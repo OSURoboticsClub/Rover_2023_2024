@@ -80,6 +80,15 @@ Urdf of the rovers chassis and bogies
         <link name="imu_link"/>
         <link name="camera_left_chassis_link"/>      
         <link name="camera_right_chassis_link"/>
+        <link name="unilidar_imu_initial">
+            <visual> 
+            <origin rpy="0 0 0" xyz="0 0 0"/>
+            <geometry>
+                <cylinder radius="0.005" length="0.01"/>
+            </geometry>
+            </visual>
+        </link>
+  
         
 
         <!-- Rear Bogie -->
@@ -391,6 +400,12 @@ Urdf of the rovers chassis and bogies
             <parent link="${name}_base_origin"/>
             <child link="imu_link"/>
             <origin rpy="-0.0556722 0.116731 -1.5708" xyz=".1524 .1016 0"/>
+        </joint>
+
+        <joint name="lidar_joint" type="fixed">
+            <parent link="${name}_base_origin"/>
+            <child link="unilidar_imu_initial"/>
+            <origin rpy="0 0 0" xyz=".1524 0 .37"/>
         </joint>
 
         <joint name="${name}_tower_joint" type="fixed">
