@@ -23,7 +23,7 @@ class AutonomousLEDSubscriber(Node):
     def __init__(self):
         super().__init__(NODE_NAME)
 
-        self.arduino = serial.Serial(port="/dev/ttyACM1",baudrate=9600, timeout=0.1)
+        self.arduino = serial.Serial(port="/dev/rover/lights",baudrate=9600, timeout=0.1)
         time.sleep(2)
         self.arduino.write(str(BLUE).encode('utf-8'))
         self.subscription = self.create_subscription(

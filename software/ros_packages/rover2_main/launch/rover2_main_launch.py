@@ -162,7 +162,7 @@ def generate_launch_description():
       status,
       cameras,
       arm_control,
-      #camera_gimbals,
+      camera_gimbals,
     #   nav_autonomy,
     #   delay_mapping,
    ])
