@@ -14,5 +14,11 @@ def generate_launch_description():
             executable='imu',
             name='imu',
             **config
-        )
+        ),
+#        Node(
+#            package='rover2_odometry',
+#            executable='odometry',
+#            name='gps',
+#            **config
+#        )
     ])

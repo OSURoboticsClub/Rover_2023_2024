@@ -7,6 +7,7 @@
 #include <ctime>
 #include <image_transport/image_transport.hpp>
 #include <opencv2/opencv.hpp>
+#include <opencv2/videoio.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <rclcpp/qos.hpp>
 
@@ -45,15 +46,15 @@ public:
         broadcast_large_image = false;
         broadcast_medium_image = false;
         broadcast_small_image = true;
-
+        
         if (is_rtsp_camera) {
             cap = new cv::VideoCapture(capture_device_path, cv::CAP_FFMPEG);
             RCLCPP_INFO_STREAM(this->get_logger(), "Connecting to RTSP camera with path: " << capture_device_path);
         } else {
-            cap = new cv::VideoCapture(capture_device_path, cv::CAP_V4L2);
+            
+            cap = new cv::VideoCapture(capture_device_path, cv::CAP_GSTREAMER);
             RCLCPP_INFO_STREAM(this->get_logger(), "Connecting to USB camera with path: " << capture_device_path);
 
-            cap->set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M', 'J', 'P', 'G'));
             cap->set(cv::CAP_PROP_FRAME_WIDTH, large_image_width);
             cap->set(cv::CAP_PROP_FRAME_HEIGHT, large_image_height);
             cap->set(cv::CAP_PROP_FPS, fps);
@@ -155,7 +156,6 @@ private:
     rclcpp::TimerBase::SharedPtr timer;
 
     bool upside_down;
-
     int large_image_width;
     int large_image_height;
     int medium_image_width;

@@ -22,7 +22,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'odometry = rover2_odometry.odometry:main',
+ #           'odometry = rover2_odometry.gps:main',
             'imu = rover2_odometry.imu:main'
         ],
     },
