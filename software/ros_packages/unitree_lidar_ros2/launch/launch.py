@@ -20,7 +20,7 @@ def generate_launch_description():
                 {'range_max': 100.0},
                 {'cloud_scan_num': 18},
 
-                {'serial_port': '/dev/ttyACM0'},
+                {'serial_port': '/dev/rover/lidar'},
                 {'baudrate': 4000000},
 
                 {'lidar_port': 6101},
