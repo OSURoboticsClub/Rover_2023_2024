@@ -50,6 +50,13 @@ def generate_launch_description():
         "'", auton, "'.lower() == 'false'"
     ])
 
+    linear_vel_scalar = PythonExpression([
+        "0.5 if '", auton, "'.lower() == 'true' else 1.0"
+    ])
+    angular_vel_scalar = PythonExpression([
+        "0.25 if '", auton, "'.lower() == 'true' else 1.0"
+    ])
+
     # -------------------------
     # Core systems (always on)
     # -------------------------
@@ -61,7 +68,9 @@ def generate_launch_description():
             )
         ),
         launch_arguments={
-            "launch_ros2_control": "False"
+            "launch_ros2_control": "False",
+            "linear_vel_scalar": linear_vel_scalar,
+            "angular_vel_scalar": angular_vel_scalar,
         }.items()
     )
 
@@ -107,7 +116,10 @@ def generate_launch_description():
         ' ',
         TextSubstitution(text='ros2_control_hardware_type:=main'),
         ' ',
-        TextSubstitution(text='attachment:=arm'),
+        TextSubstitution(text='attachment:='),
+        PythonExpression([
+            "'arm' if '", arm, "'.lower() == 'true' else 'none'"
+        ]),
     ])
 
     robot_state_publisher_node = Node(

@@ -65,6 +65,20 @@ def generate_launch_description():
             description='Launch drivetrain with indendent ros2 control[default:true]'
     )
 
+    linear_vel_scalar = LaunchConfiguration('linear_vel_scalar', default='1.0')
+    linear_vel_scalar_arg = DeclareLaunchArgument(
+            'linear_vel_scalar',
+            default_value='1.0',
+            description='Scalar for linear vel'
+    )
+
+    angular_vel_scalar = LaunchConfiguration('angular_vel_scalar', default='1.0')
+    angular_vel_scalar_arg = DeclareLaunchArgument(
+            'angular_vel_scalar',
+            default_value='1.0',
+            description='Scalar for angular vel'
+    )
+
     #Load Robot Description
     robot_description = Command([
         FindExecutable(name="xacro"), 
@@ -134,6 +148,10 @@ def generate_launch_description():
         package="rover2_control",
         executable="joy_to_drive",
         name="joy_to_drive",
+        parameters=[{
+            'linear_vel_scalar': linear_vel_scalar,
+            'angular_vel_scalar': angular_vel_scalar,
+        }],
         **config
     )
 
@@ -172,6 +190,8 @@ def generate_launch_description():
         use_sim_time_arg,           # WARNING: creating launch params with general names (such as use_sim_time) will overwrite that param value in any place the launch file is imported (for instance nav2 config through rover2_main_launch) 
         hardware_type_arg,
         launch_ros2_control_arg,
+        linear_vel_scalar_arg,
+        angular_vel_scalar_arg,
         
         legacy_control,
         joint_position_controler,

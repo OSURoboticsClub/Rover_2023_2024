@@ -58,7 +58,7 @@ drive_controller:
       - rover_middle_right_wheel_joint
       - rover_back_right_wheel_joint
     wheel_radius: 0.146
-    wheel_separation: 1.03    # This value gives decent odom yaw
+    wheel_separation: 1.15    # This value gives decent odom yaw
     
     # odometry covariance values, Untuned 2/8/2025
     pose_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]
@@ -70,15 +70,15 @@ drive_controller:
     linear:
       x:
         has_velocity_limits: true
-        max_velocity: 1.1684
-        min_velocity: -1.1684
+        max_velocity: 4.0
+        min_velocity: -4.0
         has_acceleration_limits: true
-        max_acceleration: 4.0
+        max_acceleration: 2.0
     angular:
       z:
         has_velocity_limits: true
-        max_velocity: 1.5
-        min_velocity: -1.5
+        max_velocity: 4.0
+        min_velocity: -4.0
         has_acceleration_limits: true
-        max_acceleration: 4.0
-        min_acceleration: -4.0
+        max_acceleration: 2.0
+        min_acceleration: -2.0
