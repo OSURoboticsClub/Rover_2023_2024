@@ -86,7 +86,7 @@ in rover_drive.yaml it does odometry. Take that topic instead, possibly, EVALUAT
                 'print_diagnostics': True,
                 'debug': False,
                 'frequency': 30.0,
-                'two_d_mode': False,
+                'two_d_mode': False,        # KRJ TODO: I believe this is still reliant on the angle on startup aka it zeroes to the start pitch which is bad unless starting on completely flat
                 'publish_tf': True,
                 # 'sensor_timeout': 0.1,
                 # 'transform_time_offset': 0.0,
