@@ -13,11 +13,13 @@ import os
 
 from nav_autonomy_interface.action import YoloFind
 from nav_autonomy_interface.srv import SwitchCamera
+import ultralytics.hub.utils as hub_utils
 
 # TF2
 from tf2_ros import Buffer, TransformListener
 import tf2_geometry_msgs
 from geometry_msgs.msg import PoseStamped
+from builtin_interfaces.msg import Time
 
 # YOLO specific
 from ultralytics import YOLO
@@ -26,9 +28,10 @@ import numpy as np
 from geometry_msgs.msg import Point
 import cv2
 import torch
+import time
 
 torch.backends.cudnn.enabled = False
-
+hub_utils.ONLINE = False
 
 class ActionCanceled(Exception):
     """Custom exception to handle action cancellation"""
@@ -47,6 +50,9 @@ class YoloServer(Node):
 
         self.busy = False  # Is a search already being executed?
         self.feedback = None
+
+        # Yolo Processing frequency
+        self.frequency = 10
 
         # TF2 Buffer and Listener
         self.tf_buffer = Buffer()
@@ -80,7 +86,7 @@ class YoloServer(Node):
         self.target_pose_pub = self.create_publisher(PoseStamped, '/yolo_target_pose', 10)
 
         self.models_dir = os.path.join(
-            get_package_share_directory('nav_autonomy'), 'nav_autonomy', 'yolo_models'
+            get_package_share_directory('nav_autonomy'), 'yolo_models'
         )
 
         # ROS2 Parameters
@@ -114,7 +120,7 @@ class YoloServer(Node):
         )
         self.declare_parameter(
             "max_frames",
-            10,
+            3,
             ParameterDescriptor(
                 description="Number of frames stored for history per camera, full history checked for stop_threshold"
             ),
@@ -288,7 +294,7 @@ class YoloServer(Node):
             PoseStamped in base_link frame
         """
         # Select appropriate camera frame
-        camera_frame = self.left_camera_frame if camera_id == 0 else self.right_camera_frame
+        camera_frame = self.left_camera_frame if camera_id == 1 else self.right_camera_frame
         
         try:
             # Get transform from camera to base_link
@@ -308,6 +314,8 @@ class YoloServer(Node):
 
             # Transform to base_link
             pose_base = tf2_geometry_msgs.do_transform_pose_stamped(pose_camera, transform)
+            pose_base.header.stamp = Time()
+            pose_base.pose.position.z = 0.0
             return pose_base
             
         except Exception as e:
@@ -333,7 +341,7 @@ class YoloServer(Node):
         # focal_length can be approximated from camera matrix
         focal_length = (self.left_camera_matrix[0, 0] + self.left_camera_matrix[1, 1]) / 2
         
-        estimated_depth = ((known_object_size * focal_length) / bbox_size)/2
+        estimated_depth = ((known_object_size * focal_length) / bbox_size)/3
         
         return estimated_depth
     
@@ -393,6 +401,8 @@ class YoloServer(Node):
                 cam_idx
             )
             if pose_base is not None:
+                self.get_logger().info(f"Waypoint: {pose_base}")
+
                 self.pose_marker_logging(pose_base)
                 self.target_pose_pub.publish(pose_base)
                 return pose_base
@@ -456,36 +466,87 @@ class YoloServer(Node):
         
         return center, top_left, bottom_right
 
+    def estimate_marker_poses(self, corners, marker_length, camera_matrix, dist_coeffs):
+        """
+        Estimate pose (rvecs, tvecs) for detected ArUco markers.
+
+        Args:
+            corners: output from detector.detectMarkers (list of marker corners)
+            marker_length: size of marker (float, in meters or your unit)
+            camera_matrix: 3x3 intrinsic matrix
+            dist_coeffs: distortion coefficients
+
+        Returns:
+            rvecs: list of rotation vectors
+            tvecs: list of translation vectors
+        """
+
+        if corners is None or len(corners) == 0:
+            return [], []
+
+        half_len = marker_length / 2
+
+        # 3D coordinates of marker corners in marker frame
+        obj_points = np.array([
+            [-half_len,  half_len, 0],
+            [ half_len,  half_len, 0],
+            [ half_len, -half_len, 0],
+            [-half_len, -half_len, 0]
+        ], dtype=np.float32)
+
+        rvecs = []
+        tvecs = []
+
+        for corner in corners:
+            # corner shape: (1, 4, 2) → reshape to (4, 2)
+            img_points = corner.reshape((4, 2))
+
+            success, rvec, tvec = cv2.solvePnP(
+                obj_points,
+                img_points,
+                camera_matrix,
+                dist_coeffs,
+                flags=cv2.SOLVEPNP_IPPE_SQUARE  # best for planar square markers
+            )
+
+            if success:
+                rvecs.append(rvec.flatten())
+                tvecs.append(tvec.flatten())
+
+        return rvecs, tvecs
+
     def do_aruco(self, goal_handle):
-        self.get_logger().info("detecting '{}' tags...".format(cv2.aruco.DICT_4X4_50))
-        arucoDict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
+        # self.get_logger().info("detecting '{}' tags...".format(cv2.aruco.DICT_4X4_50))
+        arucoDict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_100)
         arucoParams = cv2.aruco.DetectorParameters()
         
         # Create the detector with dictionary and parameters
         detector = cv2.aruco.ArucoDetector(arucoDict, arucoParams)
         
-        cap = cv2.VideoCapture(self.source)
-
-        camera_matrix = np.array(
-            [[600.0, 0.0, 320.0], [0.0, 600.0, 240.0], [0.0, 0.0, 1.0]]
-        )
-        dist_coeffs = np.zeros((5, 1))
+        cap = cv2.VideoCapture(self.source, cv2.CAP_V4L2)
 
         marker_length = 0.2  # meters
-
         cam_idx = 0
 
         try:
-            while rclpy.ok():
+            while cap.isOpened():
                 if goal_handle.is_cancel_requested:
                     raise ActionCanceled()
-                
+
+                self.get_logger().warn("Swapping cams")
                 # Switch Camera
                 while True:
                     cam_idx = (cam_idx + 1) % self.num_cameras
                     if self.switch_camera(cam_idx) == SwitchCamera.Response.SUCCESS:
                         break
                     self.get_logger().warn("Failed to switch cameras")
+                
+                if cam_idx == 0:
+                    camera_matrix = self.left_camera_matrix
+                    dist_coeffs = self.left_dist_coeffs
+                else:
+                    camera_matrix = self.right_camera_matrix
+                    dist_coeffs = self.right_dist_coeffs
                 
                 # Get frame
                 ret, frame = cap.read()
@@ -494,38 +555,39 @@ class YoloServer(Node):
                     continue
                 
                 display_frame = frame.copy()
+                self.get_logger().warn("Detecting Aruco")
+
                 
                 # Detect markers
                 (corners, ids, rejected) = detector.detectMarkers(frame)
                 
                 if ids is not None:
-                    cv2.aruco.drawDetectorMarkers(display_frame, corners, ids)
-                    rvecs, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(
-                        corners, marker_length, camera_matrix, dist_coeffs
+                    rvecs, tvecs = self.estimate_marker_poses(
+                        corners,
+                        marker_length,
+                        camera_matrix,
+                        dist_coeffs
                     )
-                    tvec = tvecs[0][0]
+                    x, y, z = tvecs[0] 
+                    self.get_logger().warn("Pose: {}".format(tvecs[0]))
 
-                    # Overlay pose info on frame
-                    cv2.putText(
-                        display_frame,
-                        f"X:{tvec[0]:.2f} Y:{tvec[1]:.2f} Z:{tvec[2]:.2f}",
-                        (10, 30),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        0.6,
-                        (0, 255, 255),
-                        2,
-                    )
 
                     # Transform to map frame
                     pose = self.transform_to_nav_frame(
-                        [tvec[0], tvec[1]],             # KRJ TODO: is this the correct xy in camera frame?
+                        [x, y, z],             # KRJ TODO: is this the correct xy in camera frame?
                         cam_idx
                     )
 
+                    if pose is None:
+                        self.get_logger().warn("Failed to transform pose")
+                        continue
+                        
+                    self.get_logger().info(f"Waypoint: {pose}")
+
                     feedback = YoloFind.Feedback()
                     feedback.detected = True
-                    feedback.confidence = 1
-                    feedback.total_conf = 1
+                    feedback.confidence = 1.0
+                    feedback.total_conf = 1.0
                     feedback.pose = pose
                     goal_handle.publish_feedback(feedback)
 
@@ -534,7 +596,7 @@ class YoloServer(Node):
                     feedback.detected = False
                     goal_handle.publish_feedback(feedback)
                 
-                #cv2.imshow("ArUco Detection", display_frame)
+                # cv2.imshow("ArUco Detection", display_frame)
                 if cv2.waitKey(1) & 0xFF == ord("q"):
                     break
             
@@ -576,8 +638,14 @@ class YoloServer(Node):
 
             camera_stacks = [deque(maxlen=self.max_frames) for _ in range(self.num_cameras)]
 
+
+            # Frequency scheduler
+            next_run = time.perf_counter()
+            period = 1.0 / self.frequency
+
             # Start searching in camera stream for object(s)
             while cap.isOpened():
+                next_run += period
                 if goal_handle.is_cancel_requested:
                     raise ActionCanceled()
                     
@@ -658,6 +726,16 @@ class YoloServer(Node):
                     break
 
                 frame_id += 1
+
+                # Sleep to limit processing load
+                sleep_time = next_run - time.perf_counter()
+                if sleep_time > 0:
+                    time.sleep(sleep_time)
+                else:
+                    # We're behind schedule
+                    print("Warning: loop overran")
+
+                
 
         except ActionCanceled:
             raise
