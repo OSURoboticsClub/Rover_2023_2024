@@ -13,6 +13,14 @@ colcon build --continue-on-error
 source install/setup.bash  
 ```  
 
+- Navigate to the DAM Robotics Google Drive
+    - Path: Rover/Software/Gazebo_sim_files
+    - Download the materials and meshes
+
+- In the rover_gazebo package
+    - Import the materials and meshes into the worlds directory. 
+    - Note: file structure under worlds should start with a materials and meshes directory not the individual files. 
+
 ## Dependencies
 - ROS2 Humble +
 - Nav2
