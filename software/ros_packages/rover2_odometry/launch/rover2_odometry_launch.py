@@ -59,7 +59,6 @@ def generate_launch_description():
         #          'publish_tf':False, 
         #          'approx_sync':False,
         #          'wait_imu_to_init':False,
-in rover_drive.yaml it does odometry. Take that topic instead, possibly, EVALUATE
         #          # Internal Params (must be strings)
         #          'Odom/Strategy':'1',        # 0=Frame-to-Map (F2M) 1=Frame-to-Frame (F2F) 2=Fovis 3=viso2 4=DVO-SLAM 5=ORB_SLAM 6=OKVIS 7=LOAM 8=MSCKF_VIO 9=VINS-Fusion 10=OpenVINS 11=FLOAM 12=Open3D 13=cuVSLAM
         #             # There are paramters to set for each strategy 
