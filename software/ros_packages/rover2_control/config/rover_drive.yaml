@@ -13,6 +13,9 @@ controller_manager:
 drive_controller:
   ros__parameters:
     publish_rate: 30.0
+
+    enable_odom_tf: false   # Let ekf do odom. This still published the odom topic we could put into the ekf tho as wheel odom
+
     left_wheel_names:
       - rover_front_left_wheel_joint
       - rover_middle_left_wheel_joint
@@ -23,7 +26,7 @@ drive_controller:
       - rover_back_right_wheel_joint
     
     wheel_radius: 0.146
-    wheel_separation: 0.85
+    wheel_separation: 1.15    # This value gives decent odom yaw
 
     #odometry covariance values, Untuned 2/8/2025
     pose_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]
@@ -33,21 +36,21 @@ drive_controller:
     odom_frame_id: odom
     base_frame_id: rover_base_origin
     enable_odom_tf: false
-    use_stamped_velocities: true
+    use_stamped_velocities: false
 
     # Velocity and acceleration limits for the robot
     linear:
       x:
         has_velocity_limits: true
-        max_velocity: 1.1684              # m/s
-        min_velocity: -1.1684             # m/s
+        max_velocity: 4.0             # m/s
+        min_velocity: -4.0             # m/s
         has_acceleration_limits: true
-        max_acceleration: 4.0          # m/s^2
+        max_acceleration: 2.0          # m/s^2
     angular:
       z:
         has_velocity_limits: true
-        max_velocity: 11.684              # rad/s
-        min_velocity: -11.684             # rad/s
+        max_velocity: 4.0              # rad/s
+        min_velocity: -4.0             # rad/s
         has_acceleration_limits: true
-        max_acceleration: 40.0          # rad/s^2
-        min_acceleration: -40.0
+        max_acceleration: 2.0          # rad/s^2
+        min_acceleration: -2.0

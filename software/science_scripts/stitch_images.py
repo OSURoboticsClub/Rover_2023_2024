@@ -4,38 +4,51 @@ from glob import glob
 import sys
 import re
 
+
 def extract_number(filename):
-    match = re.search(r'(\d+)', os.path.basename(filename))
+    match = re.search(r"(\d+)", os.path.basename(filename))
     return int(match.group(1)) if match else -1
 
-# Path to your directory containing images
+
 image_dir = sys.argv[1]
-filename = sys.argv[2]
-# Load and sort image paths numerically based on digits in filename
+filename  = sys.argv[2]
+file_type = sys.argv[3]
+
 image_paths = sorted(glob(os.path.join(image_dir, "*.*")), key=extract_number)
+
 
 def stitch_images(images):
     stitcher = cv2.Stitcher_create()
     status, pano = stitcher.stitch(images)
 
+    if status != cv2.Stitcher_OK:
+        reasons = {
+            cv2.Stitcher_ERR_NEED_MORE_IMGS:            "Not enough images / insufficient overlap",
+            cv2.Stitcher_ERR_HOMOGRAPHY_EST_FAIL:       "Homography estimation failed",
+            cv2.Stitcher_ERR_CAMERA_PARAMS_ADJUST_FAIL: "Camera params adjustment failed",
+        }
+        print(f"Stitching failed: {reasons.get(status, f'unknown status {status}')}")
+        return None
+
     return pano
 
+
 def try_stitch_with_fallback(images):
-    status, pano = stitch_images(images)
-    if status == cv2.Stitcher_OK:
+    pano = stitch_images(images)
+    if pano is not None:
         return pano
 
     print("Initial stitching failed. Trying to skip bad images...")
-
-    # Try skipping each image one-by-one
     for i in range(len(images)):
-        subset = images[:i] + images[i+1:]
-        status, pano = stitch_images(subset)
-        if status == cv2.Stitcher_OK:
+        subset = images[:i] + images[i + 1:]
+        pano = stitch_images(subset)
+        if pano is not None:
             print(f"Stitching succeeded without image {i}")
             return pano
 
-# Read images
+    return None
+
+
 images = []
 for path in image_paths:
     print(path)
@@ -43,19 +56,16 @@ for path in image_paths:
     if img is not None:
         images.append(img)
 
-# Make sure we have enough images
 if len(images) < 2:
     print("Need at least two images to stitch.")
     exit()
 
-# Stitch the images
 print("Stitching images...")
-panorama = stitch_images(images)
+panorama = try_stitch_with_fallback(images)  # was calling stitch_images, skipping fallback
 
-# Save result if successful
 if panorama is not None:
-    output_path = os.path.join(image_dir, filename)
+    output_path = os.path.join(image_dir, f"{filename}.{file_type}")
     cv2.imwrite(output_path, panorama)
     print(f"Panorama saved to {output_path}")
 else:
-    print("Stitching failed.")
+    print("Stitching failed after all fallback attempts.")

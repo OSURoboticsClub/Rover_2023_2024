@@ -1,0 +1,1 @@
+/usr/bin/c++ -std=c++17  -O3 -Wall -DNDEBUG -rdynamic CMakeFiles/set_to_udp_mode.dir/set_to_udp_mode.cpp.o -o ../bin/set_to_udp_mode   -L/home/makemorerobot/unilidar_sdk2/unitree_lidar_sdk/lib/aarch64  -Wl,-rpath,/home/makemorerobot/unilidar_sdk2/unitree_lidar_sdk/lib/aarch64 -Wl,-Bstatic -lunilidar_sdk2 -Wl,-Bdynamic 

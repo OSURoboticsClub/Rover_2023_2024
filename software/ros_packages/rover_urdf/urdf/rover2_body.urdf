@@ -353,12 +353,12 @@ Urdf for the rover of the DAM Robotics Rover triple bogie system.
     <child link="rover_tower"/>
   </joint>
   <joint name="camera_left_chassis" type="fixed">
-    <parent link="base_link"/>
+    <parent link="rover_base_origin"/>
     <child link="camera1"/>
     <origin xyz="0.246 0 0.290" rpy="0 0 0.785"/>
   </joint> 
   <joint name="camera_right_chassis" type="fixed">
-    <parent link="base_link"/>
+    <parent link="rover_base_origin"/>
     <child link="camera2"/>
     <origin xyz="-0.246 0 0.290" rpy="0 0 -0.785"/>
   </joint>

@@ -1,0 +1,5 @@
+uint16 cam_idx
+---
+uint16 ack
+uint16 FAIL=0
+uint16 SUCCESS=1

@@ -21,7 +21,7 @@ KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", ATTRS{idVendor}=="32e4", ATTRS{
 KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", ATTRS{idVendor}=="05a3", ATTRS{idProduct}=="9422", ATTRS{serial}=="SN0001", ATTR{index}=="0", SYMLINK+="rover/camera_main_navigation_backup"
 
 # lights/gps infrared camera
-KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="6369", ENV{ID_V4L_CAPABILITIES}==":capture:", SYMLINK+="rover/camera_infrared"
+# KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="6369", ENV{ID_V4L_CAPABILITIES}==":capture:", SYMLINK+="rover/camera_infrared"
 
 
 #Cameras 2025-2026
@@ -31,7 +31,6 @@ SUBSYSTEM=="video4linux", KERNELS=="8-1", ATTRS{idVendor}=="0c45", ATTRS{idProdu
 
 # Chassis Right
 #SUBSYSTEM=="video4linux", KERNELS=="8-1", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="64ab", ATTR{index}=="0", SYMLINK+="rover/camera_left_chassis"
-
 SUBSYSTEM=="video4linux", KERNELS=="10-1", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="64ab", ATTR{index}=="0", SYMLINK+="rover/camera_right_chassis"
 
 
@@ -44,9 +43,11 @@ SUBSYSTEM=="video4linux", KERNELS=="6-1", ATTRS{idVendor}=="0c45", ATTRS{idProdu
 SUBSYSTEM=="video4linux", KERNELS=="4-1", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="64ab", ATTR{index}=="0", SYMLINK+="rover/camera_rear"
 
 #Tower Gimbal
-SUBSYSTEM=="video4linux", KERNELS=="4-1.3", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="6366", ATTR{index}=="0", SYMLINK+="rover/camera_tower_gimbal"
-#Pantilt IR (Not set yet)
-SUBSYSTEM=="video4linux", KERNELS=="8-1.2", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="6369", ATTR{index}=="0", ENV{ID_V4L_CAPABILITIES}==":capture:", SYMLINK+="rover/camera_pan_tilt"
+#SUBSYSTEM=="video4linux", KERNELS=="4-1.3", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="6366", ATTR{index}=="0", SYMLINK+="rover/camera_tower_gimbal"
+SUBSYSTEM=="video4linux", KERNELS=="1-2.3.3.4.2", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="6366", ATTR{index}=="0", SYMLINK+="rover/camera_tower_gimbal"
 
-#CAN bus 2025-2026
+#Pantilt IR (Not set yet)
+#SUBSYSTEM=="video4linux", KERNELS=="8-1.2", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="6369", ATTR{index}=="0", ENV{ID_V4L_CAPABILITIES}==":capture:", SYMLINK+="rover/camera_pan_tilt"
+SUBSYSTEM=="video4linux", KERNELS=="1-2.3.3.4.3", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="6369", ATTR{index}=="0", ENV{ID_V4L_CAPABILITIES}==":capture:", SYMLINK+="rover/camera_pan_tilt"
+
 

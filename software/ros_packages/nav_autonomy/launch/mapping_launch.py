@@ -3,11 +3,12 @@ import os
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch_ros.actions import Node, SetParameter
+from launch_ros.actions import Node
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch.conditions import IfCondition
-import os
+from launch.substitutions import PythonExpression
+
 
 # LAUNCH: for testing without another odom source
     # ros2 launch nav_autonomy mapping_launch.py vo:=true viz:=true   
@@ -32,7 +33,7 @@ def generate_launch_description():
         ]
         
     config_rviz = os.path.join(
-        get_package_share_directory('nav_autonomy'), 'config', 'depth_nav.rviz'
+        pkg_share, 'config', 'depth_nav.rviz'
     )
 
     return LaunchDescription([
@@ -41,9 +42,7 @@ def generate_launch_description():
         DeclareLaunchArgument('viz',        default_value='false',  description='Launch RTAB-Map UI and RVIZ.'),
         DeclareLaunchArgument('vo',       default_value='false', description='Visual Odometry Node for testing'),
         DeclareLaunchArgument('rviz_cfg',   default_value=config_rviz,  description='Configuration path of rviz2.'),
-
-        # Make sure IR emitter is enabled
-        SetParameter(name='depth_module.emitter_enabled', value=1),
+        DeclareLaunchArgument('lidar', default_value='false', description='Use UniLidar instead of camera point cloud'),
 
         # Launch visual odom for testing
         Node(
@@ -60,9 +59,9 @@ def generate_launch_description():
         #     arguments=['-d']), # This will delete the previous database (~/.ros/rtabmap.db)
 
         # Converted global pose publisher
-        Node(
-            package='nav_autonomy', 
-            executable='map_pose_publisher'),
+        # Node(
+        #     package='nav_autonomy', 
+        #     executable='map_pose_publisher'),
 
         # Visualization:
         Node(
@@ -74,18 +73,37 @@ def generate_launch_description():
         # Custom point cloud publishing for local map
         Node(
             package='rtabmap_util', executable='point_cloud_xyz', output='screen',
-            parameters=[{'decimation': 2,
-                         'min_depth': 0.5,
+            condition=IfCondition(
+                PythonExpression([
+                    "'", LaunchConfiguration('lidar'), "'.lower() == 'false'"
+                ])
+            ),
+            parameters=[{'min_depth': 0.4,
                          'max_depth': 6.0, #3.0,
-                         'voxel_size': 0.05 # match nav2 local_costmap resolution
+
+                         'approx_sync': True,
+                         'sync_queue_size': 2,
+                         'approx_sync_max_interval': 0.05,
+
+                         'noise_filter_radius': 0.1,
+                         'noise_filtering_min_neighbors': 5,
+                         'filter_nans': True,
+
+                         'voxel_size': .05, 
                         }],
-            remappings=[('depth/image', '/camera/d455/aligned_depth_to_color/image_raw'),
-                        ('depth/camera_info', '/camera/d455/color/camera_info'),
+            remappings=[('depth/image', '/camera/d455/depth/image_rect_raw'),
+                        ('depth/camera_info', '/camera/d455/depth/camera_info'),
                         ('cloud', '/camera/cloud')]),
         Node(
             package='rtabmap_util', executable='obstacles_detection', output='screen',
-            parameters=[parameters],
-            remappings=[('cloud', '/camera/cloud'),
+            parameters=[{'frame_id': 'rover_base_origin'}],
+            remappings=[('cloud', 
+                            PythonExpression([
+                                "'/unilidar/cloud' if '",
+                                LaunchConfiguration('lidar'),
+                                "'.lower() == 'true' else '/camera/cloud'"
+                            ])
+                        ),
                         ('obstacles', '/camera/obstacles'),
                         ('ground', '/camera/ground')]),
 

@@ -16,17 +16,40 @@ from sensor_msgs.msg import Joy
 from geometry_msgs.msg import Twist, TwistStamped
 from std_srvs.srv import Trigger
 from rover2_control_interface.msg import DriveCommandMessage
+from rcl_interfaces.msg import ParameterDescriptor
 import time
 import math
 
 
 MAX_ACCEL = 0.05
+MAX_LINEAR_VEL = 3.7
+MAX_ANGULAR_VEL = 4
 
 RPS_FACTOR = 50/(2*math.pi) #GEAR RATIO / 2PI
 
 class JoyToDriveNode(Node):
     def __init__(self):
         super().__init__('joy_to_drive')
+
+        # Parameters
+        self.declare_parameter(
+            "linear_vel_scalar",
+            1.0,
+            ParameterDescriptor(
+                description="0-1 scalar to linear vel"
+            ),
+        )
+
+        self.declare_parameter(
+            "angular_vel_scalar",
+            1.0,
+            ParameterDescriptor(
+                description="0-1 scalar to angular vel"
+            ),
+        )
+
+        self.linear_vel_scalar = self.get_parameter("linear_vel_scalar").value
+        self.angular_vel_scalar = self.get_parameter("angular_vel_scalar").value
 
         # Publisher Drive Commands
         self.wheel_pub = self.create_publisher(TwistStamped, '/drive_controller/cmd_vel', 1)
@@ -57,8 +80,8 @@ class JoyToDriveNode(Node):
         #Drive Parameters
         self.linear_velocity = 0
         self.angular_velocity = 0
-        self.max_vel = 1.1684  # Max linear velocity (m/s)
-        self.max_ang_vel = 4.0  # Max angular velocity (rad/s)
+        self.max_vel = MAX_LINEAR_VEL * self.linear_vel_scalar  # Max linear velocity (m/s)
+        self.max_ang_vel = MAX_ANGULAR_VEL * self.angular_vel_scalar  # Max angular velocity (rad/s)
         #Watchdog Timer
         self.last_message_time = self.get_clock().now().nanoseconds * 1e-9
         self.publish_msgs = True
