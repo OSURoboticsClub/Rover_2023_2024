@@ -127,7 +127,7 @@ def generate_launch_description():
             'udp_port': 42069,
             'mux_port': 20002,
         }],
-        respawn=True
+        respawn=False
     )
     chassis_right_cam_node = Node(
         package='rover2_camera',
@@ -149,7 +149,7 @@ def generate_launch_description():
             'mux_port': 20003,
             
         }],
-        respawn=True
+        respawn=False
     )
 
     tower_gimbal_cam_node = Node(
@@ -171,7 +171,7 @@ def generate_launch_description():
             'udp_port': 42068,
             'mux_port': 20000
         }],
-        respawn=True,
+        respawn=False,
         condition=IfCondition(launch_driver)
     )
 
@@ -194,7 +194,7 @@ def generate_launch_description():
             'udp_port': 42071,
             'mux_port': 20000
         }],
-        respawn=True,
+        respawn=False,
         condition=IfCondition(launch_driver)
     )
     birds_eye_cam_node = Node(
@@ -216,7 +216,7 @@ def generate_launch_description():
             'udp_port': 42072,
             'mux_port': 20000
         }],
-        respawn=True,
+        respawn=False,
         condition=IfCondition(launch_driver)
     )
 
@@ -240,7 +240,7 @@ def generate_launch_description():
            'udp_port': 42073,
            'mux_port': 20000
         }],
-        respawn=True,
+        respawn=False,
         condition=IfCondition(launch_driver)
     )
 
@@ -263,7 +263,7 @@ def generate_launch_description():
             'udp_port': 42074,
             'mux_port': 20000
         }],
-        respawn=True,
+        respawn=False,
         condition=IfCondition(launch_d405)
     )
 
@@ -272,7 +272,7 @@ def generate_launch_description():
         namespace='rover2_camera',
         executable='camera_muxing',
         name='muxing_node',
-        respawn=True,
+        respawn=False,
         condition=IfCondition(launch_muxing)
     )
 
