@@ -277,7 +277,7 @@ def generate_launch_description():
                 arm_control,
 
                 delay_mapping,
-                nav_autonomy,
+                #nav_autonomy,
 
                 # camera_gimbals,
                 # driller,
