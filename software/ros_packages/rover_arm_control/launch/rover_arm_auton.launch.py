@@ -69,13 +69,13 @@ def generate_launch_description():
     )
     #Launch the plane fitting node
     move_perp = Node(
-			package = 'pc_processing',
+			package = 'rover_arm_control',
 			executable = 'move_perp_to_plane',
 			name = 'move_perp_to_plane',
     )
     #Launch the plane fitting node
     auton_type = Node(
-			package = 'pc_processing',
+			package = 'rover_arm_control',
 			executable = 'auton_typing',
 			name = 'auton_typing',
     )
