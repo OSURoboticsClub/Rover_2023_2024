@@ -3,11 +3,12 @@ import os
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch_ros.actions import Node, SetParameter
+from launch_ros.actions import Node
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch.conditions import IfCondition
-import os
+from launch.substitutions import PythonExpression
+
 
 # LAUNCH: for testing without another odom source
     # ros2 launch nav_autonomy mapping_launch.py vo:=true viz:=true   
@@ -32,7 +33,7 @@ def generate_launch_description():
         ]
         
     config_rviz = os.path.join(
-        get_package_share_directory('nav_autonomy'), 'config', 'depth_nav.rviz'
+        pkg_share, 'config', 'depth_nav.rviz'
     )
 
     return LaunchDescription([
@@ -41,6 +42,7 @@ def generate_launch_description():
         DeclareLaunchArgument('viz',        default_value='false',  description='Launch RTAB-Map UI and RVIZ.'),
         DeclareLaunchArgument('vo',       default_value='false', description='Visual Odometry Node for testing'),
         DeclareLaunchArgument('rviz_cfg',   default_value=config_rviz,  description='Configuration path of rviz2.'),
+        DeclareLaunchArgument('lidar', default_value='false', description='Use UniLidar instead of camera point cloud'),
 
         # Launch visual odom for testing
         Node(
@@ -57,9 +59,9 @@ def generate_launch_description():
         #     arguments=['-d']), # This will delete the previous database (~/.ros/rtabmap.db)
 
         # Converted global pose publisher
-        Node(
-            package='nav_autonomy', 
-            executable='map_pose_publisher'),
+        # Node(
+        #     package='nav_autonomy', 
+        #     executable='map_pose_publisher'),
 
         # Visualization:
         Node(
@@ -71,6 +73,11 @@ def generate_launch_description():
         # Custom point cloud publishing for local map
         Node(
             package='rtabmap_util', executable='point_cloud_xyz', output='screen',
+            condition=IfCondition(
+                PythonExpression([
+                    "'", LaunchConfiguration('lidar'), "'.lower() == 'false'"
+                ])
+            ),
             parameters=[{'min_depth': 0.4,
                          'max_depth': 6.0, #3.0,
 
@@ -90,7 +97,13 @@ def generate_launch_description():
         Node(
             package='rtabmap_util', executable='obstacles_detection', output='screen',
             parameters=[{'frame_id': 'rover_base_origin'}],
-            remappings=[('cloud', '/camera/cloud'),     # /unilidar/cloud
+            remappings=[('cloud', 
+                            PythonExpression([
+                                "'/unilidar/cloud' if '",
+                                LaunchConfiguration('lidar'),
+                                "'.lower() == 'true' else '/camera/cloud'"
+                            ])
+                        ),
                         ('obstacles', '/camera/obstacles'),
                         ('ground', '/camera/ground')]),
 
