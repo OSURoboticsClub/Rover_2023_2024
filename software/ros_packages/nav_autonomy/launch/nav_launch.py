@@ -14,7 +14,7 @@ def generate_launch_description():
     package_name='nav_autonomy'
     pkg_share = get_package_share_directory(package_name)
 
-    nav2_params = os.path.join(pkg_share, 'config', 'nav2_params_obstacles.yaml')
+    nav2_params = os.path.join(pkg_share, 'config', 'nav2_params.yaml')
 
     
     nav2 = IncludeLaunchDescription(
