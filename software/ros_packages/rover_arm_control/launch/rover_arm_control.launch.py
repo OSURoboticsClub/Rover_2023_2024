@@ -67,11 +67,18 @@ def generate_launch_description():
 			executable = 'plane_fit',
 			name = 'plane_fit',
     )
+    move_perp = Node(
+                        package = 'rover_arm_control',
+                        executable = 'move_perp_to_plane',
+                        name = 'move_perp_to_plane',
+    )
+
 
     return LaunchDescription([
         gripper_can_control_node,
-        # relative_move_node,
-        # absolute_move_node,
-        # pc_filter_node,
-        # pc_plane_node,
+        relative_move_node,
+        absolute_move_node,
+        pc_filter_node,
+        pc_plane_node,
+        move_perp,
     ])

@@ -9,12 +9,12 @@ def generate_launch_description():
     }
 
     return LaunchDescription([
-        Node(
-            package='rover2_status',
-            executable='led_node_serial',
-            name='led_node',
-            **config
-        ),
+       # Node(
+       #     package='rover2_status',
+       #     executable='led_node_serial',
+       #     name='led_node',
+       #     **config
+       # ),
 	Node(
 			package='rover2_status',
             executable='node_info',
