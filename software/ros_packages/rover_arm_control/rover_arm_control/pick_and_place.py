@@ -132,9 +132,9 @@ class SquareMakingController(Node):
         }
 
         #Arm params
-        self.frame_id = "arm_gripper" # usually "arm_gripper"
-        self.joint_names = ['base_joint', 'shoulder_joint', 'elbow_pitch_joint', 
-                  'elbow_roll_joint', 'wrist_pitch_joint', 'wrist_roll_joint']
+        self.frame_id = "rover_arm_gripper" # usually "arm_gripper"
+        self.joint_names = ['rover_arm_base_joint', 'rover_arm_shoulder_joint', 'rover_arm_elbow_pitch_joint', 
+                  'rover_arm_elbow_roll_joint', 'rover_arm_wrist_pitch_joint', 'rover_arm_wrist_roll_joint']
         self.gripper_offset = 0.335
         
         #Visual segmentation params
@@ -309,7 +309,7 @@ class SquareMakingController(Node):
         
         # Create a motion planning request
         motion_request = MotionPlanRequest()
-        motion_request.workspace_parameters.header.frame_id = "base_link"
+        motion_request.workspace_parameters.header.frame_id = "rover_arm_base_link"
         motion_request.workspace_parameters.header.stamp = self.get_clock().now().to_msg()
         
         # Set the planning group
@@ -491,7 +491,7 @@ class SquareMakingController(Node):
         A header frame id should be added as a parameter.
         """
         pose = PoseStamped()
-        pose.header.frame_id = "base_link"
+        pose.header.frame_id = "rover_arm_base_link"
         #set array to x,y,z pose positions
         pose.pose.position.x = pose_arr[0]
         pose.pose.position.y = pose_arr[1]
@@ -560,8 +560,8 @@ class SquareMakingController(Node):
         current_pose = PoseStamped()
         try:
             trans = self.tf_buffer.lookup_transform(
-                "base_link",  # target frame
-                "arm_gripper",  # source frame
+                "rover_arm_base_link",  # target frame
+                "rover_arm_gripper",  # source frame
                 rclpy.time.Time())  # latest available
 
             current_pose.header = trans.header

@@ -81,10 +81,10 @@ private:
 		pcl::fromROSMsg(*msg, *pcl_cloud); //pass it and the msg by reference for conversion
 		
 		if (pcl_cloud->size() < 100) {
-			RCLCPP_WARN(
-				this->get_logger(),
-				"Point cloud has fewer than 100 points, skipping processing."
-			);
+			//RCLCPP_WARN(
+			//	this->get_logger(),
+			//	"Point cloud has fewer than 100 points, skipping processing."
+			//);
 		return;
 		}
 

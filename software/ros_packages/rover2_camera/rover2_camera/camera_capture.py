@@ -84,6 +84,9 @@ class CameraCaptureNode(Node):
         self.start_pipeline()
 
     def start_pipeline(self):
+        if self.pipeline:
+            self.get_logger().info("Pipeline is already started")
+            return
         # Read parameters
         device = self.get_parameter('device').value
         cap_width = self.get_parameter('cap_width').value
@@ -134,6 +137,7 @@ class CameraCaptureNode(Node):
         if self.pipeline:
             self.get_logger().info("Stopping pipeline...")
             self.pipeline.set_state(Gst.State.NULL)
+            self.pipeline.get_state(Gst.CLOCK_TIME_NONE)
             self.pipeline = None
         if self.loop and self.loop.is_running():
             self.loop.quit()

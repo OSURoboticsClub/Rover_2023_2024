@@ -128,7 +128,7 @@ private:
 			
 
 		} catch (const tf2::TransformException &ex) {
-			RCLCPP_WARN(this->get_logger(), "Could not transform %s to %s: %s", msg->header.frame_id.c_str(), target_frame_.c_str(), ex.what());
+			// RCLCPP_WARN(this->get_logger(), "Could not transform %s to %s: %s", msg->header.frame_id.c_str(), target_frame_.c_str(), ex.what());
 			
 			//If we can't get the tf2, give up on this frame. (Something probably isnt working anyways)
 			return;

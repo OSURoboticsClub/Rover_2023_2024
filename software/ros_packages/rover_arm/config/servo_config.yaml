@@ -51,10 +51,10 @@ check_octomap_collisions: true  # Check collision against the octomap (if a 3D s
 
 ## MoveIt properties
 move_group_name:  rover_arm  # Often 'manipulator' or 'arm'
-planning_frame: base_link
+planning_frame: rover_arm_base_link
 
-ee_frame_name: arm_gripper
-robot_link_command_frame: arm_gripper
+ee_frame_name: rover_arm_gripper
+robot_link_command_frame: rover_arm_gripper
 
 apply_twist_commands_about_ee_frame: true
 

@@ -44,10 +44,10 @@ SUBSYSTEM=="video4linux", KERNELS=="4-1", ATTRS{idVendor}=="0c45", ATTRS{idProdu
 
 #Tower Gimbal
 #SUBSYSTEM=="video4linux", KERNELS=="4-1.3", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="6366", ATTR{index}=="0", SYMLINK+="rover/camera_tower_gimbal"
-SUBSYSTEM=="video4linux", KERNELS=="1-2.3.3.4.2", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="6366", ATTR{index}=="0", SYMLINK+="rover/camera_tower_gimbal"
+SUBSYSTEM=="video4linux", KERNELS=="1-2.1.3.4.2", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="6366", ATTR{index}=="0", SYMLINK+="rover/camera_tower_gimbal"
 
 #Pantilt IR (Not set yet)
 #SUBSYSTEM=="video4linux", KERNELS=="8-1.2", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="6369", ATTR{index}=="0", ENV{ID_V4L_CAPABILITIES}==":capture:", SYMLINK+="rover/camera_pan_tilt"
-SUBSYSTEM=="video4linux", KERNELS=="1-2.3.3.4.3", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="6369", ATTR{index}=="0", ENV{ID_V4L_CAPABILITIES}==":capture:", SYMLINK+="rover/camera_pan_tilt"
+SUBSYSTEM=="video4linux", KERNELS=="1-2.1.3.4.3", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="6369", ATTR{index}=="0", ENV{ID_V4L_CAPABILITIES}==":capture:", SYMLINK+="rover/camera_pan_tilt"
 
 

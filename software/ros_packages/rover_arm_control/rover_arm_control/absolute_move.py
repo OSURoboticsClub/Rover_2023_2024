@@ -431,7 +431,7 @@ class GripperMoveNode(Node):
 
         #Create Path constraint
         path_constraint = PositionConstraint()
-        path_constraint.header.frame_id = "base_link"  # or your world frame
+        path_constraint.header.frame_id = "rover_arm_base_link"  # or your world frame
         path_constraint.link_name = self.target_frame
         path_constraint.target_point_offset.x = 0.0
         path_constraint.target_point_offset.y = 0.0

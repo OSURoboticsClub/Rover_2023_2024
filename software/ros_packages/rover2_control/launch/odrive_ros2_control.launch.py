@@ -186,6 +186,34 @@ def generate_launch_description():
     #     **config
     # )
 
+    odrive_pan_tilt = Node(
+        package='rover2_control',
+        executable='odrive_pan_tilt',
+        name='odrive_pan_tilt',
+        parameters=[{
+            'can': 'can_cam',
+            'direction': 1,
+            'node_ids': [0, 1],
+            'board_id': 6
+        }],
+        **config
+    )
+
+    odrive_gimbal = Node(
+        package='rover2_control',
+        executable='odrive_pan_tilt',
+        name='odrive_gimbal',
+        parameters=[{
+            'can': 'can_cam',
+            'direction': 1,
+            'node_ids': [3, 5, 4],
+            'board_id': 2,
+            'control_topic': "/tower_gimbal/control",
+        }],
+        **config
+    )
+
+
     return LaunchDescription([
         use_sim_time_arg,           # WARNING: creating launch params with general names (such as use_sim_time) will overwrite that param value in any place the launch file is imported (for instance nav2 config through rover2_main_launch) 
         hardware_type_arg,
@@ -200,5 +228,7 @@ def generate_launch_description():
         joint_state_broadcaster_spawner,
         drive_controller,
         joy_to_drive,
+        odrive_gimbal,
+        # odrive_pan_tilt,
         # gripper_can_control_node,
     ])

@@ -67,7 +67,7 @@ class OdrivePanTilt(Node):
                 is_extended_id = False
             ))
             self.last_stable = self.stabalize
-            self.get_logger().info(f"CAN: Sent Can for angles: roll={self.angles[0]}, pitch={self.angles[1]}, yaw={self.angles[2]}")
+            # self.get_logger().info(f"CAN: Sent Can for angles: roll={self.angles[0]}, pitch={self.angles[1]}, yaw={self.angles[2]}")
         except:
             self.get_logger().info("CAN: CAN Buffer full")
 
@@ -81,9 +81,10 @@ class OdrivePanTilt(Node):
                     data = struct.pack('<Bf', node_id, self.angles[i]),
                     is_extended_id = False
                 ))
-            self.get_logger().info(f"CAN: Sent Can for angles: roll={self.angles[0]}, pitch={self.angles[1]}, yaw={self.angles[2]}")
+            # self.get_logger().info(f"CAN: Sent Can for angles: roll={self.angles[0]}, pitch={self.angles[1]}, yaw={self.angles[2]}")
         except:
-            self.get_logger().info("CAN: CAN Buffer full")
+            # self.get_logger().info("CAN: CAN Buffer full")
+            pass
 
     def control_callback(self, msg):
         self.get_logger().info(f"CONTROL: Recieved control message: {msg}")
@@ -94,7 +95,7 @@ class OdrivePanTilt(Node):
             self.angles[1] = 0.0
             self.angles[2] = 0.0
         elif msg.is_angle:
-            self.get_logger().info(f"CONTROL: Recieved angles: roll={msg.roll}, pitch={msg.pitch}, yaw={msg.yaw}")
+            # self.get_logger().info(f"CONTROL: Recieved angles: roll={msg.roll}, pitch={msg.pitch}, yaw={msg.yaw}")
             self.is_angle = True
             self.angles[0] = msg.pitch * self.direction
             self.angles[1] = msg.yaw * self.direction
@@ -104,7 +105,7 @@ class OdrivePanTilt(Node):
             self.angles[0] = self.angles[0] + msg.pitch * self.dt * self.direction
             self.angles[1] = self.angles[1] + msg.yaw * self.dt * self.direction
             self.angles[2] = self.angles[2] + msg.roll * self.dt * self.direction
-            self.get_logger().info(f"CONTROL: Stepped Angles positions: roll={self.angles[0]}, pitch={self.angles[1]}, yaw={self.angles[2]}")
+            # self.get_logger().info(f"CONTROL: Stepped Angles positions: roll={self.angles[0]}, pitch={self.angles[1]}, yaw={self.angles[2]}")
         if msg.stabalize:
             self.get_logger().info("CONTROL: Stabilize enabled")
             self.stabalize = msg.stabalize
