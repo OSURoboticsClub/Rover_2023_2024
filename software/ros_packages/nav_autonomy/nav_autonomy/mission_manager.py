@@ -186,7 +186,7 @@ class MissionManager(Node):
             self.get_logger().info('Sending YOLO goal')
             self.yolo_goal_handle = await self._yolo_client.send_goal_async(
                 yolo_goal,
-                feedback_callback=self.yolo_feedback_cb
+                feedback_callback=self._yolo_feedback_cb
             )
 
             if not self.yolo_goal_handle.accepted:

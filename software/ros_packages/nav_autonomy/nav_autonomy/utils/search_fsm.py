@@ -43,7 +43,7 @@ class SearchFSM:
         self.success_threshold = success_threshold
         self.target_pose = None
         self.last_detection_time = None
-        self.detection_timeout_ms = 3000.0
+        self.detection_timeout_ms = 8000.0
         
         self.status_pub = node.create_publisher(String, status_topic, 10)
         self.debug_marker_pub = node.create_publisher(MarkerArray, dbg_marker_topic, 10) if debug_markers else None
@@ -199,6 +199,69 @@ class SearchFSM:
                     self._to_failed()
 
 
+<<<<<<< HEAD
+=======
+    def update_perception(self, confidence: float, target_pose: PoseStamped = None):
+        if not self.active:
+            return
+
+        if target_pose is not None:
+            self.target_pose = target_pose
+
+            self.last_detection_time = self.node.get_clock().now()
+            self.node.get_logger().info("Target pose set: {target_pose} {self.last_detection_time}")
+
+
+        if self.state == SearchState.SEARCHING and confidence >= self.investigate_threshold:
+            if self.target_pose is not None:
+                self._to_investigate()
+            else:
+                self.node.get_logger().warn("Confidence threshold met, but no target map pose received.")
+        
+        # WINNER: Object found, end everything.
+        if self.state == SearchState.INVESTIGATING and confidence >= self.success_threshold:
+            self.state = SearchState.SUCCESS
+            self.active = False
+            self.navigator.cancelTask()
+            self._publish_state()   
+
+
+    def get_state(self):
+        return self.state
+
+
+    def is_active(self):
+        return self.active
+
+
+    # CALLBACKS
+    def _target_pose_cb(self, msg: PoseStamped):
+        if not self.active:
+            return
+        self.target_pose = msg
+
+
+    # def _confidence_cb(self, msg: Float32):
+    #     if not self.active:
+    #         return
+
+    #     conf = msg.data
+
+    #     if self.state == SearchState.SEARCHING and conf >= self.investigate_threshold:
+    #         if self.target_pose is not None:
+    #             self._to_investigate()
+    #         else:
+    #             self.node.get_logger().warn("Confidence threshold met, but no target map pose received yet!")
+    #         return
+
+    #     if self.state == SearchState.INVESTIGATING and conf >= self.success_threshold:
+    #         self.state = SearchState.SUCCESS
+    #         self.active = False
+    #         self.navigator.cancelTask()
+    #         self._publish_state()
+
+
+>>>>>>> 81e5301 (4/23 outdoor testing commit)
     def _to_investigate(self):
         self.navigator.cancelTask()
 

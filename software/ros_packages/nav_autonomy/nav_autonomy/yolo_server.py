@@ -693,7 +693,7 @@ class YoloServer(Node):
                     feedback.detected = False
                     goal_handle.publish_feedback(feedback)
                 
-                cv2.imshow("ArUco Detection", display_frame)
+                #cv2.imshow("ArUco Detection", display_frame)
                 if cv2.waitKey(1) & 0xFF == ord("q"):
                     break
             
@@ -810,7 +810,7 @@ class YoloServer(Node):
                 goal_handle.publish_feedback(feedback)
 
                 # Display the frame (with or without detections)
-                cv2.imshow("YOLO Detection", display_frame)
+                # cv2.imshow("YOLO Detection", display_frame)
 
                 # Press 'q' to manually quit the window
                 if cv2.waitKey(1) & 0xFF == ord("q"):
