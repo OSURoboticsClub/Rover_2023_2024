@@ -109,9 +109,10 @@ class SearchFSM:
             return
 
         if target_pose is None:
-            self.node.get_logger().debug(f"Perception update: no target pose, how'd that happen?")
+            self.node.get_logger().warning(f"Perception update: no target pose, how'd that happen?")
             return
         
+        self.node.get_logger().info(f"[Perception]: Updating confidence ({confidence})")
         self.target_pose = target_pose
         self.last_detection_time = self.node.get_clock().now()
 
@@ -157,6 +158,7 @@ class SearchFSM:
             case SearchState.INVESTIGATING:
                 # Handle goToPose feedback
                 if hasattr(nav_feedback, 'distance_remaining'):
+                    self.node.get_logger().info(f"Investigate: Dist to target: {nav_feedback.distance_remaining}")
                     pass
 
 
@@ -167,6 +169,7 @@ class SearchFSM:
         # If navigation failed and wasn't canceled, something went wrong, end the search with failure. 
         # If it was canceled, it's likely due to an investigation interrupt or return to search, so just wait for the next command.
         if result != TaskResult.SUCCEEDED:
+            self.node.get_logger().info(f"Didn't succeed, checking if canceled: {result}")
             if result != TaskResult.CANCELED:
                 self._to_failed()
             return
