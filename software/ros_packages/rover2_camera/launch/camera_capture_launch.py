@@ -145,7 +145,7 @@ def generate_launch_description():
             'stream_width': 640,
             'stream_height': 480,
             'fec_percentage': 30,
-            'udp_host': '192.168.1.103',
+            'udp_host': '192.168.1.100',
             'udp_port': 42069,
             'mux_port': 20002
         }],
@@ -166,7 +166,7 @@ def generate_launch_description():
             'stream_width': 640,
             'stream_height': 480,
             'fec_percentage': 100,
-            'udp_host': '192.168.1.103',
+            'udp_host': '192.168.1.100',
             'udp_port': 42070,
             'mux_port': 20003
         }],
@@ -209,7 +209,7 @@ def generate_launch_description():
             'stream_width': 640,
             'stream_height': 480,
             'fec_percentage': 100,
-            'udp_host': '192.168.1.103',
+            'udp_host': '192.168.1.100',
             'udp_port': 42071,
             'mux_port': 20003
         }],
@@ -221,7 +221,7 @@ def generate_launch_description():
         executable='camera_capture',
         name='birds_eye_cam',
         parameters=[{
-            'device': '/dev/rover/camera_birds_eye',
+            'device': '/dev/rover/camera_bird_eye',
             'cap_width': 640,
             'cap_height': 480,
             'cap_framerate': 25,
@@ -230,7 +230,7 @@ def generate_launch_description():
             'stream_width': 640,
             'stream_height': 480,
             'fec_percentage': 100,
-            'udp_host': '192.168.1.103',
+            'udp_host': '192.168.1.100',
             'udp_port': 42072,
             'mux_port': 20003
         }],
@@ -273,12 +273,11 @@ def generate_launch_description():
 #        ir_camera_node,
 #        ir_camera_node,
 #        main_nav_node,
-#        gripper_rgb_node,
-        chassis_right_cam_node,
+	chassis_right_cam_node,
         chassis_left_cam_node,
-        #birds_eye_cam_node,
-        tower_gimbal_cam_node,
-        #back_cam_node,
+        birds_eye_cam_node,
+#        tower_gimbal_cam_node,
+        back_cam_node,
         # pan_tilt_cam_node,
         muxing_node,
         # d405_node

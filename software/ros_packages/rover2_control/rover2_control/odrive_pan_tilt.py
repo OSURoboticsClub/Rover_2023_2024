@@ -43,8 +43,8 @@ class OdrivePanTilt(Node):
         self.go_home = True
         self.is_angle = False
         self.angles = [0.0, 0.0, 0.0] # pitch, yaw, roll
-        self.stabalize = True
-        self.last_stable = True
+        self.stabalize = False
+        self.last_stable = False
 
         #Can setup
         self.bus = can.interface.Bus(channel=self.can_network, bustype='socketcan')
@@ -62,7 +62,7 @@ class OdrivePanTilt(Node):
     def send_stable(self):
         try:
             self.bus.send(can.Message(
-                arbitration_id = (self.board_id << 5 | 0x02), #Motor control
+                arbitration_id = (self.board_id << 5 | 0x02), #toggle Stabalization
                 data = struct.pack('<?', self.stabalize),
                 is_extended_id = False
             ))
@@ -76,7 +76,7 @@ class OdrivePanTilt(Node):
             for i, node_id in enumerate(self.node_ids):
                 self.bus.send(can.Message(
                     arbitration_id = (self.board_id << 5 | 0x01), #Motor control
-                    data = struct.pack('<ff', node_id, self.angles[i]),
+                    data = struct.pack('<Bf', node_id, self.angles[i]),
                     is_extended_id = False
                 ))
             self.get_logger().info(f"CAN: Sent Can for angles: roll={self.angles[0]}, pitch={self.angles[1]}, yaw={self.angles[2]}")
@@ -91,7 +91,7 @@ class OdrivePanTilt(Node):
             self.angles[0] = 0.0
             self.angles[1] = 0.0
             self.angles[2] = 0.0
-        if msg.is_angle:
+        elif msg.is_angle:
             self.get_logger().info(f"CONTROL: Recieved angles: roll={msg.roll}, pitch={msg.pitch}, yaw={msg.yaw}")
             self.is_angle = True
             self.angles[0] = msg.pitch * self.direction
@@ -103,8 +103,8 @@ class OdrivePanTilt(Node):
             self.angles[1] = self.angles[1] + msg.yaw * self.dt * self.direction
             self.angles[2] = self.angles[2] + msg.roll * self.dt * self.direction
             self.get_logger().info(f"CONTROL: Stepped Angles positions: roll={self.angles[0]}, pitch={self.angles[1]}, yaw={self.angles[2]}")
-        if self.stabalize:
-            self.get_logger().info("CONTROL: Stabilize enabled, setting roll and pitch to 0")
+        if msg.stabalize:
+            self.get_logger().info("CONTROL: Stabilize enabled")
             self.stabalize = msg.stabalize
 
 def main(args=None):
