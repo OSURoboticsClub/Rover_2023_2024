@@ -9,7 +9,7 @@ from launch.conditions import IfCondition
 
 def generate_launch_description():
 
-    use_sim_time = LaunchConfiguration('use_sim_time', default='false') 
+    use_sim_time = LaunchConfiguration('nav_use_sim_time', default='false') 
 
     package_name='nav_autonomy'
     pkg_share = get_package_share_directory(package_name)
@@ -39,7 +39,7 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        DeclareLaunchArgument('use_sim_time', default_value='false', description='Use simulation (Gazebo) clock if true'),
+        DeclareLaunchArgument('nav_use_sim_time', default_value='false', description='Use simulation (Gazebo) clock if true'),
         nav2,
         mission_manager,
         yolo_server,

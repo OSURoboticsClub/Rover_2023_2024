@@ -39,16 +39,14 @@ def generate_launch_description():
     auton = LaunchConfiguration('auton')
 
     arm_enabled = PythonExpression([
-        arm,
-        " == True and ",
-        auton,
-        " == False"
+        "'", arm, "'.lower() == 'true' and ",
+        "'", auton, "'.lower() == 'false'"
     ])
 
     # -------------------------
     # Core systems (always on)
     # -------------------------
-    drive_control = IncludeLaunchDescription(
+    control_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
                 get_package_share_directory('rover2_control'),
@@ -141,7 +139,8 @@ def generate_launch_description():
         launch_arguments={
             "d455": auton,
             "d405": arm_enabled,
-            "muxing": auton
+            "muxing": auton,
+            "driver_cams": PythonExpression(["'", auton, "'.lower() == 'false'"])
         }.items()
     )
 
@@ -235,7 +234,7 @@ def generate_launch_description():
         robot_state_publisher_node,
         joint_state_broadcaster_spawner,
 
-        drive_control,
+        control_launch,
         odom,
         status,
         cameras,
@@ -243,8 +242,8 @@ def generate_launch_description():
         arm_launch,
         arm_control,
 
-        nav_autonomy,
         delay_mapping,
+        nav_autonomy,
 
         # camera_gimbals,
         # driller,

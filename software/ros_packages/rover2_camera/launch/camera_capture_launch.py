@@ -37,9 +37,16 @@ def generate_launch_description():
         description='Launch chassis muxing node for Yolo'
     )
 
+    launch_driver_arg = DeclareLaunchArgument(
+        'driver_cams',
+        default_value='True',
+        description='Launch all the extra cams for driver control'
+    )
+
     launch_d455 = LaunchConfiguration('d455')
     launch_d405 = LaunchConfiguration('d405')
     launch_muxing = LaunchConfiguration('muxing')
+    launch_driver = LaunchConfiguration('driver_cams')
     
     realsense_launch_nav = Node(
         package='realsense2_camera',
@@ -161,7 +168,8 @@ def generate_launch_description():
             'udp_port': 42068,
             'mux_port': 20000
         }],
-        respawn=True
+        respawn=True,
+        condition=IfCondition(launch_driver)
     )
 
     back_cam_node = Node(
@@ -183,7 +191,8 @@ def generate_launch_description():
             'udp_port': 42071,
             'mux_port': 20000
         }],
-        respawn=True
+        respawn=True,
+        condition=IfCondition(launch_driver)
     )
     birds_eye_cam_node = Node(
         package='rover2_camera',
@@ -204,16 +213,17 @@ def generate_launch_description():
             'udp_port': 42072,
             'mux_port': 20000
         }],
-        respawn=True
+        respawn=True,
+        condition=IfCondition(launch_driver)
     )
 
     #pan_tilt_ir
     pan_tilt_cam_node = Node(
-       package='rover2_camera',
-       namespace='rover2_camera',
-       executable='camera_capture',
-       name='pan_tilt_cam',
-       parameters=[{
+        package='rover2_camera',
+        namespace='rover2_camera',
+        executable='camera_capture',
+        name='pan_tilt_cam',
+        parameters=[{
            'device': '/dev/rover/camera_pan_tilt',
            'cap_width': 640,
            'cap_height': 480,
@@ -226,11 +236,12 @@ def generate_launch_description():
            'udp_host': DRIVE_IP,
            'udp_port': 42073,
            'mux_port': 20000
-       }],
-       respawn=True
+        }],
+        respawn=True,
+        condition=IfCondition(launch_driver)
     )
 
-    realsense_gstream = Node(
+    gripper_view = Node(
         package='rover2_camera',
         namespace='rover2_camera',
         executable='camera_ros2_conversion',
@@ -260,7 +271,6 @@ def generate_launch_description():
         name='muxing_node',
         respawn=True,
         condition=IfCondition(launch_muxing)
-
     )
 
 
@@ -269,6 +279,7 @@ def generate_launch_description():
         launch_d455_arg,
         launch_d405_arg,
         launch_muxing_arg,
+        launch_driver_arg,
 
         realsense_launch_nav,
         chassis_right_cam_node,
@@ -279,6 +290,6 @@ def generate_launch_description():
         pan_tilt_cam_node,
         muxing_node,
         d405_node,
-        realsense_gstream,
+        gripper_view,
     ])
 
