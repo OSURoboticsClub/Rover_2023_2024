@@ -768,8 +768,8 @@ class YoloServer(Node):
                     goal_handle.publish_feedback(feedback)
                 
                 # cv2.imshow("ArUco Detection", display_frame)
-                if cv2.waitKey(1) & 0xFF == ord("q"):
-                    break
+                # if cv2.waitKey(1) & 0xFF == ord("q"):
+                #     break
             
             result = YoloFind.Result()
             result.header = Header()
@@ -778,7 +778,7 @@ class YoloServer(Node):
 
         finally:
             cap.release()
-            cv2.destroyAllWindows()
+            # cv2.destroyAllWindows()
 
     def do_yolo(self, goal_handle):
         cap = None
@@ -896,8 +896,8 @@ class YoloServer(Node):
                 # cv2.imshow("YOLO Detection", display_frame)
 
                 # Press 'q' to manually quit the window
-                if cv2.waitKey(1) & 0xFF == ord("q"):
-                    break
+                # if cv2.waitKey(1) & 0xFF == ord("q"):
+                #     break
 
                 frame_id += 1
 
@@ -923,7 +923,7 @@ class YoloServer(Node):
         finally:   
             if cap is not None:
                 cap.release()
-            cv2.destroyAllWindows()  
+            # cv2.destroyAllWindows()  
 
     def goal_callback(self, goal_request):
         """Accept or reject a client request to begin an action."""
