@@ -76,7 +76,7 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        # gripper_can_control_node,
+        gripper_can_control_node,
         relative_move_node,
         absolute_move_node,
         pc_filter_node,

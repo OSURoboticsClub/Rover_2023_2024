@@ -11,12 +11,12 @@ def generate_launch_description():
     }
 
     return LaunchDescription([
-        Node(
-            package='rover2_odometry',
-            executable='imu',
-            name='imu',
-            **config
-        ),
+#        Node(
+#            package='rover2_odometry',
+#            executable='imu',
+#            name='imu',
+#            **config
+#        ),
 #        Node(
 #            package='rover2_odometry',
 #            executable='scimech_sensors',
