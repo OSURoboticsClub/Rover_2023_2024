@@ -23,12 +23,14 @@ def generate_launch_description():
 #            name='scimech_sensors',
 #            **config
 #        ),
-        Node(
-            package='rover2_odometry',
-            executable='odometry',
-            name='odometry',
-            **config
-        ),
+
+    # odometry and odrive_can_info are for old wheel odom launch
+        # Node(
+        #     package='rover2_odometry',
+        #     executable='odometry',
+        #     name='odometry',
+        #     **config
+        # ),
         Node(
             package='rover2_odometry',
             executable='odrive_can_info',
@@ -57,7 +59,7 @@ def generate_launch_description():
         #          'publish_tf':False, 
         #          'approx_sync':False,
         #          'wait_imu_to_init':False,
-
+in rover_drive.yaml it does odometry. Take that topic instead, possibly, EVALUATE
         #          # Internal Params (must be strings)
         #          'Odom/Strategy':'1',        # 0=Frame-to-Map (F2M) 1=Frame-to-Frame (F2F) 2=Fovis 3=viso2 4=DVO-SLAM 5=ORB_SLAM 6=OKVIS 7=LOAM 8=MSCKF_VIO 9=VINS-Fusion 10=OpenVINS 11=FLOAM 12=Open3D 13=cuVSLAM
         #             # There are paramters to set for each strategy 
@@ -96,7 +98,7 @@ def generate_launch_description():
                 'world_frame': 'odom',
                 
                 # Local odometry 
-                'odom0': '/wheel_odom',                 # KRJ TODO: in rover_drive.yaml it does odometry. Take that topic instead, possibly, EVALUATE
+                'odom0': '/drive_controller/odom',                 # KRJ TODO: evaulate if this odom from new drive controller is better or at least equal to our /wheel_odom published from our rover2_odometry odometry node
                 'odom0_config': [False, False, False,
                                 False, False, False,
                                 True,  True,  False,
@@ -161,7 +163,7 @@ def generate_launch_description():
                     'map_frame': 'map', # published map frame tf name
                     
                     # Local odometry 
-                    'odom0': '/wheel_odom',
+                    'odom0': '/drive_controller/odom',
                     'odom0_config': [False, False, False,
                                     False, False, False,
                                     True,  True,  False,
