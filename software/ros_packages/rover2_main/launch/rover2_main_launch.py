@@ -35,8 +35,15 @@ def generate_launch_description():
         description='Launch autonomy stack (nav + mapping)'
     )
 
+    lidar_arg = DeclareLaunchArgument(
+        'lidar',
+        default_value='False',
+        description='Launch lidar and config mapping for lidar'
+    )
+
     arm = LaunchConfiguration('arm')
     auton = LaunchConfiguration('auton')
+    lidar = LaunchConfiguration('lidar')
 
     arm_enabled = PythonExpression([
         "'", arm, "'.lower() == 'true' and ",
@@ -223,12 +230,23 @@ def generate_launch_description():
         )
     )
 
+    lidar = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory('unitree_lidar_ros2'),
+                'launch.py'
+            )
+        ),
+        condition=IfCondition(lidar)
+    )
+
     # -------------------------
     # Launch description
     # -------------------------
     return LaunchDescription([
         arm_arg,
         auton_arg,
+        lidar_arg,
 
         ros2_control_node,
         robot_state_publisher_node,
@@ -238,6 +256,7 @@ def generate_launch_description():
         odom,
         status,
         cameras,
+        lidar,
 
         arm_launch,
         arm_control,
