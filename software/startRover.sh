@@ -20,5 +20,5 @@ export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
 sudo modprobe v4l2loopback video_nr=64,99,100 exclusive_caps=1
 source /home/makemorerobot/Rover_2023_2024/software/install/setup.bash
 sleep 15
-ros2 launch rover2_main rover2_main_launch.py 2> /home/makemorerobot/Rover_2023_2024/software/output.txt
+ros2 launch rover2_main rover2_main_launch.py 2> /home/makemorerobot/Rover_Autonomy_Capstone/software/output.txt
 
