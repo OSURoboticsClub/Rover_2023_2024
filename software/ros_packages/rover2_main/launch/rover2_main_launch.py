@@ -216,7 +216,7 @@ def generate_launch_description():
     )
 
     delay_mapping = TimerAction(
-        period=5.0,
+        period=3.0,
         actions=[mapping]
     )
 
@@ -256,26 +256,31 @@ def generate_launch_description():
     # Launch description
     # -------------------------
     return LaunchDescription([
-        arm_arg,
-        auton_arg,
-        lidar_arg,
+        TimerAction(            # Delay so autolaunch works
+            period=3.0,
+            actions=[
+                arm_arg,
+                auton_arg,
+                lidar_arg,
 
-        ros2_control_node,
-        robot_state_publisher_node,
-        joint_state_broadcaster_spawner,
+                ros2_control_node,
+                robot_state_publisher_node,
+                joint_state_broadcaster_spawner,
 
-        control_launch,
-        odom,
-        status,
-        cameras,
-        lidar,
+                control_launch,
+                odom,
+                status,
+                cameras,
+                lidar,
 
-        arm_launch,
-        arm_control,
+                arm_launch,
+                arm_control,
 
-        delay_mapping,
-        nav_autonomy,
+                delay_mapping,
+                nav_autonomy,
 
-        # camera_gimbals,
-        # driller,
+                # camera_gimbals,
+                # driller,
+            ]
+        )
     ])
