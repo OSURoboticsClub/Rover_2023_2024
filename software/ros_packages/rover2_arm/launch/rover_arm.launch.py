@@ -345,7 +345,7 @@ def generate_launch_description():
             rover_arm_controller_spawner,
             moveit_arm_controller_spawner,
             controller_switcher_node,
-            rviz_node,
+            # rviz_node,
             #joy_to_servo_node,
             # d405_node,
             #d455_node,

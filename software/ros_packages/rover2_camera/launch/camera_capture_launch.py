@@ -291,7 +291,7 @@ def generate_launch_description():
 
 
     return LaunchDescription([
-        realsense_launch_nav,
+        # realsense_launch_nav,
 #        ir_camera_node,
 #        ir_camera_node,
 #        main_nav_node,

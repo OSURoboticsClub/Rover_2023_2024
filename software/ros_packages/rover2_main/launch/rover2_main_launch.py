@@ -154,5 +154,5 @@ def generate_launch_description():
       cameras,
       arm_control,
     #   nav_autonomy,
-      delay_mapping,
+    #   delay_mapping,
    ])
