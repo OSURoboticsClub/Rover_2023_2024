@@ -111,7 +111,9 @@ class GripperCanControl(Node):
         #states
         self.controller_state = 0 #controller state. See timer_callback_v2/joy_callback_v2 for Details
         self.lights = False 
+        self.lightsChanged = False
         self.laser = False
+        self.laserChanged = False
         self.in_action = False
         self.is_closed = False
         self.sent_command = False
@@ -275,12 +277,23 @@ class GripperCanControl(Node):
             self.controller_state = 2
         else:
             self.controller_state = 0
+
         if buttons[self.light_button]:
-            self.lights = not self.lights
-            self.set_gpio(pin=self.lights_pin, state=self.lights, node_id=self.node_id, conn_id=self.conn_id)
+            if not self.lightsChanged:
+                self.lights = not self.lights
+                self.lightsChanged = True
+                self.set_gpio(pin=self.lights_pin, state=self.lights, node_id=self.node_id, conn_id=self.conn_id)
+        else:
+            self.lightsChanged = False
+
         if buttons[self.laser_button]:
-            self.laser = not self.laser
-            self.set_gpio(pin=self.laser_pin, state=self.laser, node_id=self.node_id, conn_id=self.conn_id)
+            if not self.laserChanged:
+                self.laser = not self.laser
+                self.laserChanged = True
+                self.set_gpio(pin=self.laser_pin, state=self.laser, node_id=self.node_id, conn_id=self.conn_id)
+        else:
+            self.laserChanged = False
+            
         if buttons[self.home_button]:
             self.get_logger().info("Re-Homing")
             self.found_home = False
