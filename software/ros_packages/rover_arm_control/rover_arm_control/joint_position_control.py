@@ -3,6 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionClient
+from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 
 from sensor_msgs.msg import JointState
 from moveit_msgs.action import MoveGroup
@@ -24,6 +25,8 @@ class JointPositionController(Node):
     def __init__(self):
         super().__init__('joint_position_controller')
         
+        self.cb_group = MutuallyExclusiveCallbackGroup()
+
         # Create an action client for the MoveGroup action
         self.move_group_client = ActionClient(self, MoveGroup, 'move_action')
         
@@ -79,10 +82,10 @@ class JointPositionController(Node):
                 The result from the service call.
             """
             # Starts servo node
-            self.request = Trigger.Request()
-            self.future = self.start_servo_client.call_async(self.request)
-            rclpy.spin_until_future_complete(self, self.future) 
-            return self.future.result()
+            request = Trigger.Request()
+            future = self.start_servo_client.call_async(request)
+            rclpy.spin_until_future_complete(self, future) 
+            return future.result()
     
     def switch_controller(self, servo=False, sim=False):
             """Switch the ros2 control controllers.
@@ -120,6 +123,9 @@ class JointPositionController(Node):
     
             self.future = self.controller_client.call_async(self.request)
             rclpy.spin_until_future_complete(self, self.future)
+
+            self.get_logger().info("Attempted to activate " + "rover_arm_controller" if servo else "rover_arm_controller_moveit")
+
             return self.future.result()
         
 
