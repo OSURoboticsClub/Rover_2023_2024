@@ -46,6 +46,10 @@ rover_arm_velocity_controller:
       - rover_arm_wrist_pitch_joint
       - rover_arm_wrist_roll_joint
     command_interfaces:
+      - position
+      - velocity
+    state_interfaces:
+      - position
       - velocity
 
 rover_arm_controller_moveit:
@@ -63,3 +67,4 @@ rover_arm_controller_moveit:
     command_interfaces:
       - position
       - velocity
+    set_last_command_interface_value_as_state_on_activation: false

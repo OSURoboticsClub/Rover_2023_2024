@@ -15,7 +15,7 @@ class OdrivePanTilt(Node):
     def __init__(self):
         super().__init__('odrive_pan_tilt')
         #parameters
-        self.declare_parameter('control_topic', "/chasis_pan_tilt/control")
+        self.declare_parameter('control_topic', "/chassis_pan_tilt/control")
         self.declare_parameter('can', "can0")
         self.declare_parameter('direction', 1)
         self.declare_parameter('node_ids', [0, 1, 2])

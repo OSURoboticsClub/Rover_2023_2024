@@ -175,12 +175,13 @@ def generate_launch_description():
             os.path.join(
                 get_package_share_directory('rover2_arm'),
                 'launch',
-                'rover_arm.launch.py'
+                'rover2_arm.launch.py'
             )
         ),
         condition=IfCondition(arm_enabled),
         launch_arguments={
-            "launch_ros2_control": "False"
+            "launch_ros2_control": "False",
+            "attachment": attachment,
         }.items()
     )
 

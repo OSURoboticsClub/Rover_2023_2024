@@ -4,7 +4,7 @@ import camera_gimbal_controller.gimbal_control as gc
 def main(args=None):
     rclpy.init()
 
-    node = gc.GimbalControlNode(topic="/chassis_gimbal/control")
+    node = gc.GimbalControlNode(topic="/chassis_pan_tilt/control")
 
     while(True):
         node.update()

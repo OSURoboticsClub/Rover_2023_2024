@@ -242,6 +242,6 @@ def generate_launch_description():
         # joy_to_drive,
         # gripper_can_control_node,
 #        auton_controller
-        # odrive_pan_tilt,
+        odrive_pan_tilt,
         odrive_gimbal
     ])
