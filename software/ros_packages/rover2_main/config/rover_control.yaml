@@ -10,6 +10,8 @@ controller_manager:
       #type: joint_trajectory_controller/JointTrajectoryController
     rover_arm_controller_moveit:
       type: joint_trajectory_controller/JointTrajectoryController
+    rover_arm_velocity_controller:
+      type: velocity_controllers/JointGroupVelocityController
 
 rover_arm_controller:
   ros__parameters:
@@ -25,6 +27,30 @@ rover_arm_controller:
       - velocity
     state_interfaces:
       - position
+      
+rover_arm_velocity_controller:
+  ros__parameters:
+    joints:
+      - rover_arm_base_joint
+      - rover_arm_shoulder_joint
+      - rover_arm_elbow_pitch_joint
+      - rover_arm_elbow_roll_joint
+      - rover_arm_wrist_pitch_joint
+      - rover_arm_wrist_roll_joint
+    command_interfaces:
+      - velocity
+      - velocity
+
+rover_arm_velocity_controller:
+  ros__parameters:
+    joints:
+      - rover_arm_base_joint
+      - rover_arm_shoulder_joint
+      - rover_arm_elbow_pitch_joint
+      - rover_arm_elbow_roll_joint
+      - rover_arm_wrist_pitch_joint
+      - rover_arm_wrist_roll_joint
+    command_interfaces:
       - velocity
 
 rover_arm_controller_moveit:
