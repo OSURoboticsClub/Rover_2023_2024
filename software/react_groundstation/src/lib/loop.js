@@ -14,6 +14,8 @@ const loop = {
         // Loop all the gamepads on each frame
         gamepads.forEach((gamepad, index) => {
             if (gamepad) {
+
+                gamepad.buttons.forEach(b => {if (b.hold === undefined) b.hold = false});
                 // Initialise joypad instance events if not present
                 if (!buttonEvents.joypad[index]) {
                     buttonEvents.joypad[index] = {};
@@ -33,6 +35,7 @@ const loop = {
         // Handle button events on each frame
         buttonEvents.joypad.forEach(events => {
             if (events) {
+                
                 Object.keys(events).forEach(key => {
                     handleButtonEvent(key, events);
                 });

@@ -5,6 +5,7 @@ import { EVENTS, AXIS_MOVEMENT_THRESHOLD } from './constants';
 import { log, hasVibrationSupport } from './helpers';
 
 const joypad = {
+    cacheEvents: new Array(17).fill(0),
     loopStarted: false,
     instances: {},
     buttonEvents: {
@@ -28,6 +29,8 @@ const joypad = {
                 return emitter.subscribe(EVENTS.BUTTON_RELEASE.ALIAS, callback);
             case EVENTS.AXIS_MOVEMENT.ALIAS:
                 return emitter.subscribe(EVENTS.AXIS_MOVEMENT.ALIAS, callback);
+            case EVENTS.BUTTON_HELD.ALIAS:
+                return emitter.subscribe(EVENTS.BUTTON_HELD.ALIAS, callback)
         }
     },
     vibrate: function (gamepadInstance, options) {

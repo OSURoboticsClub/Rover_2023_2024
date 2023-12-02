@@ -40,35 +40,50 @@ const initEventListeners = () => {
     });
 };
 const listenToButtonEvents = gamepad => {
+    //console.log(gamepad.buttons);
     gamepad.buttons.forEach((button, index) => {
+        const cacheEvents = joypad.cacheEvents
         const { customButtonMapping } = joypad.settings;
         const buttonMapping = customButtonMapping ? customButtonMapping : BUTTON_MAPPING;
         const keys = findButtonMapping(index, buttonMapping);
         const { buttonEvents } = joypad;
-
         if (keys && keys.length) {
             keys.forEach(key => {
-
+                
                 // If button is pressed then set press status of button
-                if (button.pressed) {
-                    if (!buttonEvents.joypad[gamepad.index][key]) {
+                
+                if (button.pressed || button.hold) {
+                    
+                    //console.log(button.hold)
+                    if (cacheEvents[buttonMapping[key]] === 0) {
                         buttonEvents.joypad[gamepad.index][key] = {
                             pressed: true,
                             hold: false,
                             released: false
                         };
                     }
-
+                    if(cacheEvents[buttonMapping[key]] === 15) {
+                        console.log("In here")
+                        buttonEvents.joypad[gamepad.index][key] = {
+                            pressed: false,
+                            hold: true,
+                            released: false
+                        };                       
+                    }
+                    
                     // Set button event data
                     buttonEvents.joypad[gamepad.index][key].button = button;
                     buttonEvents.joypad[gamepad.index][key].index = index;
                     buttonEvents.joypad[gamepad.index][key].gamepad = gamepad;
+                    cacheEvents[buttonMapping[key]] +=1
+                    
                 }
 
                 // If button is not pressed then set release status of button
                 else if (!button.pressed && buttonEvents.joypad[gamepad.index][key]) {
                     buttonEvents.joypad[gamepad.index][key].released = true;
                     buttonEvents.joypad[gamepad.index][key].hold = false;
+                    cacheEvents[buttonMapping[key]] = 0
                 }
             });
         }
@@ -124,13 +139,18 @@ const handleButtonEvent = (buttonName, buttonEvents) => {
 
         // Reset button usage flags
         buttonEvents[buttonName].pressed = false;
-        buttonEvents[buttonName].hold = true;
         // Set last button press to fire button release event
         buttonEvents[buttonName].last_event = EVENTS.BUTTON_PRESS.ALIAS;
     }
 
     // Button being held
-    else if (buttonEvents[buttonName].hold) {}
+    else if (buttonEvents[buttonName].hold) {
+        dispatchCustomEvent(EVENTS.BUTTON_HELD.ALIAS, buttonEvents, buttonName);
+
+        buttonEvents[buttonName.pressed] = false;
+
+        buttonEvents[buttonName].last_event = EVENTS.BUTTON_HELD.ALIAS;
+    }
 
     // Button being released
     else if (buttonEvents[buttonName].released && buttonEvents[buttonName].last_event === EVENTS.BUTTON_PRESS.ALIAS) {
