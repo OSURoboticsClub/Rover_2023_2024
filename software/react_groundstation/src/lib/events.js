@@ -66,7 +66,7 @@ const listenToButtonEvents = gamepad => {
                         };
                     }
                     if(cacheEvents[buttonMapping[key]] === 60) {
-                        console.log("Event set")
+                        
                         buttonEvents.joypad[gamepad.index][key] = {
                             pressed: false,
                             hold: true,
@@ -153,7 +153,7 @@ const handleButtonEvent = (buttonName, buttonEvents) => {
         
         dispatchCustomEvent(EVENTS.BUTTON_HELD.ALIAS, buttonEvents, buttonName);
 
-        buttonEvents[buttonName.pressed] = false;
+        buttonEvents[buttonName].hold = false;
 
         buttonEvents[buttonName].last_event = EVENTS.BUTTON_HELD.ALIAS;
     }
