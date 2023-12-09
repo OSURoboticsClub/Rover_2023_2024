@@ -38,6 +38,9 @@ const initEventListeners = () => {
     window.addEventListener(EVENTS.AXIS_MOVEMENT.ALIAS, e => {
         return emitter.publish(EVENTS.AXIS_MOVEMENT.ALIAS, e);
     });
+    window.addEventListener(EVENTS.BUTTON_HELD.ALIAS, e => {
+        return emitter.publish(EVENTS.BUTTON_HELD.ALIAS, e);
+    });
 };
 const listenToButtonEvents = gamepad => {
     //console.log(gamepad.buttons);
@@ -62,8 +65,8 @@ const listenToButtonEvents = gamepad => {
                             released: false
                         };
                     }
-                    if(cacheEvents[buttonMapping[key]] === 15) {
-                        console.log("In here")
+                    if(cacheEvents[buttonMapping[key]] === 60) {
+                        console.log("Event set")
                         buttonEvents.joypad[gamepad.index][key] = {
                             pressed: false,
                             hold: true,
@@ -81,6 +84,7 @@ const listenToButtonEvents = gamepad => {
 
                 // If button is not pressed then set release status of button
                 else if (!button.pressed && buttonEvents.joypad[gamepad.index][key]) {
+                    
                     buttonEvents.joypad[gamepad.index][key].released = true;
                     buttonEvents.joypad[gamepad.index][key].hold = false;
                     cacheEvents[buttonMapping[key]] = 0
@@ -135,6 +139,7 @@ const dispatchCustomEvent = (eventName, buttonEvents, buttonName) => {
 const handleButtonEvent = (buttonName, buttonEvents) => {
     // Fire button press event
     if (buttonEvents[buttonName].pressed) {
+        
         dispatchCustomEvent(EVENTS.BUTTON_PRESS.ALIAS, buttonEvents, buttonName);
 
         // Reset button usage flags
@@ -145,6 +150,7 @@ const handleButtonEvent = (buttonName, buttonEvents) => {
 
     // Button being held
     else if (buttonEvents[buttonName].hold) {
+        
         dispatchCustomEvent(EVENTS.BUTTON_HELD.ALIAS, buttonEvents, buttonName);
 
         buttonEvents[buttonName.pressed] = false;
