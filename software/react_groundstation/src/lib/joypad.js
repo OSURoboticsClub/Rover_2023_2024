@@ -6,6 +6,7 @@ import { log, hasVibrationSupport } from './helpers';
 
 const joypad = {
     cacheEvents: new Array(17).fill(0),
+    nullEvent: new Array(8).fill(false),
     loopStarted: false,
     instances: {},
     buttonEvents: {

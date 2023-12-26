@@ -4,6 +4,8 @@ import './lib/controller.js';
 function App() {
   window.joypad.on('button_press', e => console.log(e));
   window.joypad.on('button_held', e => console.log(e));
+  window.joypad.on('axis_move', e=> console.log(e.detail));
+  
 
   return (
     <div className="App">

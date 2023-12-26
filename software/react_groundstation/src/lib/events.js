@@ -94,31 +94,43 @@ const listenToButtonEvents = gamepad => {
     });
 };
 const listenToAxisMovements = gamepad => {
+   
     const axisMovementEvent = eventData => new CustomEvent(EVENTS.AXIS_MOVEMENT.ALIAS, { detail: eventData });
     const { axisMovementThreshold } = joypad.settings;
     const { axes } = gamepad;
     const totalAxisIndexes = axes.length;
     const totalSticks = totalAxisIndexes / 2;
+    const nullEvent = joypad.nullEvent
 
+    
     axes.forEach((axis, index) => {
+        let stickMoved = null;
+        let directionOfMovement = null;
+        let axisMovementValue = axis;
+
+        if (index === STICKS.LEFT.AXES.X || index === STICKS.RIGHT.AXES.X) {
+            directionOfMovement = axis < 0 ? DIRECTIONS.LEFT : DIRECTIONS.RIGHT;
+        }
+        if (index === STICKS.LEFT.AXES.Y || index === STICKS.RIGHT.AXES.Y) {
+            directionOfMovement = axis < 0 ? DIRECTIONS.TOP : DIRECTIONS.BOTTOM;
+        }
+
+        if (index < totalSticks) {
+            stickMoved = STICKS.LEFT.NAME;
+        } else {
+            stickMoved = STICKS.RIGHT.NAME;
+        }
+        
+
         if (Math.abs(axis) > axisMovementThreshold) {
-            let stickMoved = null;
-            let directionOfMovement = null;
-            let axisMovementValue = axis;
-
-            if (index < totalSticks) {
-                stickMoved = STICKS.LEFT.NAME;
-            } else {
-                stickMoved = STICKS.RIGHT.NAME;
-            }
-
-            if (index === STICKS.LEFT.AXES.X || index === STICKS.RIGHT.AXES.X) {
-                directionOfMovement = axis < 0 ? DIRECTIONS.LEFT : DIRECTIONS.RIGHT;
-            }
-            if (index === STICKS.LEFT.AXES.Y || index === STICKS.RIGHT.AXES.Y) {
-                directionOfMovement = axis < 0 ? DIRECTIONS.TOP : DIRECTIONS.BOTTOM;
-            }
-
+            
+            nullEvent[index] = true
+            const eventData = { gamepad, totalSticks, stickMoved, directionOfMovement, axisMovementValue, axis: index };
+            return window.dispatchEvent(axisMovementEvent(eventData));
+        }
+        if(nullEvent[index]){
+            nullEvent[index] = false
+            axisMovementValue = 0
             const eventData = { gamepad, totalSticks, stickMoved, directionOfMovement, axisMovementValue, axis: index };
             return window.dispatchEvent(axisMovementEvent(eventData));
         }
