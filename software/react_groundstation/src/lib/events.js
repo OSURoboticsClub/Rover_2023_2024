@@ -107,7 +107,7 @@ const listenToAxisMovements = gamepad => {
         let stickMoved = null;
         let directionOfMovement = null;
         let axisMovementValue = axis;
-
+    
         if (index === STICKS.LEFT.AXES.X || index === STICKS.RIGHT.AXES.X) {
             directionOfMovement = axis < 0 ? DIRECTIONS.LEFT : DIRECTIONS.RIGHT;
         }
