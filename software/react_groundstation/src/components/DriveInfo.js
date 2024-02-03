@@ -1,5 +1,6 @@
 import React from 'react';
-import Sliders from './AxisOutput.js'
+
+import AxisOutput from './AxisOutput.js';
 
 
 function DriveInfo(){
@@ -8,8 +9,8 @@ function DriveInfo(){
 
     return (
         <div>
-            <Sliders id = "left"/>
-            <Sliders id = "right"/>
+            <AxisOutput id = "left"/>
+            <AxisOutput id = "right"/>
             
         </div>
         

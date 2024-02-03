@@ -1,10 +1,9 @@
 import React from 'react';
-import '../lib/controller.js';
+
 
 function truncateDecimals(number) {
     return Math[number < 0 ? 'ceil' : 'floor'](number);
 };
-
 
 function SlidingColor(e,props){
     if((e.detail.directionOfMovement === "top" || e.detail.directionOfMovement === "bottom") && e.detail.stickMoved === props.id+"_stick"){
@@ -16,8 +15,7 @@ function SlidingColor(e,props){
             elem.style.backgroundColor = "red";
         }
     
-        
-        
+
         elem.innerHTML = truncateDecimals(e.detail.axisMovementValue*100 * -1) + "%";
         elem.style.width = Math.abs(truncateDecimals(e.detail.axisMovementValue*97 * -1)) + "%";
         console.log(e.detail)

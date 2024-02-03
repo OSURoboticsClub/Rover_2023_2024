@@ -6,52 +6,43 @@ import '../lib/controller.js';
 import StatusLights from '../components/StatusLights.js'
 import DriveInfo from '../components/DriveInfo.js'
 
-
-
-
-function SlidingColor(e,squareName){
-
-        var newColor = 125+ e.detail.axisMovementValue*100;
-
-        document.getElementById(squareName).style.backgroundColor = "rgb("+newColor+","+newColor+","+newColor+")";
-        console.log("rgb("+newColor+","+newColor+","+newColor+")");
-}
+import ROSLIB from 'roslib'
 
 function MainPage(){
-    
-    //window.joypad.on('button_press', function(){ChangeColor("square1")});
-    //window.joypad.on('button_held', function(){ChangeColor("square2")});
-    //window.joypad.on('axis_move', function(e){SlidingColor(e,"square3")});
-    
-    /*
-    <div id = "square2"/>
-    <div id = "square3"/>
-    <input id = "square1" value = "Bogie"  showonly></input>
-    <input id = "square1" value = "Bogie"  showonly></input>
+    var ros = new ROSLIB.Ros({
+      url : 'ws://192.168.1.138:9090'
+    });
+
+    ros.on('connection', function() {
+      console.log('Connected to websocket server.');
+    });
+
+    ros.on('error', function(error) {
+      console.log('Error connecting to websocket server: ', error);
+    });
+
+    ros.on('close', function() {
+      console.log('Connection to websocket server closed.');
+    });
 
 
-    <div class = "mining">
-                </div>
-                <div class = "control">
-                </div>
-    */
+
+    
     return (
         
         <div className = "main">
             <div className = "leftScreen">
                 <div className = "status">
-                    <StatusLights/>
+                    <StatusLights ros = {ros}/>
                 </div>
                 <div className = "mining">    
                 </div>
                 <div className = "control">
-                    <DriveInfo/>
+                    <DriveInfo ros = {ros}/>
                 </div>
             </div>
             <div className = "rightScreen">
-                <div className = "streamLarge">
-                </div>
-                <div className = "streamSmall">
+                <div className = "videoController" ros = {ros}>
                 </div>
             </div>
         </div>
