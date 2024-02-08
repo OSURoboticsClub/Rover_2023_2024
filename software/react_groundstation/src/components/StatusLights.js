@@ -5,7 +5,8 @@ import Light from './Light.js';
 
 
 
-function StatusLights(){
+function StatusLights(props){
+    
     //window.joypad.on('button_press', function(){flipColor("square1")});
     return (
         <div>
