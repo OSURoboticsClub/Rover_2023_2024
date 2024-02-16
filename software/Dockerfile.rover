@@ -1,21 +1,17 @@
-FROM --platform=linux/arm64 ros:foxy
+FROM --platform=linux/arm64 ros:humble
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-        ros-foxy-angles ros-foxy-composition ros-foxy-depthimage-to-laserscan \
-        ros-foxy-image-tools ros-foxy-joy ros-foxy-lifecycle ros-foxy-pcl-conversions \
-        ros-foxy-pendulum-control ros-foxy-pendulum-msgs ros-foxy-rqt-common-plugins \
-        ros-foxy-rviz2 ros-foxy-rviz-default-plugins ros-foxy-teleop-twist-joy \
-        ros-foxy-teleop-twist-keyboard ros-foxy-tlsf ros-foxy-tlsf-cpp ros-foxy-topic-monitor \
-        ros-foxy-image-common ros-foxy-image-pipeline ros-foxy-image-transport-plugins \
-        ros-foxy-laser-geometry ros-foxy-perception-pcl ros-foxy-vision-opencv ros-foxy-ros-ign \
-        ros-foxy-nmea-msgs nano socat xxd pip \
+        ros-humble-vision-opencv ros-humble-cv-bridge ros-humble-image-transport \
+        ros-humble-image-transport-plugins ros-humble-image-common ros-humble-image-pipeline \
+        ros-humble-image-tools ros-humble-rosbridge-server ros-humble-nmea-msgs \
+        nano pip \
 && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN pip install numpy pyserial pynmea2 minimalmodbus
 
-RUN /bin/bash -c 'echo "source /opt/ros/foxy/setup.bash" >> ~/.bashrc'
+RUN /bin/bash -c 'echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc'
 
-RUN git clone https://github.com/OSURoboticsClub/Rover_2022_2023.git
+RUN git clone https://github.com/OSURoboticsClub/Rover_2023_2024.git
 
 ENTRYPOINT []
 
