@@ -4,7 +4,8 @@ import '../lib/controller.js';
 //import '../components/sliderBox.js'
 //import '../components/streamBox.js'
 import StatusLights from '../components/StatusLights.js'
-import DriveInfo from '../components/DriveInfo.js'
+import ChassisManager from '../components/ChassisManager.js'
+import VideoManager from '../components/VideoManager.js'
 
 import ROSLIB from 'roslib'
 
@@ -38,11 +39,12 @@ function MainPage(){
                 <div className = "mining">    
                 </div>
                 <div className = "control">
-                    <DriveInfo ros = {ros}/>
+                    <ChassisManager ros = {ros}/>
                 </div>
             </div>
             <div className = "rightScreen">
-                <div className = "videoController" ros = {ros}>
+                <div className = "videoManager">
+                    <VideoManager ros = {ros}/>
                 </div>
             </div>
         </div>
