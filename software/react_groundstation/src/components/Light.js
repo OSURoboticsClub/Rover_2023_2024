@@ -2,9 +2,9 @@ import React from 'react';
 import UseRunOnce from './UseRunOnce.js'
 
 function flipColor(e,id,button){
-    console.log(document.getElementById(id).style.backgroundColor)
+    
     if(e.detail.buttonName === button){
-        console.log("yipeeeeee")
+        
         var curColor = document.getElementById(id).style.backgroundColor;
         if(curColor === "red"){
             document.getElementById(id).style.backgroundColor = "green";

@@ -6,47 +6,81 @@ function truncateDecimals(number) {
     return Math[number < 0 ? 'ceil' : 'floor'](number);
 };
 
-function slidingColor(e,props){
-    if((e.detail.directionOfMovement === "top" || e.detail.directionOfMovement === "bottom") && e.detail.stickMoved === props.id+"_stick"){
-        var elem = document.getElementById(props.id)
-        if(e.detail.directionOfMovement === "top"){
-            elem.style.backgroundColor = "green";
-        } else {
-            
-            elem.style.backgroundColor = "red";
-        }
+function driveOutput(e,props,topic){
+    console.log(e.detail)
+    var leftYAxis = 0
+    var rightYAxis = 0
     
 
-        elem.innerHTML = truncateDecimals(e.detail.axisMovementValue*100 * -1) + "%";
-        elem.style.width = Math.abs(truncateDecimals(e.detail.axisMovementValue*97 * -1)) + "%";
-        console.log(e.detail)
-    
-    }
-}
-/*
-function getDriveMessage(ros){
-    
-    const cmdVel = new ROSLIB.Topic({
-        ros: ros,
-        name: "command_control/ground_station_drive",
-        messageType: "rover2_control_interface/msg/DriveCommandMessage"
-      })
-  
-      const data = new ROSLIB.Message({
+    for(var i = 0; i < 2; i++){
+        if((e.detail.directionOfMovement === "top" || e.detail.directionOfMovement === "bottom") && e.detail.stickMoved === props.id[i]+"_stick"){
+            var elem = document.getElementById(props.id[i])
+            if(e.detail.directionOfMovement === "top"){
+                elem.style.backgroundColor = "green";
+            } else {
+
+                elem.style.backgroundColor = "red";
+            }
+
+            if(props.id[0] === "left"){
+                leftYAxis = e.detail.axisMovementValue
+            } else {
+                rightYAxis = e.detail.axisMovementValue
+            }
         
-      })
+            
+            elem.innerHTML = truncateDecimals(e.detail.axisMovementValue*100 * -1) + "%";
+            elem.style.width = Math.abs(truncateDecimals(e.detail.axisMovementValue*97 * -1)) + "%";
 
-      return data;
+            leftYAxis*=-1
+            rightYAxis*=-1
+            sendDriveMessage(props,topic,leftYAxis,rightYAxis)
+
+        }
+
+    }
+    
+   
 }
-*/
+
+function sendDriveMessage(props,topic,leftYAixs,rightYAxis){
+ 
+    const data = new ROSLIB.Message({
+        controller_present: true,
+        ignore_drive_control: false,
+        drive_twist: {
+                linear : {
+                  x : (leftYAixs + rightYAxis) / 2.0,
+                  y : 0,
+                  z : 0
+                },
+                angular : {
+                  x : 0,
+                  y : 0,
+                  z : (rightYAxis - leftYAixs) / 2.0
+                }
+            }
+    })
+    console.log(data)
+    topic.publish(data)
+}
+
 function ChassisControl(props){
     
     
     //const message = getDriveMessage(props.ros)
-
-    window.joypad.on('axis_move', function(e){slidingColor(e,props)});
+    const topic = new ROSLIB.Topic({
+        ros: props.ros,
+        name: "command_control/ground_station_drive",
+        messageType: "rover2_control_interface/msg/DriveCommandMessage"
+    })
+    window.joypad.on('axis_move', function(e){driveOutput(e,props,topic)});
     return(
-        <article className="driveOutput" id = {props.id}>0%</article>
+        <div>
+            <article className="driveOutput" id = {props.id[0]}>0%</article>
+            <article className="driveOutput" id = {props.id[1]}>0%</article>
+        </div>
+        
     );
 }
 

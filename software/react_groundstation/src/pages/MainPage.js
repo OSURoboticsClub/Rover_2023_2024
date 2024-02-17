@@ -9,6 +9,8 @@ import VideoManager from '../components/VideoManager.js'
 
 import ROSLIB from 'roslib'
 
+
+
 function MainPage(){
     var ros = new ROSLIB.Ros({
       url : 'ws://192.168.1.138:9090'
@@ -25,7 +27,21 @@ function MainPage(){
     ros.on('close', function() {
       console.log('Connection to websocket server closed.');
     });
-
+    //LIST TOPICS RECEIVED BY ROSLIB
+    
+    var topicsClient = new ROSLIB.Service({
+    ros : ros,
+    name : '/rosapi/topics',
+    serviceType : 'rosapi/Topics'
+    });
+  
+    var request = new ROSLIB.ServiceRequest();
+  
+    topicsClient.callService(request, function(result) {
+    console.log("Getting topics...");
+    console.log(result.topics);
+    });
+    
 
 
     
