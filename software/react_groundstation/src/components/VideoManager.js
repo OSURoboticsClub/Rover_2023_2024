@@ -31,10 +31,10 @@ function VideoManager(props){
 
     return(
         <div>
-            <CameraPanTilt ros = {props.ros} button_switch = "button_6" button_center = "button_7" buttons_move = {["button_3",//"button_12"
+            <CameraPanTilt ros = {props.ros} button_switch = "button_8" button_center = "button_9" buttons_move = {["button_2",//"button_12"
                                                                                                                    "button_0",//"button_13"
                                                                                                                    "button_1",//"button_14"
-                                                                                                                   "button_2"]}/*"button_15"*//>
+                                                                                                                   "button_3"]}/*"button_15"*//>
             <Light text = "Chassis Cam" id = "chas_cam" controllerEvent = "button_press" button = "button_6" startColor = "green"/>
             <Light text = "Tower Cam" id = "tower_cam" controllerEvent = "button_press" button = "button_6"/>
             <h1>Tower cam</h1>

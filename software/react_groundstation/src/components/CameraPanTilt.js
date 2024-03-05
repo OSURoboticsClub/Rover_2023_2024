@@ -19,12 +19,9 @@ var rosTopic = null
 function buttonPressHandler(e,props,topic){
     if(e.detail.buttonName === props.button_switch) {
         switchControlTopic(props)
-    }
-    
-    if(props.buttons_move.includes(e.detail.buttonName)){
+    } else if(props.buttons_move.includes(e.detail.buttonName)){
         panTilt(e,props,topic)
-    }
-    if(e.detail.buttonName === props.button_center){
+    }else if(e.detail.buttonName === props.button_center){
         publishMessage(true,0,0,topic)
     }
 }
@@ -46,7 +43,8 @@ function switchControlTopic(props){
         name: currentTopic,
         messageType: "rover2_control_interface/msg/TowerPanTiltControlMessage"
     })
-    console.log(currentTopic)
+    console.log(rosTopic)
+    
     
 
 }
