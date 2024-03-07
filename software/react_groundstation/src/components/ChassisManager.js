@@ -6,7 +6,6 @@ import ChassisControl from './ChassisControl.js';
 function ChassisManager(props){
     //<Sliders id = "right"/>
     //<ChassisControl id = "right" ros = {props.ros}/>
-    //<ChassisControl id = {["left","right"]} ros = {props.ros}/>
     return (
         <div>
             
