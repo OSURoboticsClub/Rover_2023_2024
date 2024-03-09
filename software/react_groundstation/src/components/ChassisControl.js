@@ -1,93 +1,70 @@
 import React,{useState} from 'react';
 import ROSLIB from 'roslib';
+import { debounce } from 'lodash';
 
+
+var leftYAxis = 0
+var rightYAxis = 0
+var colors = {left: 0, right:0}
+var output = {left: "0%", right:"%"}
+var width = {left:"0%", right: "0%"}
 
 function truncateDecimals(number) {
     return Math[number < 0 ? 'ceil' : 'floor'](number);
 };
 
-<<<<<<< HEAD
-function driveOutput(e,props,topic,setLeftOutput,setRightOutput, setLeftColor, setRightColor,setLeftWidth,setRightWidth){
-   
-    var motorVals = {}
+function driveOutput(e,props,updateChassisState){
+    
     for(var i = 0; i < 2; i++){
         if((e.detail.directionOfMovement === "top" || e.detail.directionOfMovement === "bottom") && e.detail.stickMoved === props.id[i]+"_stick"){
             
             //var elem = document.getElementById(props.id[i])
 
             if(e.detail.directionOfMovement === "top" && props.id[i] === "left"){
-                setLeftColor("green")
+                colors.left = "green"
+                
             } else if(e.detail.directionOfMovement === "top" && props.id[i] === "right"){
-                setRightColor("green")
+                colors.right = "green"
+                
             } else if(e.detail.directionOfMovement === "bottom" && props.id[i] === "left"){
-                setLeftColor("red")
+                colors.left = "red"
+                
             } else if(e.detail.directionOfMovement === "bottom" && props.id[i] === "right"){
-                setLeftColor("red")
+                colors.right = "red"
+                
             }
             if(props.id[i] === "left"){
                 
-                leftYAxis = -1 * e.detail.axisMovementValue
-                setLeftOutput(truncateDecimals(leftYAxis*100)+ "%")
-                setLeftWidth(truncateDecimals(Math.abs(leftYAxis*97))+ "%")
-=======
-function driveOutput(e,props,topic){
-    console.log(e.detail)
-    var leftYAxis = 0
-    var rightYAxis = 0
-    
-
-    for(var i = 0; i < 2; i++){
-        if((e.detail.directionOfMovement === "top" || e.detail.directionOfMovement === "bottom") && e.detail.stickMoved === props.id[i]+"_stick"){
-            var elem = document.getElementById(props.id[i])
-            if(e.detail.directionOfMovement === "top"){
-                elem.style.backgroundColor = "green";
-            } else {
-
-                elem.style.backgroundColor = "red";
-            }
-
-            if(props.id[0] === "left"){
                 leftYAxis = e.detail.axisMovementValue
->>>>>>> parent of 70e987a... Full complete implementation of Rover vision, chassis and tower camera feed and control, chasiss control, and necessary UI elements
+                output.left = truncateDecimals(leftYAxis*-100)+ "%"
+                width.left = truncateDecimals(Math.abs(leftYAxis*-97))+ "%"
+                
             } else {
-                rightYAxis = -1 * e.detail.axisMovementValue
-                setRightOutput(truncateDecimals(rightYAxis*100)+ "%")
-                setRightWidth(truncateDecimals(Math.abs(rightYAxis*97))+ "%")
+                rightYAxis = e.detail.axisMovementValue
+                output.right = truncateDecimals(rightYAxis*-100)+ "%"
+                width.right = truncateDecimals(Math.abs(rightYAxis*-97))+ "%"
+                
             }
-        
-            
-<<<<<<< HEAD
-            //elem.innerHTML = truncateDecimals(e.detail.axisMovementValue*100 * -1) + "%";
-            //elem.style.width = Math.abs(truncateDecimals(e.detail.axisMovementValue*97 * -1)) + "%";
-            
-=======
-            elem.innerHTML = truncateDecimals(e.detail.axisMovementValue*100 * -1) + "%";
-            elem.style.width = Math.abs(truncateDecimals(e.detail.axisMovementValue*97 * -1)) + "%";
 
-            leftYAxis*=-1
-            rightYAxis*=-1
-            sendDriveMessage(props,topic,leftYAxis,rightYAxis)
-
->>>>>>> parent of 70e987a... Full complete implementation of Rover vision, chassis and tower camera feed and control, chasiss control, and necessary UI elements
+            
+          
+            
         }
-
+        
     }
-<<<<<<< HEAD
 
-        
-        
-        //console.log("Left axis: %f Right axis: %f",leftYAxis,rightYAxis)
-        motorVals.left = leftYAxis
-        motorVals.right = rightYAxis
-     
-        sendDriveMessage(props,topic,leftYAxis,rightYAxis)
-=======
->>>>>>> parent of 70e987a... Full complete implementation of Rover vision, chassis and tower camera feed and control, chasiss control, and necessary UI elements
+    updateChassisState({
+        leftOutput: output.left,
+        rightOutput: output.right,
+        leftColor: colors.left,
+        rightColor: colors.right,
+        leftWidth: width.left,
+        rightWidth: width.right
+    })
     
-   
 }
 
-function sendDriveMessage(props,topic,leftYAixs,rightYAxis){
+function sendDriveMessage(topic,leftYAixs,rightYAxis){
  
     const data = new ROSLIB.Message({
         controller_present: true,
@@ -105,46 +82,36 @@ function sendDriveMessage(props,topic,leftYAixs,rightYAxis){
                 }
             }
     })
-    console.log(data)
+    //console.log(data)
+    console.log("Left axis: %f Right axis: %f",leftYAxis,rightYAxis)
     topic.publish(data)
+
 }
 
 function ChassisControl(props){
-<<<<<<< HEAD
-    const [leftOutput,setLeftOutput] = useState(0)
-    const [rightOutput,setRightOutput] = useState(0)
-
-    const [leftColor,setLeftColor] = useState("red")
-    const [rightColor,setRightColor] = useState("red")
+    var [chassisState,updateChassisState] = useState({
+        leftOutput: 0,
+        rightOutput: 0,
+        leftColor: "red",
+        rightColor: "red",
+        leftWidth: 0,
+        rightWidth: 0
+    })
     
-    const [leftWidth,setLeftWidth] = useState(0)
-    const [rightWidth,setRightWidth] = useState(0)
-    
-=======
-    
-    
-    //const message = getDriveMessage(props.ros)
->>>>>>> parent of 70e987a... Full complete implementation of Rover vision, chassis and tower camera feed and control, chasiss control, and necessary UI elements
     const topic = new ROSLIB.Topic({
         ros: props.ros,
         name: "command_control/ground_station_drive",
         messageType: "rover2_control_interface/msg/DriveCommandMessage"
     })
-<<<<<<< HEAD
     
  
-    window.joypad.on('axis_move', function(e){driveOutput(e,props,topic,setLeftOutput,setRightOutput,
-                                                                        setLeftColor, setRightColor,
-                                                                        setLeftWidth, setRightWidth)});
+    window.joypad.on('axis_move', function(e){driveOutput(e,props,updateChassisState)});
+    sendDriveMessage(topic,-1 * leftYAxis,-1 * rightYAxis)
     
-    
-=======
-    window.joypad.on('axis_move', function(e){driveOutput(e,props,topic)});
->>>>>>> parent of 70e987a... Full complete implementation of Rover vision, chassis and tower camera feed and control, chasiss control, and necessary UI elements
     return(
         <div>
-            <article className="driveOutput" id = {props.id[0]} style={{backgroundColor: leftColor, width: leftWidth}}>{leftOutput}</article>
-            <article className="driveOutput" id = {props.id[1]} style={{backgroundColor: rightColor, width:rightWidth}}>{rightOutput}</article>
+            <article className="driveOutput" id = {props.id[0]} style={{backgroundColor: chassisState.leftColor, width: chassisState.leftWidth}}>{chassisState.leftOutput}</article>
+            <article className="driveOutput" id = {props.id[1]} style={{backgroundColor: chassisState.rightColor, width: chassisState.rightWidth}}>{chassisState.rightOutput}</article>
         </div>
         
     );

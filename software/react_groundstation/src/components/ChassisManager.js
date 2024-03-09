@@ -10,7 +10,7 @@ function ChassisManager(props){
         <div>
             
             <ChassisControl id = {["left","right"]} ros = {props.ros}/>
-            <Slider id = "right"/>
+            
 
                 
         </div>
