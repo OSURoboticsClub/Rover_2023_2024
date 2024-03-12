@@ -1,6 +1,6 @@
 import React,{useState} from 'react';
 import ROSLIB from 'roslib';
-import { debounce } from 'lodash';
+
 
 
 var leftYAxis = 0
@@ -36,13 +36,13 @@ function driveOutput(e,props,updateChassisState){
             if(props.id[i] === "left"){
                 
                 leftYAxis = e.detail.axisMovementValue
-                output.left = truncateDecimals(leftYAxis*-100)+ "%"
-                width.left = truncateDecimals(Math.abs(leftYAxis*-97))+ "%"
+                output.left = truncateDecimals(leftYAxis*props.throttle*-100)+ "%"
+                width.left = truncateDecimals(Math.abs(leftYAxis*props.throttle*-97))+ "%"
                 
             } else {
                 rightYAxis = e.detail.axisMovementValue
-                output.right = truncateDecimals(rightYAxis*-100)+ "%"
-                width.right = truncateDecimals(Math.abs(rightYAxis*-97))+ "%"
+                output.right = truncateDecimals(rightYAxis*props.throttle*-100)+ "%"
+                width.right = truncateDecimals(Math.abs(rightYAxis*props.throttle*-97))+ "%"
                 
             }
 
@@ -64,32 +64,33 @@ function driveOutput(e,props,updateChassisState){
     
 }
 
-function sendDriveMessage(topic,leftYAixs,rightYAxis){
- 
+function sendDriveMessage(topic,throttle){
+    var adjustedYLeft = -1*throttle*leftYAxis
+    var adjustedYRight = -1*throttle*rightYAxis
     const data = new ROSLIB.Message({
         controller_present: true,
         ignore_drive_control: false,
         drive_twist: {
                 linear : {
-                  x : (leftYAixs + rightYAxis) / 2.0,
+                  x : (adjustedYLeft + adjustedYRight) / 2.0,
                   y : 0,
                   z : 0
                 },
                 angular : {
                   x : 0,
                   y : 0,
-                  z : (rightYAxis - leftYAixs) / 2.0
+                  z : (adjustedYRight - adjustedYLeft) / 2.0
                 }
             }
     })
     //console.log(data)
-    console.log("Left axis: %f Right axis: %f",leftYAxis,rightYAxis)
+    //console.log("Left axis: %f Right axis: %f",leftYAxis,rightYAxis)
     topic.publish(data)
 
 }
 
 function ChassisControl(props){
-    var [chassisState,updateChassisState] = useState({
+    let [chassisState,updateChassisState] = useState({
         leftOutput: 0,
         rightOutput: 0,
         leftColor: "red",
@@ -106,7 +107,7 @@ function ChassisControl(props){
     
  
     window.joypad.on('axis_move', function(e){driveOutput(e,props,updateChassisState)});
-    sendDriveMessage(topic,-1 * leftYAxis,-1 * rightYAxis)
+    sendDriveMessage(topic,props.throttle)
     
     return(
         <div>
