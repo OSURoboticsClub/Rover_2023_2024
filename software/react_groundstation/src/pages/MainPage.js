@@ -1,8 +1,6 @@
-import React from 'react';
+
 import '../lib/controller.js';
-//import '../components/statusBox.js'
-//import '../components/sliderBox.js'
-//import '../components/streamBox.js'
+
 import StatusLights from '../components/StatusLights.js'
 import ChassisManager from '../components/ChassisManager.js'
 import VideoManager from '../components/VideoManager.js'

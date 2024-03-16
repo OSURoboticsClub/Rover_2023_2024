@@ -1,4 +1,4 @@
-import React,{useState} from 'react';
+import {useState} from 'react';
 import UseRunOnce from './UseRunOnce.js'
 
 function flipColor(e,button,backgroundColor,changeColor){
@@ -29,7 +29,7 @@ function Light(props){
     
     
     return(
-        <input className = "light" id = {props.id} value = {props.text} style={{backgroundColor: backgroundColor}}></input>
+        <input className = "light" id = {props.id} value = {props.text} style={{backgroundColor: backgroundColor}} readOnly></input>
     );
 }
 

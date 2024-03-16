@@ -1,9 +1,5 @@
-import React from 'react';
+
 import Light from './Light.js';
-
-
-
-
 
 function StatusLights(props){
     

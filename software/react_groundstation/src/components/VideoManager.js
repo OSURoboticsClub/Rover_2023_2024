@@ -52,13 +52,13 @@ function VideoManager(props){
     ros : ros,
     name : '/cameras/main_navigation/image_640x360/compressed',
     messageType : 'sensor_msgs/CompressedImage'
-    
-    
+      
   });
 
   tower_listener.subscribe(function(message) {
     document.getElementById("tower_image").src = "data:image/png;base64," + message.data
   });
+
   return(
     <div>
         <CameraPanTilt ros = {props.ros} button_switch = "button_8" button_center = "button_9" buttons_move = {["button_2",//"button_12"

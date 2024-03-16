@@ -1,6 +1,6 @@
 import React,{useState} from 'react';
 import ROSLIB from 'roslib';
-
+import {DRIVE_CONTROLLER_ID} from '../lib/constants.js';
 
 
 var leftYAxis = 0
@@ -14,9 +14,12 @@ function truncateDecimals(number) {
 };
 
 function driveOutput(e,props,updateChassisState){
-    
+    if(e.detail.gamepad["id"] !== DRIVE_CONTROLLER_ID || (e.detail.directionOfMovement !== "top" && e.detail.directionOfMovement !== "bottom")){
+        return ;
+    }
     for(var i = 0; i < 2; i++){
-        if((e.detail.directionOfMovement === "top" || e.detail.directionOfMovement === "bottom") && e.detail.stickMoved === props.id[i]+"_stick"){
+        //This if statement is required as the triggers are classified as sticks, and therefore will have their own stick_moved property
+        if(e.detail.stickMoved === props.id[i]+"_stick"){
             
             //var elem = document.getElementById(props.id[i])
 

@@ -1,5 +1,5 @@
 import ReactSlider from "react-slider";
-function Slider(props){
+function Slider({setThrottle}){
     return(
         <ReactSlider
         className="horizontal-slider"
@@ -7,7 +7,7 @@ function Slider(props){
         trackClassName="example-track"
         
         onAfterChange={(value, index) =>
-            props.setThrottle(value/100)
+            setThrottle(value/100)
         }
         renderThumb={(props, state) => <div {...props}>{state.valueNow}</div>}
         />
