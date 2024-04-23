@@ -1,5 +1,6 @@
 import React from 'react';
 import ROSLIB from 'roslib'
+import { DRIVE_CONTROLLER_ID } from '../lib/constants';
 
 const DEFAULT_TOWER_PAN_TILT_COMMAND_TOPIC = "tower/pan_tilt/control"
 const DEFAULT_CHASSIS_PAN_TILT_COMMAND_TOPIC = "chassis/pan_tilt/control"
@@ -17,6 +18,9 @@ var currentYScalar = CHASSIS_PAN_TILT_Y_AXIS_SCALAR
 var rosTopic = null
 
 function buttonPressHandler(e,props,topic){
+    if(e.detail.gamepad["id"] !== DRIVE_CONTROLLER_ID){
+        return ;
+    }
     if(e.detail.buttonName === props.button_switch) {
         switchControlTopic(props)
     }

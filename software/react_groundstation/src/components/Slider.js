@@ -9,7 +9,7 @@ function Slider({setThrottle}){
         onAfterChange={(value, index) =>
             setThrottle(value/100)
         }
-        renderThumb={(props, state) => <div {...props}>{state.valueNow}</div>}
+        renderThumb={(props, state) => <d1 {...props}>{state.valueNow}%</d1>}
         />
     );
 }

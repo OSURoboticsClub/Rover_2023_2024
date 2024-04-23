@@ -13,6 +13,7 @@ const loop = {
 
         // Loop all the gamepads on each frame
         gamepads.forEach((gamepad, index) => {
+            
             if (gamepad) {
 
                 gamepad.buttons.forEach(b => {if (b.hold === undefined) b.hold = false});
@@ -23,7 +24,7 @@ const loop = {
 
                 // Update gamepad instance data
                 joypad.instances[index] = gamepad;
-
+                
                 // Listen to button press events
                 listenToButtonEvents(gamepad);
 

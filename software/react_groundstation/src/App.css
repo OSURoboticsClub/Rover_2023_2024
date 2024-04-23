@@ -3,11 +3,29 @@
 
 @import '../node_modules/modern-normalize/modern-normalize.css';
 
+div{
+  background-color: #191c1d;
+ 
+  outline-style: solid;
+  
+  
+    background-size:10px 100%;
+    background-position:0 0, 100% 0%;
+    background-repeat:no-repeat;
+}
+body{
+  color:#191c1d 
+}
+h1{
+  color:#D73F09
+}
+label{
+  color: #D73F09
+}
 
 .App {
   text-align: center;
   min-height: 100vh;
-  
 }
 
 .App-logo {
@@ -53,40 +71,89 @@
   display: flex;
   
 }
-.leftScreen{
+.rightScreen{
   width: 50%;
   height: 100vh;
+  
 }
-.rightScreen{
+.leftScreen{
   flex-grow: 1;
   height: 100vh;
+  
 }
 .status{
   width:100%;
   height:20%;
-  background-color: rosybrown;
+  background-color: #323536;
 }
-
+.frontMountManager{
+  
+  background-color: #323536; 
+}
 .mining{
   width: 100%;
   height:50%;
-  background-color: royalblue;
+  background-color: #323536; 
+}
+.arm{
+  background-color: #323536; 
+}
+.wireframeWidget{
+  position:relative;
+  width: 300px;
+  height: 300px;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: orange;
+  float:left
   
+}
+.jointInformation{
+  width: 200px;
+  height: 300px;
+  float:left
+}
+.armCameraFeed{
+  width: 300px;
+  height: 300px;
+  float:left
+}
+
+.line {
+  margin: 0;
+  position:absolute;
+  border-top:2px solid green;
+  height: 0px;
+  width:0px;
+  
+  
+  
+}
+
+.dot {
+  filter: brightness(1);
+  margin: 0;
+  position: absolute;
+  background-color: orange;
+  border: 3px solid rgb(9, 194, 9);
+  border-radius: 30px;
+  height:30px;
+  width:30px;
 }
 
 .control{
   width:100%;
   height:30%;
-  background-color: lightgreen;
   
+  background-color: #323536;
 }
 
 .videoManager{
   
   width: 100%;
   height:100%;
-  background-color: crimson;
   
+  background-color: #323536;
   
 }
 
@@ -94,7 +161,6 @@
 .light {
   width: 100px;
   height: 50px;
-  
   text-align: center;
   pointer-events:none;
   background: red;
@@ -102,12 +168,13 @@
   margin-bottom: 10px;
   margin-left: 10px;
   margin-right: 10px;
+  
 }
 
 .driveOutput {
   width: 0;
   height: 30px;
-  background-color: green;
+  
   text-align: center;
   line-height: 30px;
   color: white;
@@ -145,4 +212,8 @@
   cursor: pointer;
   border: 5px solid gray;
   box-sizing: border-box;
+}
+.controlButton{
+  width: 200px;
+  height: 30px;
 }

@@ -43,42 +43,50 @@ const initEventListeners = () => {
     });
 };
 const listenToButtonEvents = gamepad => {
+    
     //console.log(gamepad.buttons);
     gamepad.buttons.forEach((button, index) => {
-        const cacheEvents = joypad.cacheEvents
+        const {cacheEvents} = joypad
         const { customButtonMapping } = joypad.settings;
         const buttonMapping = customButtonMapping ? customButtonMapping : BUTTON_MAPPING;
         const keys = findButtonMapping(index, buttonMapping);
         const { buttonEvents } = joypad;
         if (keys && keys.length) {
+            //console.log(buttonEvents.joypad[gamepad.index])
             keys.forEach(key => {
                 
                 // If button is pressed then set press status of button
                 
                 if (button.pressed || button.hold) {
                     
-                    //console.log(button.hold)
-                    if (cacheEvents[buttonMapping[key]] === 0) {
+                    
+                    if (cacheEvents[gamepad.index][buttonMapping[key]] === 0) {
                         buttonEvents.joypad[gamepad.index][key] = {
                             pressed: true,
                             hold: false,
                             released: false
                         };
+                        buttonEvents.joypad[gamepad.index][key].button = button;
+                        buttonEvents.joypad[gamepad.index][key].index = index;
+                        buttonEvents.joypad[gamepad.index][key].gamepad = gamepad;
+                        
                     }
-                    if(cacheEvents[buttonMapping[key]] === 60) {
+                    if(cacheEvents[gamepad.index][buttonMapping[key]] === 60) {
                         
                         buttonEvents.joypad[gamepad.index][key] = {
-                            pressed: false,
+                            pressed: true,
                             hold: true,
                             released: false
-                        };                       
+                        };
+                        buttonEvents.joypad[gamepad.index][key].button = button;
+                        buttonEvents.joypad[gamepad.index][key].index = index;
+                        buttonEvents.joypad[gamepad.index][key].gamepad = gamepad;                       
                     }
-                    
+                    //console.log(buttonEvents.joypad[gamepad.index], " ", key)
                     // Set button event data
-                    buttonEvents.joypad[gamepad.index][key].button = button;
-                    buttonEvents.joypad[gamepad.index][key].index = index;
-                    buttonEvents.joypad[gamepad.index][key].gamepad = gamepad;
-                    cacheEvents[buttonMapping[key]] +=1
+                    
+                    cacheEvents[gamepad.index][buttonMapping[key]] +=1
+                    
                     
                 }
 
@@ -87,11 +95,44 @@ const listenToButtonEvents = gamepad => {
                     
                     buttonEvents.joypad[gamepad.index][key].released = true;
                     buttonEvents.joypad[gamepad.index][key].hold = false;
-                    cacheEvents[buttonMapping[key]] = 0
+                    cacheEvents[gamepad.index][buttonMapping[key]] = 0
                 }
             });
         }
-    });
+    });/*
+    gamepad.buttons.forEach((button, index) => {
+        const { customButtonMapping } = joypad.settings;
+        const buttonMapping = customButtonMapping ? customButtonMapping : BUTTON_MAPPING;
+        const keys = findButtonMapping(index, buttonMapping);
+        const { buttonEvents } = joypad;
+
+        if (keys && keys.length) {
+            keys.forEach(key => {
+
+                // If button is pressed then set press status of button
+                if (button.pressed) {
+                    if (!buttonEvents.joypad[gamepad.index][key]) {
+                        buttonEvents.joypad[gamepad.index][key] = {
+                            pressed: true,
+                            hold: false,
+                            released: false
+                        };
+                    }
+
+                    // Set button event data
+                    buttonEvents.joypad[gamepad.index][key].button = button;
+                    buttonEvents.joypad[gamepad.index][key].index = index;
+                    buttonEvents.joypad[gamepad.index][key].gamepad = gamepad;
+                }
+
+                // If button is not pressed then set release status of button
+                else if (!button.pressed && buttonEvents.joypad[gamepad.index][key]) {
+                    buttonEvents.joypad[gamepad.index][key].released = true;
+                    buttonEvents.joypad[gamepad.index][key].hold = false;
+                }
+            });
+        }
+    });*/
 };
 const listenToAxisMovements = gamepad => {
    
@@ -124,12 +165,12 @@ const listenToAxisMovements = gamepad => {
 
         if (Math.abs(axis) > axisMovementThreshold) {
             
-            nullEvent[index] = true
+            nullEvent[gamepad.index][index] = true
             const eventData = { gamepad, totalSticks, stickMoved, directionOfMovement, axisMovementValue, axis: index };
             return window.dispatchEvent(axisMovementEvent(eventData));
         }
-        if(nullEvent[index]){
-            nullEvent[index] = false
+        if(nullEvent[gamepad.index][index]){
+            nullEvent[gamepad.index][index] = false
             axisMovementValue = 0
             const eventData = { gamepad, totalSticks, stickMoved, directionOfMovement, axisMovementValue, axis: index };
             return window.dispatchEvent(axisMovementEvent(eventData));
@@ -171,7 +212,8 @@ const handleButtonEvent = (buttonName, buttonEvents) => {
     }
 
     // Button being released
-    else if (buttonEvents[buttonName].released && buttonEvents[buttonName].last_event === EVENTS.BUTTON_PRESS.ALIAS) {
+    else if (buttonEvents[buttonName].released && (buttonEvents[buttonName].last_event === EVENTS.BUTTON_PRESS.ALIAS || 
+                                                   buttonEvents[buttonName].last_event === EVENTS.BUTTON_HELD.ALIAS)) {
         dispatchCustomEvent(EVENTS.BUTTON_RELEASE.ALIAS, buttonEvents, buttonName);
 
         delete buttonEvents[buttonName];

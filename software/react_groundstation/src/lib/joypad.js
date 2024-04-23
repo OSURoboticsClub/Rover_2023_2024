@@ -5,8 +5,8 @@ import { EVENTS, AXIS_MOVEMENT_THRESHOLD } from './constants';
 import { log, hasVibrationSupport } from './helpers';
 
 const joypad = {
-    cacheEvents: new Array(17).fill(0),
-    nullEvent: new Array(8).fill(false),
+    cacheEvents: [Array(17).fill(0),Array(17).fill(0)],
+    nullEvent: [Array(8).fill(false),Array(8).fill(false)],
     loopStarted: false,
     instances: {},
     buttonEvents: {

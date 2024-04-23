@@ -41,13 +41,27 @@ function MainPage(){
     console.log(result.topics);
     });
     
-
-
+    window.joypad.on('button_press', (e) => {
+      const { buttonName } = e.detail;
+      console.log(`${buttonName} was pressed!`);
+      
+    });
+   
+    window.joypad.on('button_held', (e) => {
+        const { buttonName } = e.detail;
+      
+        console.log(`${buttonName} was held!`);
+      });
     
     return (
         
         <div className = "main">
             <div className = "leftScreen">
+                <div className = "videoManager">
+                    <VideoManager ros = {ros}/>
+                </div>
+            </div>
+            <div className = "rightScreen">
                 <div className = "status">
                     <StatusLights ros = {ros}/>
                 </div>
@@ -56,11 +70,6 @@ function MainPage(){
                 </div>
                 <div className = "control">
                     <ChassisManager ros = {ros}/>
-                </div>
-            </div>
-            <div className = "rightScreen">
-                <div className = "videoManager">
-                    <VideoManager ros = {ros}/>
                 </div>
             </div>
         </div>

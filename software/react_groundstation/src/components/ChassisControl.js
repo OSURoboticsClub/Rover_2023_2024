@@ -1,4 +1,4 @@
-import React,{useState} from 'react';
+import React,{useState,useEffect} from 'react';
 import ROSLIB from 'roslib';
 import {DRIVE_CONTROLLER_ID} from '../lib/constants.js';
 
@@ -14,9 +14,11 @@ function truncateDecimals(number) {
 };
 
 function driveOutput(e,props,updateChassisState){
-    if(e.detail.gamepad["id"] !== DRIVE_CONTROLLER_ID || (e.detail.directionOfMovement !== "top" && e.detail.directionOfMovement !== "bottom")){
+    
+    if(DRIVE_CONTROLLER_ID !== e.detail.gamepad["id"] || (e.detail.directionOfMovement !== "top" && e.detail.directionOfMovement !== "bottom")){
         return ;
     }
+    
     for(var i = 0; i < 2; i++){
         //This if statement is required as the triggers are classified as sticks, and therefore will have their own stick_moved property
         if(e.detail.stickMoved === props.id[i]+"_stick"){
@@ -87,7 +89,7 @@ function sendDriveMessage(topic,throttle){
             }
     })
     //console.log(data)
-    //console.log("Left axis: %f Right axis: %f",leftYAxis,rightYAxis)
+    
     topic.publish(data)
 
 }
@@ -107,10 +109,15 @@ function ChassisControl(props){
         name: "command_control/ground_station_drive",
         messageType: "rover2_control_interface/msg/DriveCommandMessage"
     })
+    const chassisControls = window.joypad.on('axis_move', function(e){driveOutput(e,props,updateChassisState); });
     
- 
-    window.joypad.on('axis_move', function(e){driveOutput(e,props,updateChassisState)});
-    sendDriveMessage(topic,props.throttle)
+    useEffect(() => { //Must include these useEffects to unsub from chassis control listener to prevent CPU and memory leaks and overruns
+        chassisControls.unsubscribe() 
+        sendDriveMessage(topic,props.throttle)
+    },[chassisState])
+    
+    
+    
     
     return(
         <div>

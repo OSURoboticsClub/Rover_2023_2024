@@ -1,10 +1,13 @@
-import React,{useState} from 'react';
+import React,{useState,useEffect} from 'react';
 import ROSLIB from 'roslib';
-import Light from './Light.js';
-import CameraPanTilt from './CameraPanTilt.js';
+import Light from './LightControl.js';
+
 
 
 function VideoManager(props){
+
+  let [towerImage,updateTowerImage] = useState("")
+  let [chassisImage,updateChassisImage] = useState("")
 
   let ros = props.ros
 /*
@@ -36,41 +39,40 @@ function VideoManager(props){
   tower_controller.publish(towerSetup)
 */
 
-  
-  var chassis_listener = new ROSLIB.Topic({
+  useEffect(() => {
+    var chassis_listener = new ROSLIB.Topic({
+        ros : ros,
+        name : '/cameras/chassis/image_640x360/compressed',
+        messageType : 'sensor_msgs/CompressedImage'
+    });
+    
+    chassis_listener.subscribe(function(message) {
+      updateChassisImage("data:image/png;base64," + message.data)
+        
+    });
+    
+    var tower_listener = new ROSLIB.Topic({
       ros : ros,
-      name : '/cameras/chassis/image_640x360/compressed',
+      name : '/cameras/main_navigation/image_640x360/compressed',
       messageType : 'sensor_msgs/CompressedImage'
-  });
-  
-  chassis_listener.subscribe(function(message) {
-    document.getElementById("chassis_image").src = "data:image/png;base64," + message.data
-      
-  });
-  
-  var tower_listener = new ROSLIB.Topic({
-    ros : ros,
-    name : '/cameras/main_navigation/image_640x360/compressed',
-    messageType : 'sensor_msgs/CompressedImage'
-      
-  });
+        
+    });
 
-  tower_listener.subscribe(function(message) {
-    document.getElementById("tower_image").src = "data:image/png;base64," + message.data
-  });
+    tower_listener.subscribe(function(message) {
+      updateTowerImage("data:image/png;base64," + message.data)
+    });
+  }, [])
+  
 
   return(
     <div>
-        <CameraPanTilt ros = {props.ros} button_switch = "button_8" button_center = "button_9" buttons_move = {["button_2",//"button_12"
-                                                                                                               "button_0",//"button_13"
-                                                                                                               "button_1",//"button_14*"
-                                                                                                               "button_3"]}/*"button_15"*//>
+        
         <Light text = "Chassis Cam" id = "chas_cam" controllerEvent = "button_press" button = "button_8" startColor = "green"/>
         <Light text = "Tower Cam" id = "tower_cam" controllerEvent = "button_press" button = "button_8"/>
         <h1>Tower cam</h1>
-        <div><img src="" id="tower_image"/></div>
+        <div><img src={towerImage} id="tower_image"/></div>
         <h1>Chassis cam</h1>
-        <div><img src="" id="chassis_image"/></div>
+        <div><img src={chassisImage} id="chassis_image"/></div>
     </div>
   );
 }
