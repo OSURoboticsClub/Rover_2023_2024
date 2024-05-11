@@ -41,9 +41,8 @@ function MainPage(){
     console.log(result.topics);
     });
     
-    window.joypad.on('button_press', (e) => {
-      const { buttonName } = e.detail;
-      console.log(`${buttonName} was pressed!`);
+    window.joypad.on('axis_move', (e) => {
+      console.log(e.detail);
       
     });
    

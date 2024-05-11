@@ -162,7 +162,7 @@ const listenToAxisMovements = gamepad => {
             stickMoved = STICKS.RIGHT.NAME;
         }
         
-
+        
         if (Math.abs(axis) > axisMovementThreshold) {
             
             nullEvent[gamepad.index][index] = true
