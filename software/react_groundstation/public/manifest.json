@@ -1,0 +1,15 @@
+{
+  "short_name": "groundstation",
+  "name": "OSURC Rover Groundstation",
+  "icons": [
+    {
+      "src": "OSURC_logo.png",
+      "type": "image/png",
+      "sizes": "350x128"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}
