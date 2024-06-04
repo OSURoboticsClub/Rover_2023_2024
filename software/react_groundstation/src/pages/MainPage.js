@@ -4,7 +4,6 @@ import '../lib/controller.js';
 import StatusLights from '../components/StatusLights.js'
 import ChassisManager from '../components/ChassisManager.js'
 import VideoManager from '../components/VideoManager.js'
-import FrontMountManager from '../components/FrontMountManager.js';
 
 import ROSLIB from 'roslib'
 
@@ -64,15 +63,13 @@ function MainPage(){
                 <div className = "status">
                     <StatusLights ros = {ros}/>
                 </div>
-                <div className = "mining">  
-                    <FrontMountManager ros = {ros}/>
+                <div className = "mining">    
                 </div>
                 <div className = "control">
                     <ChassisManager ros = {ros}/>
                 </div>
             </div>
         </div>
-        
         
         
     );

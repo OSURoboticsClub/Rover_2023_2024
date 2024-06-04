@@ -109,7 +109,7 @@ function ChassisControl(props){
         name: "command_control/ground_station_drive",
         messageType: "rover2_control_interface/msg/DriveCommandMessage"
     })
-    const chassisControls = window.joypad.on('axis_move', function(e){driveOutput(e,props,updateChassisState); });
+    const chassisControls = window.joypad.on('axis_move', function(e){driveOutput(e,props,updateChassisState);});
     
     useEffect(() => { //Must include these useEffects to unsub from chassis control listener to prevent CPU and memory leaks and overruns
         chassisControls.unsubscribe() 

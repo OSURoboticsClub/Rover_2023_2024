@@ -5,8 +5,8 @@ import { DRIVE_CONTROLLER_ID } from '../lib/constants';
 const DEFAULT_TOWER_PAN_TILT_COMMAND_TOPIC = "tower/pan_tilt/control"
 const DEFAULT_CHASSIS_PAN_TILT_COMMAND_TOPIC = "chassis/pan_tilt/control"
 
-const TOWER_PAN_TILT_X_AXIS_SCALAR = 2
-const TOWER_PAN_TILT_Y_AXIS_SCALAR = 15
+const TOWER_PAN_TILT_X_AXIS_SCALAR = 10
+const TOWER_PAN_TILT_Y_AXIS_SCALAR = 75
 
 const CHASSIS_PAN_TILT_X_AXIS_SCALAR = 100
 const CHASSIS_PAN_TILT_Y_AXIS_SCALAR = 100
@@ -18,6 +18,7 @@ var currentYScalar = CHASSIS_PAN_TILT_Y_AXIS_SCALAR
 var rosTopic = null
 
 function buttonPressHandler(e,props,topic){
+    
     if(e.detail.gamepad["id"] !== DRIVE_CONTROLLER_ID){
         return ;
     }
@@ -106,6 +107,7 @@ function CameraPanTilt(props){
       messageType: "rover2_control_interface/msg/TowerPanTiltControlMessage"
     })
 
-    window.joypad.on('button_press', function(e){buttonPressHandler(e,props,rosTopic)});
+    const topicButton = window.joypad.on('button_press', function(e){buttonPressHandler(e,props,rosTopic)});
+
 }
 export default CameraPanTilt;

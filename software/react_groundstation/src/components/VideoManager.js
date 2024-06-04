@@ -3,14 +3,13 @@ import ROSLIB from 'roslib';
 import Light from './LightControl.js';
 
 
-
 function VideoManager(props){
 
   let [towerImage,updateTowerImage] = useState("")
   let [chassisImage,updateChassisImage] = useState("")
 
   let ros = props.ros
-/*
+
   var chassis_controller = new ROSLIB.Topic({
     ros : ros,
     name : '/cameras/chassis/camera_control',
@@ -37,8 +36,9 @@ function VideoManager(props){
   console.log(chassisSetup)
   chassis_controller.publish(chassisSetup)
   tower_controller.publish(towerSetup)
-*/
+  
 
+/*
   useEffect(() => {
     var chassis_listener = new ROSLIB.Topic({
         ros : ros,
@@ -63,7 +63,7 @@ function VideoManager(props){
     });
   }, [])
   
-
+*/
   return(
     <div>
         
