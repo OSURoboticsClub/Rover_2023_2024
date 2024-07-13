@@ -29,7 +29,7 @@ def generate_launch_description():
                 '~drive_control_status_topic': 'drive_status/rear',
                 '~first_motor_id': 2,
                 '~second_motor_id': 1,
-                '~invert_first_motor': True
+                '~invert_second_motor': True
             }],
             **config
         ),
