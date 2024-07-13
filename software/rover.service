@@ -1,0 +1,11 @@
+[Unit]
+Description=Rover
+Requires=docker.service
+After=docker.service
+
+[Service]
+Restart=always
+ExecStart=/usr/bin/docker start rover2
+
+[Install]
+WantedBy=default.target
