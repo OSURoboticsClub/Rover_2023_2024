@@ -84,7 +84,7 @@ DEFAULT_GRIPPER_REGISTERS = [
 GRIPPER_UNIVERSAL_POSITION_MAX = 7000
 GRIPPER_HOMING_THRESHOLD = GRIPPER_UNIVERSAL_POSITION_MAX // 500
 NUM_COMPARTMENTS = 4
-LINEAR_MOVE_STOP = DEFAULT_HERTZ // 2
+#LINEAR_MOVE_STOP = DEFAULT_HERTZ // 2
 
 # ##### Science Defines #####
 SCIENCE_MODBUS_REGISTERS = {
@@ -217,10 +217,11 @@ class EffectorsControl(Node):
         self.failed_drill_modbus_count = 0
         self.failed_linear_modbus_count = 0
 
-        self.which_effector = self.EFFECTORS.index("SCIENCE")
+        self.which_effector = self.EFFECTORS.index("GRIPPER")
 
         self.gripper_position_status = 0
         self.compartment = 0
+        #self.linear_moving = False
 
         self.timer = self.create_timer(self.wait_time, self.main_loop)
 
@@ -290,27 +291,28 @@ class EffectorsControl(Node):
             self.new_science_control_message = False
 
     def process_linear_control_message(self):
-        if self.linear_moving:
-            # stop the movement when we've moved for a certain number of node iterations
-            if self.linear_move_count >= LINEAR_MOVE_STOP:
-                self.linear_moving = False
-                self.linear_registers[LINEAR_MODBUS_REGISTERS["SPEED"]] = 0
-                self.linear_registers[LINEAR_MODBUS_REGISTERS["SLEEP"]] = 0
+        #if self.linear_moving:
+        #    # stop the movement when we've moved for a certain number of node iterations
+        #    if self.linear_move_count >= LINEAR_MOVE_STOP:
+        #        self.linear_moving = False
+        #        self.linear_registers[LINEAR_MODBUS_REGISTERS["SPEED"]] = 0
+        #        self.linear_registers[LINEAR_MODBUS_REGISTERS["SLEEP"]] = 0
 
         # only process new move if old one completed
-        elif self.new_linear_control_message:
+        if self.new_linear_control_message:
             self.linear_registers[LINEAR_MODBUS_REGISTERS["DIRECTION"]] = self.linear_control_message.direction
             self.linear_registers[LINEAR_MODBUS_REGISTERS["SLEEP"]] = 1
             self.linear_registers[LINEAR_MODBUS_REGISTERS["SPEED"]] = min(self.linear_control_message.speed, UINT16_MAX)
             self.new_linear_control_message = False
 
-        self.linear_node.write_registers(0, self.linear_registers)
-        self.modbus_nodes_seen_time = time()
+            self.linear_node.write_registers(0, self.linear_registers)
+            self.modbus_nodes_seen_time = time()
 
     def process_drill_control_messages(self):
         if self.new_drill_control_message:
             self.drill_registers[DRILL_MODBUS_REGISTERS["DIRECTION"]] = self.drill_control_message.direction
-            self.drill_registers[DRILL_MODBUS_REGISTERS["SPEED"]] = self.drill_control_message.speed
+            self.drill_registers[DRILL_MODBUS_REGISTERS["SLEEP"]] = 1
+            self.drill_registers[DRILL_MODBUS_REGISTERS["SPEED"]] = min(self.drill_control_message.speed, UINT16_MAX)
 
             self.drill_node.write_registers(0, self.drill_registers)
             self.modbus_nodes_seen_time = time()
