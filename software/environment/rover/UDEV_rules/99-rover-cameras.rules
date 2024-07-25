@@ -9,7 +9,7 @@ KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", ATTRS{idVendor}=="2b03", ATTRS{
 KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="082d", ATTRS{serial}=="B9A8A5FF", SYMLINK+="rover/camera_undercarriage"
 
 # The second C920 Webcam
-KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="082d", ATTRS{serial}=="A98AA5FF", SYMLINK+="rover/camera_chassis"
+KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="08e5", ATTRS{serial}=="3B10172F", SYMLINK+="rover/camera_chassis"
 
 # The special main nav cam
 KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", ATTRS{idVendor}=="32e4", ATTRS{idProduct}=="9422", ATTRS{serial}=="2020032801", ATTR{index}=="0", SYMLINK+="rover/camera_main_navigation"
