@@ -1,0 +1,184 @@
+<?xml version="1.0"?>
+<robot name="rover_arm">
+
+  <!--DEFINING ROBOT LINKS IN ORDER FROM BASE TO HAND-->
+  <link name="base_link">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://rover_arm_urdf/urdf/dae_files/base_link.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://rover_arm_urdf/urdf/stl_files/base_link.stl"/>
+      </geometry>
+    </collision>
+  </link>
+  
+  <link name="arm_link_0">
+    <visual>
+      <origin rpy="0 0 0" xyz="-0.043 -0.056 0"/>
+      <geometry>
+        <mesh filename="package://rover_arm_urdf/urdf/dae_files/arm_link_0.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="-0.043 -0.056 0"/>
+      <geometry>
+        <mesh filename="package://rover_arm_urdf/urdf/stl_files/arm_link_0.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="1"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+
+  <link name="arm_link_1">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://rover_arm_urdf/urdf/dae_files/arm_link_1.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://rover_arm_urdf/urdf/stl_files/arm_link_1.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="1"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+
+  <link name="arm_link_2">
+    <visual>
+      <origin rpy="0 0 0" xyz="0.063 0.000654 -0.040895"/>
+      <geometry>
+        <mesh filename="package://rover_arm_urdf/urdf/dae_files/arm_link_2.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0.063 0.000654 -0.040895"/>
+      <geometry>
+        <mesh filename="package://rover_arm_urdf/urdf/stl_files/arm_link_2.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="1"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+
+  <link name="arm_link_3">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 -0.0086"/>
+      <geometry>
+        <mesh filename="package://rover_arm_urdf/urdf/dae_files/arm_link_3.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 -0.0086"/>
+      <geometry>
+        <mesh filename="package://rover_arm_urdf/urdf/stl_files/arm_link_3.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="1"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+
+  <link name="arm_link_4">
+    <visual>
+      <origin rpy="0 0 1.57079632679" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://rover_arm_urdf/urdf/dae_files/arm_link_4.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0 0 1.57079632679" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://rover_arm_urdf/urdf/stl_files/arm_link_4.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="1"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+
+  <link name="arm_gripper">
+    <visual>
+      <origin rpy="0 0 0" xyz="-0.038106 0.015875 0.14921"/>
+      <geometry>
+        <mesh filename="package://rover_arm_urdf/urdf/dae_files/arm_gripper.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="-0.038106 0.015875 0.14921"/>
+      <geometry>
+        <mesh filename="package://rover_arm_urdf/urdf/stl_files/arm_gripper.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="1"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+  </link>
+
+
+
+  <joint name="base_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="arm_link_0"/>
+    <origin rpy="0 0 0" xyz="0 0.055 0.087245"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="1000.0" lower="-1.57079632679" upper="1.57079632679" velocity="2.5"/>
+  </joint>
+
+  <joint name="shoulder_joint" type="revolute">
+    <parent link="arm_link_0"/>
+    <child link="arm_link_1"/>
+    <origin rpy="0 0 0" xyz="0 0 0.151443"/>
+    <axis xyz="1 0 0"/>
+    <limit effort="1000.0" lower="-1.57079632679" upper="1.57079632679" velocity="2.5"/>
+  </joint>
+
+  <joint name="elbow_pitch_joint" type="revolute">
+    <parent link="arm_link_1"/>
+    <child link="arm_link_2"/>
+    <origin rpy="0 0 0" xyz="0.05925 0 0.501983"/>
+    <axis xyz="1 0 0"/>
+    <limit effort="1000.0" lower="-1.57079632679" upper="1.57079632679" velocity="2.5"/>
+  </joint>
+
+  <joint name="elbow_roll_joint" type="revolute">
+    <parent link="arm_link_2"/>
+    <child link="arm_link_3"/>
+    <origin rpy="0 0 0" xyz="0.063 0.000654 0.059505"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="1000.0" lower="-3.141592653589793" upper="3.141592653589793" velocity="2.5"/>
+  </joint>
+
+  <joint name="wrist_pitch_joint" type="revolute">
+    <parent link="arm_link_3"/>
+    <child link="arm_link_4"/>
+    <origin rpy="0 0 0" xyz="-0.065 0 0.3318"/>
+    <axis xyz="1 0 0"/>
+    <limit effort="1000.0" lower="-1.57079632679" upper="3.141592653589793" velocity="2.5"/>
+  </joint>
+
+  <joint name="wrist_roll_joint" type="continuous">
+    <parent link="arm_link_4"/>
+    <child link="arm_gripper"/>
+    <origin rpy="0 0 0" xyz="-0.050 0 0.050484"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="1000.0" velocity="2.5"/>
+  </joint>
+
+</robot>
