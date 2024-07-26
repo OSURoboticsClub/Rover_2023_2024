@@ -2,6 +2,7 @@ import React,{useState,useEffect} from 'react';
 import JointConnectorDisplay from './JointConnectorDisplay';
 import { ARM_CONTROLLER_ID } from '../lib/constants';
 import ROSLIB from 'roslib'
+import GripperControl from './GripperControl';
 
 
 /* TODO: DISCOVER UNKNOWNS
@@ -227,7 +228,7 @@ function ArmControl(props){
             <div class = "jointInformation"></div>
             
             <JointConnectorDisplay ros = {props.ros}/>
-            
+            <GripperControl ros = {props.ros}/>
             <div class = "armCameraFeed"></div>
 
         </div>
