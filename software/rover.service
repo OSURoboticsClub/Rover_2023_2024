@@ -1,7 +1,7 @@
 [Unit]
-Description=Rover
-Requires=docker.service
-After=docker.service
+Description=Rover Docker
+Requires=docker.service cansetup.service
+After=docker.service cansetup.service
 
 [Service]
 Restart=always
