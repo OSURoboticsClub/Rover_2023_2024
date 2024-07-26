@@ -49,7 +49,7 @@ function translateJoystickMsg(e){
         stickArr[0] = e.detail.axisMovementValue * -1
         
     else if(e.detail.axis === 1 && (e.detail.directionOfMovement === "bottom" || e.detail.directionOfMovement === "top"))
-        stickArr[1] = e.detail.axisMovementValue
+        stickArr[1] = e.detail.axisMovementValue * -1
 
     else if(e.detail.directionOfMovement === null && e.detail.axis === 4)
         stickArr[2] = e.detail.axisMovementValue
@@ -58,7 +58,7 @@ function translateJoystickMsg(e){
         stickArr[3] = e.detail.axisMovementValue
 
     else if(e.detail.axis === 3 && (e.detail.directionOfMovement === "bottom" || e.detail.directionOfMovement === "top"))
-        stickArr[4] = e.detail.axisMovementValue * -1
+        stickArr[4] = e.detail.axisMovementValue
 
     else if(e.detail.directionOfMovement === null && e.detail.axis === 5)
         stickArr[5] = e.detail.axisMovementValue
@@ -71,10 +71,10 @@ function translateButtonPresses(dpadStatus){
     var stickArr = [0,0,0,0,0,0,0,0]
 
     if(dpadStatus[0])
-        stickArr[7] = -1
+        stickArr[7] = 1
 
     else if(dpadStatus[1])
-        stickArr[7] = 1
+        stickArr[7] = -1
 
     else if(dpadStatus[2])
         stickArr[6] = -1
