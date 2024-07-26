@@ -18,7 +18,7 @@ from rover2_control_interface.msg import TowerPanTiltControlMessage
 #####################################
 # Global Variables
 #####################################
-NODE_NAME = "pan_tilt_and_tower_control"
+NODE_NAME = "tower_pan_tilt_control"
 
 DEFAULT_PORT = "/dev/rover/ttyTowerAndPanTilt"
 DEFAULT_BAUD = 115200
