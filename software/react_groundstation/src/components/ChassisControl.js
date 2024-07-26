@@ -88,7 +88,7 @@ function sendDriveMessage(topic,throttle){
                 }
             }
     })
-    //console.log(data)
+    
     
     topic.publish(data)
 
@@ -112,12 +112,13 @@ function ChassisControl(props){
     const chassisControls = window.joypad.on('axis_move', function(e){driveOutput(e,props,updateChassisState);});
     
     useEffect(() => { //Must include these useEffects to unsub from chassis control listener to prevent CPU and memory leaks and overruns
-        chassisControls.unsubscribe() 
+        //chassisControls.unsubscribe() 
         sendDriveMessage(topic,props.throttle)
+        
     },[chassisState])
     
     
-    
+   
     
     return(
         <div>

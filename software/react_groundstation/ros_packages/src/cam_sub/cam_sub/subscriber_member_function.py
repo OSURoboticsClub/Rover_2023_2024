@@ -19,40 +19,85 @@ from sensor_msgs.msg import CompressedImage
 
 import cv2
 import numpy as np
+from flask import Flask, send_file, request
 from cv_bridge import CvBridge
 import asyncio
 import websocket
+from socketIO_client import SocketIO, LoggingNamespace
+import sys
+import json
+import requests
+import base64
+import time
 
+IMG_BYTES = b""
+app = Flask("img_backend")
 
+@app.route("/img")
+def image():
+    return send_file(IMG_BYTES, mimetype='image/jpeg')
 
+url1 = "http://localhost:5000/img1"
+headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 class MinimalSubscriber(Node):
 
     def __init__(self):
         super().__init__('minimal_subscriber')
         self.bridge = CvBridge()
+        self.img_bytes = b""
         
+        self.subscription = self.create_subscription(
+            CompressedImage,
+            '/cameras/main_navigation/image_640x360/compressed',
+            self.tower_listener_callback,
+            1)
         
         self.subscription = self.create_subscription(
             CompressedImage,
             '/cameras/chassis/image_640x360/compressed',
-            self.listener_callback,
-            10)
+            self.chassis_listener_callback,
+            1)
+    
+        # self.publisher = self.create_publisher(CompressedImage, '/cameras/main_navigation/forward', 1)
         self.subscription  # prevent unused variable warning
 
-    def listener_callback(self, msg):
-        #opencv_image = self.bridge.compressed_imgmsg_to_cv2(msg, "bgr8")
-        #cv2.imshow('leg', opencv_image)
-        #cv2.waitKey(1)
-        self.ws.send("Hello,world!")
+    def tower_listener_callback(self, msg):
+        opencv_image = self.bridge.compressed_imgmsg_to_cv2(msg, "bgr8")
+        cv2.imshow('tower', opencv_image)
+        cv2.waitKey(1)
+
+    def chassis_listener_callback(self, msg):
+        opencv_image = self.bridge.compressed_imgmsg_to_cv2(msg, "bgr8")
+        cv2.imshow('chassis', opencv_image)
+        cv2.waitKey(1)
+        # _, img = cv2.imencode('.jpg', opencv_image)
+        # IMG_BYTES = img.tobytes()
+        # self.publisher.publish(msg)
+
+        # img_json = json.dumps({"msg": base64.b64encode(img_bytes).decode()})
+        # #print(img_json[:100])
+        # #time.sleep(100)
+        # try:
+        #     r1 = requests.post(url1, data=img_json, headers=headers,timeout = 0.03)
+        # except requests.exceptions.ReadTimeout: 
+        #     pass
+        # except requests.exceptions.ConnectionError:
+        #     print("Backend server is offline, please check it's status. Exiting...")
+        
+        # #data = {'msg': 'Hi!!!'}
+        # #headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+        # #r = requests.post(self.url, data=json.dumps(data), headers=headers)
+        
 
 
 
 def main(args=None):
     rclpy.init(args=args)
-    websocket.enableTrace(True)
+    
 
     minimal_subscriber = MinimalSubscriber()
 
+    # app.run()
     rclpy.spin(minimal_subscriber)
 
     # Destroy the node explicitly

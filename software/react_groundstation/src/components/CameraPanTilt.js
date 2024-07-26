@@ -22,11 +22,13 @@ function buttonPressHandler(e,props,topic){
     if(e.detail.gamepad["id"] !== DRIVE_CONTROLLER_ID){
         return ;
     }
+    
     if(e.detail.buttonName === props.button_switch) {
         switchControlTopic(props)
     }
     
     if(props.buttons_move.includes(e.detail.buttonName)){
+        
         panTilt(e,props,topic)
     }
     if(e.detail.buttonName === props.button_center){

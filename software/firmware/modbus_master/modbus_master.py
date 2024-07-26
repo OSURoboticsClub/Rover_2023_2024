@@ -1,6 +1,5 @@
 import struct
 import serial
-from typing import Any, List, Tuple, Dict
 
 # Constants
 _WRITE_INSTR = 16
@@ -22,17 +21,17 @@ _REG_MAX = 1023
 _MAX_DATA_BYTES = 255
 _INT_MAX = 65536
 
-_serialports: Dict[str, serial.Serial] = {}
+_serialports = {}
 
 class Instrument:
     """Represents a slave
     """
     def __init__(
         self,
-        port: str,
-        slave_id: int,
-        baudrate: int = 19200
-    ) -> None:
+        port,
+        slave_id,
+        baudrate=19200
+    ):
         """Opens serial comms with a node and assigns it a slave id
         """
         self.slave_id = slave_id
@@ -50,9 +49,9 @@ class Instrument:
 
     def write_registers(
         self,
-        register_addr: int,
-        values: List[Any]
-    ) -> None:
+        register_addr,
+        values
+    ):
         """Write a list of values starting at register_addr
         """
         if not self.serial:
@@ -101,9 +100,9 @@ class Instrument:
 
     def read_registers(
         self,
-        register_addr: int,
-        num_registers: int
-    ) -> List[Any]:
+        register_addr,
+        num_registers
+    ):
         """Read num_registers starting at register_addr
         """
         if not self.serial:
@@ -161,23 +160,23 @@ class Instrument:
     
     def write_register(
         self,
-        register_addr: int,
-        value: Any
-    ) -> None:
+        register_addr,
+        value
+    ):
         """Write a value to register at register_addr
         """
         self.write_registers(register_addr, [value])
 
     def read_register(
         self,
-        register_addr: int,
-    ) -> Any:
+        register_addr,
+    ):
         """Read register at register_addr
         """
         res = self.read_registers(register_addr, 1)
         return res[0] if res else None
 
-def _create_byte_string(values: List[Any]) -> str:
+def _create_byte_string(values):
     """Convert a list of values into a byte string
     """
     bstr = ''
@@ -193,7 +192,7 @@ def _create_byte_string(values: List[Any]) -> str:
     return bstr
 
 
-def _create_byte_string_int8(values: List[int]) -> str:
+def _create_byte_string_int8(values):
     """Converts a list of integers into a uint8 byte string
     """
     bstr = ''
@@ -202,7 +201,7 @@ def _create_byte_string_int8(values: List[int]) -> str:
     return bstr
 
 
-def _calculate_num_bytes(values: List[Any]) -> int:
+def _calculate_num_bytes(values):
     """Calculates the total number of bytes for a list of values
     """
     num_bytes = 0
@@ -218,7 +217,7 @@ def _calculate_num_bytes(values: List[Any]) -> int:
     return num_bytes
 
 
-def _calculate_resp_size(instr: int, num_bytes: int = 0) -> int:
+def _calculate_resp_size(instr, num_bytes=0):
     """Calculates the expected response size for a command
     """
     if instr == _WRITE_INSTR:
@@ -227,7 +226,7 @@ def _calculate_resp_size(instr: int, num_bytes: int = 0) -> int:
         return _READ_RESP_SZ_BASE + num_bytes
 
 
-def _calculate_crc(packet: bytes) -> int:
+def _calculate_crc(packet):
     """Calculates the CRC for a list of values (BLACK MAGIC)
     """
     crc = 0xffff
@@ -244,31 +243,31 @@ def _calculate_crc(packet: bytes) -> int:
     return crc
 
 
-def _check_crc(resp: bytes, crc: int) -> bool:
+def _check_crc(resp, crc):
     """Checks that the CRC of a list of values matches the expected CRC
     """
     return _calculate_crc(resp[:-2]) == crc
 
 
-def _add_crc(packet: bytes) -> bytes:
+def _add_crc(packet):
     """Adds crc to packet"""
     crc = _calculate_crc(packet)
     packet += crc.to_bytes(2, 'big')
     return packet
 
 
-def _pack(formatstring: str, value: Any) -> str:
+def _pack(formatstring, value):
     """Packs a value into a bytestring based on format
     """
     return str(struct.pack(formatstring, value), encoding='latin1')
 
 
 def _unpack(
-        resp: bytes,
-        register_addr: int,
-        num_registers: int,
-        skip_header: bool = True
-) -> List[Any]:
+        resp,
+        register_addr,
+        num_registers,
+        skip_header=True
+):
     """Given a response byte string, unpacks it into a list of values
     """
     # Get the number of each register type in the packet
@@ -310,10 +309,10 @@ def _unpack(
 
 
 def _calc_num_type(
-    register_addr: int,
-    num_registers: int,
-    max_reg: int
-) -> int:
+    register_addr,
+    num_registers,
+    max_reg
+):
     """Returns the number of a register type in a packet
     """
     if num_registers <= 0:
@@ -329,9 +328,9 @@ def _calc_num_type(
 
 
 def _calc_num_types(
-    register_addr: int,
-    num_registers: int,
-) -> Tuple[int]:
+    register_addr,
+    num_registers,
+):
     """Returns the total number of each register type in a packet
     """
     # To calculate the number of each register type, we increase the register
@@ -361,16 +360,16 @@ def _calc_num_types(
     return num_ints, num_floats, num_chars, num_bools
 
 
-def _reg_in_range(addr: int, start: int, end: int) -> bool:
+def _reg_in_range(addr, start, end):
     """Checks whether a given register address falls within the range provided (end exclusive)
     """
     return addr >= start and addr < end
 
 
 def _is_valid_write_data (
-    reg_addr: int,
-    values: list[Any]
-) -> bool:
+    reg_addr,
+    values
+):
     """Checks that the type of the given list of values matches the registers
     """
     if reg_addr < _INT_REG_OFFSET or reg_addr >= _REG_MAX:

@@ -74,7 +74,7 @@ const listenToButtonEvents = gamepad => {
                     if(cacheEvents[gamepad.index][buttonMapping[key]] === 60) {
                         
                         buttonEvents.joypad[gamepad.index][key] = {
-                            pressed: true,
+                            pressed: false,
                             hold: true,
                             released: false
                         };
@@ -91,7 +91,7 @@ const listenToButtonEvents = gamepad => {
                 }
 
                 // If button is not pressed then set release status of button
-                else if (!button.pressed && buttonEvents.joypad[gamepad.index][key]) {
+                else if ((!button.pressed && !button.hold) && buttonEvents.joypad[gamepad.index][key])  {
                     
                     buttonEvents.joypad[gamepad.index][key].released = true;
                     buttonEvents.joypad[gamepad.index][key].hold = false;
@@ -163,9 +163,15 @@ const listenToAxisMovements = gamepad => {
         }
         
         
-        if (Math.abs(axis) > axisMovementThreshold) {
+        if (Math.abs(axisMovementValue) > axisMovementThreshold && directionOfMovement){
             
             nullEvent[gamepad.index][index] = true
+            const eventData = { gamepad, totalSticks, stickMoved, directionOfMovement, axisMovementValue, axis: index };
+            return window.dispatchEvent(axisMovementEvent(eventData));
+        }
+        else if(axisMovementValue > -1 && (index === 4 || index === 5) && axisMovementValue !== 0){
+            nullEvent[gamepad.index][index] = true
+            axisMovementValue = (axisMovementValue+1)/2
             const eventData = { gamepad, totalSticks, stickMoved, directionOfMovement, axisMovementValue, axis: index };
             return window.dispatchEvent(axisMovementEvent(eventData));
         }

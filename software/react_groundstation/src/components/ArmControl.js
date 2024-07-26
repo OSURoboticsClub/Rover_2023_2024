@@ -38,91 +38,170 @@ enum Button
   RIGHT_STICK_CLICK = 10
 };
 */
+let seqID = 0
+
 function translateJoystickMsg(e){
     //MAKE SURE CONTROLLER INPUT IS VALIDATED BEFORE CALLING
     var stickArr = [0,0,0,0,0,0,0,0]
     
-
-    if(e.detail.stickMoved === "left_stick" && (e.detail.direction === "left" || e.detail.direction === "right"))
-        stickArr[0] = e.detail.axisMovementValue
-
-    if(e.detail.stickMoved === "left_stick" && (e.detail.direction === "bottom" || e.detail.direction === "top"))
+    
+    if(e.detail.axis === 0 && (e.detail.directionOfMovement === "left" || e.detail.directionOfMovement === "right"))
+        stickArr[0] = e.detail.axisMovementValue * -1
+        
+    else if(e.detail.axis === 1 && (e.detail.directionOfMovement === "bottom" || e.detail.directionOfMovement === "top"))
         stickArr[1] = e.detail.axisMovementValue
 
-    if(e.detail.directionOfMovement === null && e.detail.axis === 4)
+    else if(e.detail.directionOfMovement === null && e.detail.axis === 4)
         stickArr[2] = e.detail.axisMovementValue
     
-    if(e.detail.stickMoved === "right_stick" && (e.detail.direction === "left" || e.detail.direction === "right"))
+    else if(e.detail.axis === 2 && (e.detail.directionOfMovement === "left" || e.detail.directionOfMovement === "right"))
         stickArr[3] = e.detail.axisMovementValue
 
-    if(e.detail.stickMoved === "right_stick" && (e.detail.direction === "bottom" || e.detail.direction === "top"))
-        stickArr[4] = e.detail.axisMovementValue
+    else if(e.detail.axis === 3 && (e.detail.directionOfMovement === "bottom" || e.detail.directionOfMovement === "top"))
+        stickArr[4] = e.detail.axisMovementValue * -1
 
-    if(e.detail.directionOfMovement === null && e.detail.axis === 5)
+    else if(e.detail.directionOfMovement === null && e.detail.axis === 5)
         stickArr[5] = e.detail.axisMovementValue
 
     //GET DPAD VALUES (THEY ARE BUTTONS FFS    (ﾉ °益°)ﾉ 彡 ┻━┻)
+    
+    return stickArr
+}
+function translateButtonPresses(dpadStatus){
+    var stickArr = [0,0,0,0,0,0,0,0]
+
+    if(dpadStatus[0])
+        stickArr[7] = -1
+
+    else if(dpadStatus[1])
+        stickArr[7] = 1
+
+    else if(dpadStatus[2])
+        stickArr[6] = -1
+
+    else if(dpadStatus[3])
+        stickArr[6] = 1
+
+    return stickArr
 }
 
+
+function publishArmControl(topic,inputArr){
+    seqID+=1
+    var buttonArr = [0,0,0,0,0,0,0,0,0,0,0]
+    const data = new ROSLIB.Message({
+        header: {
+            
+            stamp : {
+              sec : 0,
+              nsec : 0
+            },
+            frame_id: ""
+        },
+        
+        axes: inputArr,
+        buttons: buttonArr
+        
+    })
+    console.log(inputArr)
+    topic.publish(data)
+}
 
 
 
 function ArmControl(props){
     
+    
 
     const [movementMode,setMovementMode] = useState("DISABLED");
+    const [dpadStatus,setDpadStatus] = useState([false,false,false,false])
+    const [buttonInterval,setButtonInterval] = useState(null)
 
-    const armMovement = window.joypad.on('axis_move', function(e){armOutput(e,props)})
-    let seqID = 0
+    const armJoyMovement = window.joypad.on('axis_move', function(e){armOutput(e)})
+    const dpadPressed = window.joypad.on('button_press', function(e){
+        console.log(e.detail.buttonName)
+        if(e.detail.gamepad["id"] !== ARM_CONTROLLER_ID)
+            return
+        if((movementMode === "DISABLED" || e.detail.gamepad["id"] !== ARM_CONTROLLER_ID) ){
+            return 
+        }
+
+        if(e.detail.buttonName === "button_12")
+            setDpadStatus([true,false,false,false])
+        else if(e.detail.buttonName === "button_13")
+            setDpadStatus([false,true,false,false])
+        else if(e.detail.buttonName === "button_14")
+            setDpadStatus([false,false,true,false])
+        else if(e.detail.buttonName === "button_15")
+            setDpadStatus([false,false,false,true])
+        
+    })
+    
+    const dpadReleased = window.joypad.on('button_release', function(e){
+        
+        if(e.detail.gamepad["id"] !== ARM_CONTROLLER_ID)
+            return
+        if(e.detail.buttonName === "button_12" || e.detail.buttonName === "button_13" || e.detail.buttonName === "button_14" || e.detail.buttonName === "button_15")
+        setDpadStatus([false,false,false,false])
+    })
+    
 
     const topic = new ROSLIB.Topic({
         ros: props.ros,
         name: "/joy",
-        messageType: "sensor_msgs/msg/joy"
+        messageType: "sensor_msgs/Joy"
     })
     
-
+    //Below is the most disgusting code I have ever written... I am become death
     const updateMovementMode = (update) =>{
-        armMovement.unsubscribe()
-        
+        armJoyMovement.unsubscribe()
+        dpadPressed.unsubscribe()
+        dpadReleased.unsubscribe()
         setMovementMode(update)
     }
+    
+    useEffect(() => { //Must include these useEffects to unsub from chassis control listener to prevent CPU and memory leaks and overruns
+        clearInterval(buttonInterval)
+        console.log(dpadStatus)
+        dpadPressed.unsubscribe()
+        dpadReleased.unsubscribe()
+        armJoyMovement.unsubscribe()
+        
+        if(dpadStatus.includes(true)){
+            setButtonInterval(
+                setInterval(() => {
+                    var inputArr = translateButtonPresses(dpadStatus)
+                    publishArmControl(topic,inputArr)
+                    
+                }, 15)
+            )
+        }
+    },[dpadStatus])
 
+    useEffect(() => { //Must include these useEffects to unsub from chassis control listener to prevent CPU and memory leaks and overruns
+        dpadPressed.unsubscribe()
+        dpadReleased.unsubscribe()
+        armJoyMovement.unsubscribe()
+    },[buttonInterval])
 
+    
     const armOutput = (e) => {
-        //console.log(props.controlArm)
+        console.log(props.controlArm)
         if(!props.controlArm){
             return 
         }
         
-        if((movementMode === "DISABLED" || ARM_CONTROLLER_ID !== e.detail.gamepad["id"]) ){
+        if((movementMode === "DISABLED" || e.detail.gamepad["id"] !== ARM_CONTROLLER_ID) ){
             return 
         }
  
-        if(movementMode === "JBJ"){
-            
-        } else { //This is the IK control case
-            
-        }
-        var joyArr = translateJoystickMsg(e)
-        var buttonArr = [0,0,0,0,0,0,0,0,0,0,0]
-        const data = new ROSLIB.Message({
-            header: {
-                seq : seqID,
-                stamp : {
-                  sec : 0,
-                  nsec : 0
-                },
-                frame_id: ""
-            },
-            
-            axes: joyArr,
-            buttons: buttonArr
-            
-        })
-        seqID+=1
-        topic.publish(data)
+        
+        var inputArr = translateJoystickMsg(e)
+        
+        publishArmControl(topic,inputArr)
+        
     }
+    
     
     
     

@@ -1,13 +1,15 @@
 import React,{useState,useEffect} from 'react';
 import ROSLIB from 'roslib';
 import Light from './LightControl.js';
-
+import axios from 'axios';
 
 function VideoManager(props){
 
   let [towerImage,updateTowerImage] = useState("")
   let [chassisImage,updateChassisImage] = useState("")
 
+  
+  
   let ros = props.ros
 
   var chassis_controller = new ROSLIB.Topic({
@@ -33,13 +35,25 @@ function VideoManager(props){
     enable_medium_broadcast: false,
     enable_large_broadcast: true
   })
-  console.log(chassisSetup)
-  chassis_controller.publish(chassisSetup)
-  tower_controller.publish(towerSetup)
   
 
-/*
+  
+  useEffect(()=>{
+    chassis_controller.publish(chassisSetup)
+    tower_controller.publish(towerSetup)
+
+   
+
+
+  },[])
+  
+  useEffect(()=>{
+    console.log(towerImage)
+  },[towerImage])
+
+
   useEffect(() => {
+    /*
     var chassis_listener = new ROSLIB.Topic({
         ros : ros,
         name : '/cameras/chassis/image_640x360/compressed',
@@ -50,20 +64,20 @@ function VideoManager(props){
       updateChassisImage("data:image/png;base64," + message.data)
         
     });
-    
-    var tower_listener = new ROSLIB.Topic({
-      ros : ros,
-      name : '/cameras/main_navigation/image_640x360/compressed',
-      messageType : 'sensor_msgs/CompressedImage'
+    */
+    // var tower_listener = new ROSLIB.Topic({
+    //   ros : ros,
+    //   name : '/cameras/main_navigation/forward',
+    //   messageType : 'sensor_msgs/CompressedImage'
         
-    });
+    // });
 
-    tower_listener.subscribe(function(message) {
-      updateTowerImage("data:image/png;base64," + message.data)
-    });
+    // tower_listener.subscribe(function(message) {
+    //   updateTowerImage("data:image/png;base64," + message.data)
+    // });
   }, [])
   
-*/
+
   return(
     <div>
         
