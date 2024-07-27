@@ -104,15 +104,15 @@ int convertJoyToCmd(const std::vector<float>& axes, const std::vector<int>& butt
   // If any joint jog command is requested, we are only publishing joint commands
   if(axes[D_PAD_X] || axes[D_PAD_Y] || axes[LEFT_STICK_X] || axes[LEFT_STICK_Y] || axes[RIGHT_STICK_X] || axes[RIGHT_STICK_Y]){
     joint->joint_names.push_back("base_joint");
-    joint->velocities.push_back(axes[D_PAD_X]);
+    joint->velocities.push_back(axes[D_PAD_X] * 0.30);
     joint->joint_names.push_back("shoulder_joint");
-    joint->velocities.push_back(axes[D_PAD_Y]);
+    joint->velocities.push_back(axes[D_PAD_Y] * 0.25);
     joint->joint_names.push_back("elbow_pitch_joint");
-    joint->velocities.push_back(axes[LEFT_STICK_Y]);
+    joint->velocities.push_back(axes[LEFT_STICK_Y] * 0.30);
     joint->joint_names.push_back("elbow_roll_joint");
-    joint->velocities.push_back(axes[LEFT_STICK_X]);
+    joint->velocities.push_back(axes[LEFT_STICK_X] * 0.25);
     joint->joint_names.push_back("wrist_pitch_joint");
-    joint->velocities.push_back(axes[RIGHT_STICK_Y]);
+    joint->velocities.push_back(axes[RIGHT_STICK_Y] * 0.30);
     joint->joint_names.push_back("wrist_roll_joint");
     joint->velocities.push_back(axes[RIGHT_STICK_X]);
     return 2;

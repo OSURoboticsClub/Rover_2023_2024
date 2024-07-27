@@ -1,15 +1,15 @@
-import yaml
+import yaml, sys
 from launch import LaunchDescription
 from launch.actions import RegisterEventHandler
 from launch.event_handlers import OnProcessExit
 from launch_ros.actions import Node
 from moveit_configs_utils import MoveItConfigsBuilder
 
-
 from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
+
 
     moveit_config = (
         MoveItConfigsBuilder("rover_arm", package_name="rover_arm")
@@ -29,18 +29,23 @@ def generate_launch_description():
         get_package_share_directory("rover_arm") + "/config/ros2_controllers.yaml"
     )
 
+    use_rviz = str('false')
+    for arg in sys.argv:
+        if arg.startswith("use_rviz:="):
+            use_rviz = arg.split(":=")[1]
 
-    rviz_node = Node(
-        package="rviz2",
-        executable="rviz2",
-        name="rviz2",
-        output="log",
-        arguments=["-d", rviz_config_file],
-        parameters=[
-            moveit_config.robot_description,
-            moveit_config.robot_description_semantic,
-        ],
-    )
+    if use_rviz == 'true':
+        rviz_node = Node(
+            package="rviz2",
+            executable="rviz2",
+            name="rviz2",
+            output="log",
+            arguments=["-d", rviz_config_file],
+            parameters=[
+                moveit_config.robot_description,
+                moveit_config.robot_description_semantic,
+            ],
+        )
 
     control_node = Node(
         package="controller_manager",
@@ -100,6 +105,7 @@ def generate_launch_description():
     )
 
 
+
     nodes = [
         control_node,
         robot_state_pub_node,
@@ -108,8 +114,9 @@ def generate_launch_description():
         joy_node,
         servo_node,
         joy_to_servo_node,
-        rviz_node,
     ]
+    if use_rviz == 'true':
+        nodes.append(rviz_node)
 
     
 

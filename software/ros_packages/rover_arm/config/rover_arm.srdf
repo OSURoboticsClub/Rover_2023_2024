@@ -28,6 +28,17 @@
         <joint name="shoulder_joint" value="0"/>
         <joint name="wrist_pitch_joint" value="0"/>
     </group_state>
+
+    <group_state name="folded" group="rover_arm">
+        <joint name="base_joint" value="1"/>
+        <joint name="elbow_pitch_joint" value="0"/>
+        <joint name="elbow_roll_joint" value="0"/>
+        <joint name="wrist_roll_joint" value="0"/>
+        <joint name="shoulder_joint" value="0"/>
+        <joint name="wrist_pitch_joint" value="0"/>
+    </group_state>
+
+
     <!--END EFFECTOR: Purpose: Represent information about an end effector.-->
 
     <!--VIRTUAL JOINT: Purpose: this element defines a virtual joint between a robot link and an external frame of reference (considered fixed with respect to the robot)-->
