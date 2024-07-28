@@ -1,11 +1,10 @@
 [Unit]
-Description=Rover Docker
-Requires=docker.service cansetup.service
-After=docker.service cansetup.service
+Description=Rover Setup
+Requires=multi-user.target
+After=multi-user.target
 
 [Service]
-Restart=always
-ExecStart=/usr/bin/docker start rover2
+ExecStart=/bin/bash -c /home/rover/startRover.sh
 
 [Install]
 WantedBy=default.target

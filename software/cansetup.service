@@ -1,8 +1,0 @@
-[Unit]
-Description=CAN Setup
-
-[Service]
-ExecStart=/bin/bash -c /home/rover/startupCAN.sh
-
-[Install]
-WantedBy=default.target
