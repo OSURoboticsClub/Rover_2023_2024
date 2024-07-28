@@ -37,7 +37,7 @@ public:
         broadcast_small_image = false;
 
         if (is_rtsp_camera) {
-            cap = new cv::VideoCapture(capture_device_path, cv::CAP_V4L2);
+            cap = new cv::VideoCapture(capture_device_path, cv::CAP_FFMPEG);
             RCLCPP_INFO_STREAM(this->get_logger(), "Connecting to RTSP camera with path: " << capture_device_path);
         } else {
             cap = new cv::VideoCapture(capture_device_path, cv::CAP_V4L2);
@@ -74,6 +74,7 @@ public:
         image_black = cv::Mat(large_image_height, large_image_width, CV_8UC3, cv::Scalar(0, 0, 0));
 
         if(!cap->isOpened()) {
+            RCLCPP_INFO_STREAM(this->get_logger(), "Failed to open capture for " << capture_device_path);
             return;
         }
 

@@ -30,5 +30,28 @@ def generate_launch_description():
                 'base_topic': 'cameras/chassis'
             }],
             **config
+        ),
+        Node(
+            package='rover_camera',
+            executable='rover_camera',
+            name='infrared',
+            #prefix=["sudo taskset -c 5"],
+            parameters=[{
+                'device_path': '/dev/rover/camera_infrared',
+                'base_topic': 'cameras/infrared'
+            }],
+            **config
+        ),
+        Node(
+            package='rover_camera',
+            executable='rover_camera',
+            name='gripper',
+            #prefix=["sudo taskset -c 6"],
+            parameters=[{
+                'is_rtsp_camera': True,
+                'device_path': 'rtsp://192.168.1.11:554',
+                'base_topic': 'cameras/gripper'
+            }],
+            **config
         )
     ])
