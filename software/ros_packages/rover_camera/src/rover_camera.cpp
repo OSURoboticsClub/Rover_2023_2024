@@ -1,6 +1,6 @@
 #include <cstdio>
 #include "rclcpp/rclcpp.hpp"
-#include "rover2_camera_interface/msg/camera_control_message.hpp"
+#include "rover_camera_interface/msg/camera_control_message.hpp"
 #include <string>
 #include <iostream>
 #include <image_transport/image_transport.hpp>
@@ -62,7 +62,7 @@ public:
         //medium_image_publisher = medium_image_transport->advertise(medium_image_node_name, 1);
         small_image_publisher = small_image_transport->advertise(small_image_node_name, 1);
 
-        control_subscriber = this->create_subscription<rover2_camera_interface::msg::CameraControlMessage>(base_topic + "/camera_control", 1, std::bind(&RoverCamera::control_callback, this, _1));
+        control_subscriber = this->create_subscription<rover_camera_interface::msg::CameraControlMessage>(base_topic + "/camera_control", 1, std::bind(&RoverCamera::control_callback, this, _1));
 
         int period;
         if (is_rtsp_camera) {
@@ -117,7 +117,7 @@ public:
         }
     }
 
-    void control_callback(const rover2_camera_interface::msg::CameraControlMessage::SharedPtr msg) {
+    void control_callback(const rover_camera_interface::msg::CameraControlMessage::SharedPtr msg) {
         broadcast_small_image = msg->enable_small_broadcast;
         //broadcast_medium_image = msg->enable_medium_broadcast;
         broadcast_large_image = msg->enable_large_broadcast;
@@ -166,7 +166,7 @@ private:
     //image_transport::Publisher medium_image_publisher;
     image_transport::Publisher small_image_publisher;
 
-    rclcpp::Subscription<rover2_camera_interface::msg::CameraControlMessage>::SharedPtr control_subscriber;
+    rclcpp::Subscription<rover_camera_interface::msg::CameraControlMessage>::SharedPtr control_subscriber;
 
     cv::Mat image_black;
 

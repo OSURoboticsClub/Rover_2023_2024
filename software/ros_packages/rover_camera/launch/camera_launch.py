@@ -10,7 +10,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         Node(
-            package='rover2_camera',
+            package='rover_camera',
             executable='rover_camera',
             name='navigation',
             parameters=[{
@@ -21,7 +21,7 @@ def generate_launch_description():
             **config
         ),
         Node(
-            package='rover2_camera',
+            package='rover_camera',
             executable='rover_camera',
             name='chassis',
             #prefix=["sudo taskset -c 4"],
