@@ -14,7 +14,7 @@ def generate_launch_description():
 
    cameras = IncludeLaunchDescription(
       PythonLaunchDescriptionSource([os.path.join(
-         get_package_share_directory('rover2_camera'),
+         get_package_share_directory('rover_camera'),
          'launch'), '/camera_launch.py'])
       )
 
@@ -34,4 +34,4 @@ def generate_launch_description():
       cameras,
       bridge,
       arm
-   ]) 
+   ])

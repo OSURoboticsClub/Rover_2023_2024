@@ -5,7 +5,8 @@ def generate_launch_description():
     config = {
         'emulate_tty': True,
         'output': 'screen',
-        'respawn': True
+        'respawn': True,
+        'respawn_delay': 2
     }
 
     return LaunchDescription([
@@ -15,7 +16,8 @@ def generate_launch_description():
             name='navigation',
             parameters=[{
                 'device_path': '/dev/rover/camera_main_navigation',
-                'base_topic': 'cameras/main_navigation'
+                'base_topic': 'cameras/main_navigation',
+                'fps': 10
             }],
             #prefix=["sudo taskset -c 3"],
             **config

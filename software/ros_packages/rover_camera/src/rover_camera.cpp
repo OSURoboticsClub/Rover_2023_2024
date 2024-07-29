@@ -6,6 +6,8 @@
 #include <image_transport/image_transport.hpp>
 #include <opencv2/opencv.hpp>
 #include <cv_bridge/cv_bridge.h>
+#include <rclcpp/qos.hpp>
+
 using std::placeholders::_1;
 
 // Useful info
@@ -17,24 +19,27 @@ class RoverCamera : public rclcpp::Node{
 
 public:
     RoverCamera() : Node("camera") {
+
+	auto qos_profile = rclcpp::QoS(rclcpp::KeepLast(1))
+                             .best_effort()  // Ensures message delivery
+                             .durability_volatile() // Messages are not stored for late subscribers
+                             .get_rmw_qos_profile();
+
         is_rtsp_camera = this->declare_parameter("is_rtsp_camera", false);
         capture_device_path = this->declare_parameter("device_path", std::string("/dev/video0"));
-        fps = this->declare_parameter("fps", 30);
+        fps = this->declare_parameter("fps", 20);
 
         upside_down = this->declare_parameter("upside_down", false);
 
         large_image_width = this->declare_parameter("large_image_width", 640);
         large_image_height = this->declare_parameter("large_image_height", 360);
-        //medium_image_width = this->declare_parameter("medium_image_width", 640);
-        //medium_image_height = this->declare_parameter("medium_image_height", 360);
         small_image_width = this->declare_parameter("small_image_width", 256);
         small_image_height = this->declare_parameter("small_image_height", 144);
 
         base_topic = this->declare_parameter("base_topic", "cameras/main_navigation");
 
-        broadcast_large_image = true;
-        //broadcast_medium_image = true;
-        broadcast_small_image = false;
+        broadcast_large_image = false;
+        broadcast_small_image = true;
 
         if (is_rtsp_camera) {
             cap = new cv::VideoCapture(capture_device_path, cv::CAP_FFMPEG);
@@ -50,17 +55,14 @@ public:
         }
 
         large_image_node_name = base_topic + "/image_" + std::to_string(large_image_width) + "x" + std::to_string(large_image_height);
-        //medium_image_node_name = base_topic + "/image_" + std::to_string(medium_image_width) + "x" + std::to_string(medium_image_height);
         small_image_node_name = base_topic + "/image_" + std::to_string(small_image_width) + "x" + std::to_string(small_image_height);
 
-        rclcpp::Node::SharedPtr node_handle_ = std::shared_ptr<RoverCamera>(this);
-        large_image_transport = new image_transport::ImageTransport(node_handle_);
-        //medium_image_transport = new image_transport::ImageTransport(node_handle_);
-        small_image_transport = new image_transport::ImageTransport(node_handle_);
+        //rclcpp::Node::SharedPtr node_handle_ = std::shared_ptr<RoverCamera>(this);
+        large_image_publisher = image_transport::create_publisher(this, large_image_node_name, qos_profile);
+        small_image_publisher = image_transport::create_publisher(this, small_image_node_name, qos_profile);
 
-        large_image_publisher = large_image_transport->advertise(large_image_node_name, 1);
-        //medium_image_publisher = medium_image_transport->advertise(medium_image_node_name, 1);
-        small_image_publisher = small_image_transport->advertise(small_image_node_name, 1);
+        //large_image_publisher = large_image_transport->advertise(large_image_node_name, 1);
+        //small_image_publisher = small_image_transport->advertise(small_image_node_name, 1);
 
         control_subscriber = this->create_subscription<rover_camera_interface::msg::CameraControlMessage>(base_topic + "/camera_control", 1, std::bind(&RoverCamera::control_callback, this, _1));
 
@@ -85,7 +87,6 @@ public:
         if(!is_rtsp_camera) {
             cap->read(image_large);
         }else{
-            this->get_logger(),
             cap->read(image_rtsp_raw);
             image_black.copyTo(image_large);
 
@@ -103,13 +104,10 @@ public:
                 cv::flip(image_large, image_large, -1);
             }
 
+            //RCLCPP_INFO_STREAM(this->get_logger(), "Broadcasts large: " << broadcast_large_image << " - Broadcast small: " << broadcast_small_image);
             if(broadcast_large_image){
                 large_image_message = cv_bridge::CvImage(std_msgs::msg::Header(), "bgr8", image_large).toImageMsg();
                 large_image_publisher.publish(large_image_message);
-            //}else if(broadcast_medium_image){
-            //    cv::resize(image_large, image_medium, cv::Size(medium_image_width, medium_image_height));
-            //    medium_image_message = cv_bridge::CvImage(std_msgs::msg::Header(), "bgr8", image_medium).toImageMsg();
-            //    medium_image_publisher.publish(medium_image_message);
             }else if(broadcast_small_image){
                 cv::resize(image_large, image_small, cv::Size(small_image_width, small_image_height));
                 small_image_message = cv_bridge::CvImage(std_msgs::msg::Header(), "bgr8", image_small).toImageMsg();
@@ -120,7 +118,6 @@ public:
 
     void control_callback(const rover_camera_interface::msg::CameraControlMessage::SharedPtr msg) {
         broadcast_small_image = msg->enable_small_broadcast;
-        //broadcast_medium_image = msg->enable_medium_broadcast;
         broadcast_large_image = msg->enable_large_broadcast;
     }
 
@@ -144,27 +141,21 @@ private:
 
     int large_image_width;
     int large_image_height;
-    //int medium_image_width;
-    //int medium_image_height;
     int small_image_width;
     int small_image_height;
 
     bool broadcast_large_image;
-    //bool broadcast_medium_image;
     bool broadcast_small_image;
 
     std::string base_topic;
 
     std::string large_image_node_name;
-    //std::string medium_image_node_name;
     std::string small_image_node_name;
 
     image_transport::ImageTransport *large_image_transport;
-    //image_transport::ImageTransport *medium_image_transport;
     image_transport::ImageTransport *small_image_transport;
 
     image_transport::Publisher large_image_publisher;
-    //image_transport::Publisher medium_image_publisher;
     image_transport::Publisher small_image_publisher;
 
     rclcpp::Subscription<rover_camera_interface::msg::CameraControlMessage>::SharedPtr control_subscriber;
@@ -174,11 +165,9 @@ private:
     cv::Mat image_rtsp_raw;
     cv::Mat image_rtsp_scaled;
     cv::Mat image_large;
-    //cv::Mat image_medium;
     cv::Mat image_small;
 
     sensor_msgs::msg::Image::SharedPtr large_image_message;
-    //sensor_msgs::msg::Image::SharedPtr medium_image_message;
     sensor_msgs::msg::Image::SharedPtr small_image_message;
 
 };
