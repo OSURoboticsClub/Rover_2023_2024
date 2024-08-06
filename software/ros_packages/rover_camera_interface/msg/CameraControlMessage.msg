@@ -1,3 +1,4 @@
 bool enable_small_broadcast
 bool enable_medium_broadcast
 bool enable_large_broadcast
+bool take_photo
