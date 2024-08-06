@@ -16,7 +16,7 @@ import rclpy
 from rclpy.node import Node
 
 from sensor_msgs.msg import CompressedImage
-
+import threading
 import cv2
 import numpy as np
 from flask import Flask, send_file, request
@@ -29,6 +29,7 @@ import json
 import requests
 import base64
 import time
+from rclpy.qos import QoSProfile, QoSHistoryPolicy, QoSReliabilityPolicy, QoSDurabilityPolicy
 
 IMG_BYTES = b""
 app = Flask("img_backend")
@@ -42,33 +43,63 @@ headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 class MinimalSubscriber(Node):
 
     def __init__(self):
+        qos_profile = QoSProfile(
+            history=QoSHistoryPolicy.KEEP_LAST,
+            depth=1,
+            reliability=QoSReliabilityPolicy.BEST_EFFORT,
+            durability=QoSDurabilityPolicy.RMW_QOS_POLICY_DURABILITY_VOLATILE
+        
+        )
         super().__init__('minimal_subscriber')
         self.bridge = CvBridge()
         self.img_bytes = b""
         
         self.subscription = self.create_subscription(
             CompressedImage,
-            '/cameras/main_navigation/image_640x360/compressed',
+            '/cameras/main_navigation/image_256x144/compressed',
             self.tower_listener_callback,
-            1)
+             qos_profile)
         
         self.subscription = self.create_subscription(
             CompressedImage,
-            '/cameras/chassis/image_640x360/compressed',
+            '/cameras/chassis/image_256x144/compressed',
             self.chassis_listener_callback,
-            1)
+             qos_profile)
+        
+        self.subscription = self.create_subscription(
+            CompressedImage,
+            '/cameras/infrared/image_256x144/compressed',
+            self.infrared_listener_callback,
+             qos_profile)
+        
+        self.subscription = self.create_subscription(
+             CompressedImage,
+             '/cameras/gripper/image_256x144/compressed',
+             self.gripper_listener_callback,
+             qos_profile)
     
         # self.publisher = self.create_publisher(CompressedImage, '/cameras/main_navigation/forward', 1)
         self.subscription  # prevent unused variable warning
 
     def tower_listener_callback(self, msg):
-        opencv_image = self.bridge.compressed_imgmsg_to_cv2(msg, "bgr8")
+        
+        opencv_image = cv2.resize(self.bridge.compressed_imgmsg_to_cv2(msg, "bgr8"), (640, 360))
         cv2.imshow('tower', opencv_image)
         cv2.waitKey(1)
 
     def chassis_listener_callback(self, msg):
-        opencv_image = self.bridge.compressed_imgmsg_to_cv2(msg, "bgr8")
+        opencv_image = cv2.resize(self.bridge.compressed_imgmsg_to_cv2(msg, "bgr8"), (640, 360))
         cv2.imshow('chassis', opencv_image)
+        cv2.waitKey(1)
+
+    def infrared_listener_callback(self, msg):
+        opencv_image = cv2.resize(self.bridge.compressed_imgmsg_to_cv2(msg, "bgr8"), (640, 360))
+        cv2.imshow('infrared', opencv_image)
+        cv2.waitKey(1)
+
+    def gripper_listener_callback(self, msg):
+        opencv_image = cv2.resize(self.bridge.compressed_imgmsg_to_cv2(msg, "bgr8"), (640, 360))
+        cv2.imshow('gripper', opencv_image)
         cv2.waitKey(1)
         # _, img = cv2.imencode('.jpg', opencv_image)
         # IMG_BYTES = img.tobytes()

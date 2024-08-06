@@ -40,10 +40,11 @@ enum Button
 };
 */
 let seqID = 0
+var stickArr = [0,0,0,0,0,0,0,0]
 
 function translateJoystickMsg(e){
     //MAKE SURE CONTROLLER INPUT IS VALIDATED BEFORE CALLING
-    var stickArr = [0,0,0,0,0,0,0,0]
+
     
     
     if(e.detail.axis === 0 && (e.detail.directionOfMovement === "left" || e.detail.directionOfMovement === "right"))
@@ -69,27 +70,27 @@ function translateJoystickMsg(e){
     return stickArr
 }
 function translateButtonPresses(dpadStatus){
-    var stickArr = [0,0,0,0,0,0,0,0]
+    
 
     if(dpadStatus[0])
-        stickArr[7] = 1
-
-    else if(dpadStatus[1])
         stickArr[7] = -1
 
+    else if(dpadStatus[1])
+        stickArr[7] = 1
+
     else if(dpadStatus[2])
-        stickArr[6] = -1
+        stickArr[6] = 1
 
     else if(dpadStatus[3])
-        stickArr[6] = 1
+        stickArr[6] = -1
 
     return stickArr
 }
 
 
-function publishArmControl(topic,inputArr){
+function publishArmControl(topic,inputArr,buttonArr){
     seqID+=1
-    var buttonArr = [0,0,0,0,0,0,0,0,0,0,0]
+    
     const data = new ROSLIB.Message({
         header: {
             
@@ -104,15 +105,20 @@ function publishArmControl(topic,inputArr){
         buttons: buttonArr
         
     })
-    console.log(inputArr)
+    //console.log(data)
     topic.publish(data)
 }
 
 
 
 function ArmControl(props){
-    
-    
+    var buttonArr = [0,0,0,0,0,0,0,0,0,0,0]
+
+    const topic = new ROSLIB.Topic({
+        ros: props.ros,
+        name: "/joy",
+        messageType: "sensor_msgs/Joy"
+    })
 
     const [movementMode,setMovementMode] = useState("DISABLED");
     const [dpadStatus,setDpadStatus] = useState([false,false,false,false])
@@ -120,21 +126,41 @@ function ArmControl(props){
 
     const armJoyMovement = window.joypad.on('axis_move', function(e){armOutput(e)})
     const dpadPressed = window.joypad.on('button_press', function(e){
-        console.log(e.detail.buttonName)
-        if(e.detail.gamepad["id"] !== ARM_CONTROLLER_ID)
-            return
+        //console.log(e.detail.buttonName)
+        
         if((movementMode === "DISABLED" || e.detail.gamepad["id"] !== ARM_CONTROLLER_ID) ){
             return 
         }
 
-        if(e.detail.buttonName === "button_12")
+        if(e.detail.buttonName == "button_8"){
+            
+            buttonArr[6] = 1
+            buttonArr[7] = 0
+            publishArmControl(topic,stickArr,buttonArr)
+        }
+
+        else if(e.detail.buttonName == "button_9"){
+            buttonArr[6] = 0
+            buttonArr[7] = 1
+            publishArmControl(topic,stickArr,buttonArr)
+        }
+
+        else if(e.detail.buttonName === "button_12"){
             setDpadStatus([true,false,false,false])
-        else if(e.detail.buttonName === "button_13")
+            stickArr[7] = 0
+        }
+        else if(e.detail.buttonName === "button_13"){
             setDpadStatus([false,true,false,false])
-        else if(e.detail.buttonName === "button_14")
+            stickArr[7] = 0
+        }
+        else if(e.detail.buttonName === "button_14"){
             setDpadStatus([false,false,true,false])
-        else if(e.detail.buttonName === "button_15")
+            stickArr[6] = 0
+        }
+        else if(e.detail.buttonName === "button_15"){
             setDpadStatus([false,false,false,true])
+            stickArr[6] = 0
+        }
         
     })
     
@@ -142,16 +168,30 @@ function ArmControl(props){
         
         if(e.detail.gamepad["id"] !== ARM_CONTROLLER_ID)
             return
-        if(e.detail.buttonName === "button_12" || e.detail.buttonName === "button_13" || e.detail.buttonName === "button_14" || e.detail.buttonName === "button_15")
-        setDpadStatus([false,false,false,false])
+        
+        if(e.detail.buttonName === "button_12"){
+            setDpadStatus([false,dpadStatus[1],dpadStatus[2],dpadStatus[3]])
+            stickArr[7] = 0
+        }
+        else if(e.detail.buttonName === "button_13"){
+            setDpadStatus([dpadStatus[0],false,dpadStatus[2],dpadStatus[3]])
+            stickArr[7] = 0
+        }
+        else if(e.detail.buttonName === "button_14"){
+            setDpadStatus([dpadStatus[0],dpadStatus[1],false,dpadStatus[3]])
+            stickArr[6] = 0
+        }
+        else if(e.detail.buttonName === "button_15"){
+            setDpadStatus([dpadStatus[0],dpadStatus[1],dpadStatus[2],false])
+            stickArr[6] = 0
+        }
+            
+        
+        
     })
     
 
-    const topic = new ROSLIB.Topic({
-        ros: props.ros,
-        name: "/joy",
-        messageType: "sensor_msgs/Joy"
-    })
+    
     
     //Below is the most disgusting code I have ever written... I am become death
     const updateMovementMode = (update) =>{
@@ -163,7 +203,7 @@ function ArmControl(props){
     
     useEffect(() => { //Must include these useEffects to unsub from chassis control listener to prevent CPU and memory leaks and overruns
         clearInterval(buttonInterval)
-        console.log(dpadStatus)
+        //console.log(dpadStatus)
         dpadPressed.unsubscribe()
         dpadReleased.unsubscribe()
         armJoyMovement.unsubscribe()
@@ -172,7 +212,7 @@ function ArmControl(props){
             setButtonInterval(
                 setInterval(() => {
                     var inputArr = translateButtonPresses(dpadStatus)
-                    publishArmControl(topic,inputArr)
+                    publishArmControl(topic,inputArr,buttonArr)
                     
                 }, 15)
             )
@@ -187,7 +227,7 @@ function ArmControl(props){
 
     
     const armOutput = (e) => {
-        console.log(props.controlArm)
+        //console.log(props.controlArm)
         if(!props.controlArm){
             return 
         }
@@ -199,7 +239,7 @@ function ArmControl(props){
         
         var inputArr = translateJoystickMsg(e)
         
-        publishArmControl(topic,inputArr)
+        publishArmControl(topic,inputArr,buttonArr)
         
     }
     
@@ -220,8 +260,8 @@ function ArmControl(props){
                     id="controlMode"
                     required>
                     <option value = "DISABLED">DISABLED</option>
-                    <option value="JBJ">JBJ</option>
-                    <option value="IK">IK</option>
+                    <option value="ON">Enabled</option>
+                    
                 </select>
             </h1>
             

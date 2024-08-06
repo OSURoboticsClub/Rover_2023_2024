@@ -35,6 +35,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/MiningControlMessage.msg"
   "msg/MiningStatusMessage.msg"
   "msg/TowerPanTiltControlMessage.msg"
+  "msg/LightControlMessage.msg"
+  "msg/GPSStatusMessage.msg"
   DEPENDENCIES geometry_msgs
 )
 

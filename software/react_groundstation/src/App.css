@@ -19,6 +19,9 @@ body{
 h1{
   color:#D73F09
 }
+h2{
+  color:#D73F09
+}
 label{
   color: #D73F09
 }
@@ -72,7 +75,7 @@ label{
   
 }
 .rightScreen{
-  width: 50%;
+  width: 100%;
   height: 100vh;
   
 }

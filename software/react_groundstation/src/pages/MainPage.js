@@ -42,7 +42,7 @@ function MainPage(){
     });
     
     window.joypad.on('axis_move', (e) => {
-      console.log(e.detail);
+      //console.log(e.detail);
       
     });
    
@@ -51,15 +51,21 @@ function MainPage(){
       
         console.log(`${buttonName} was held!`);
       });
+
+      window.joypad.on('button_press', (e) => {
+        const { buttonName } = e.detail;
+      
+        console.log(`${buttonName} was pressed!`);
+      });
     
     return (
         
         <div className = "main">
-            <div className = "leftScreen">
+            {/* <div className = "leftScreen">
                 <div className = "videoManager">
                     <VideoManager ros = {ros}/>
                 </div>
-            </div>
+            </div> */}
             <div className = "rightScreen">
                 <div className = "status">
                     <StatusLights ros = {ros}/>

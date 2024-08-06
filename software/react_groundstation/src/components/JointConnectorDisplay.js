@@ -1,20 +1,42 @@
 import React, { useRef , useState, useEffect} from 'react'
+import ROSLIB from 'roslib'
 let OFFSET_FROM_ORIGIN = 100
 let SQUARE_CENTER = 150
 let START_CIRCLE_DIAMETER = 30
 let max_angle = 2
 let matrixMultiplication = require('matrix-multiplication')
 let mul = matrixMultiplication()(3)
+let JOINT_OFFSETS = [
+    {"x":0,"y":-0.5},
+    {"x":0,"y":-0.8},
+    {"x":-0.4,"y":0},
+    {"x":0,"y":-0.6},
+    {"x":0.4,"y":0},
+    {"x":0,"y":-0.5},
+]
 
 function populateArmJoints(setArmJoints){
     var jointArr = []
     //ARBITRARY VALUES, REPLACE THIS WITH INFORMATION FROM THE ARM ROS MODULE 
-    jointArr.push([1,0,0])
-    jointArr.push([0.5,0,0])
     jointArr.push([0,0,0])
-    jointArr.push([-1,0,0])
-    jointArr.push([0,1,0])
-    
+    var count = 0
+    for (let coords of JOINT_OFFSETS){
+        var prevEntry = jointArr[jointArr.length-1]
+        
+        if(count == 2)
+            prevEntry = [0,0,0]
+        console.log(prevEntry)
+
+        var coord = [prevEntry[0]+coords["x"],prevEntry[1]+coords["y"],prevEntry[2]]
+        jointArr.push(coord)
+        count++
+    }
+    var offset = jointArr[2]
+    for (let coords of jointArr){
+        coords[0] -= offset[0]
+        coords[1] -= offset[1]
+        
+    }
     
     
 
@@ -46,9 +68,15 @@ function JointConnectorDisplay(props){
     const [mouseDownNew,setDownNew] = useState(false)
 
     const [armJoints,setArmJoints] = useState([])
+    const [buttonInterval,setButtonInterval] = useState(null)
 
-
-    const printClick = () =>{
+    var listener = new ROSLIB.Topic({
+        ros : props.ros,
+        name : '/rover_arm_controller/commands',
+        messageType : 'std_msgs/msg/Float64MultiArray'
+    })
+    
+     const printClick = () =>{
         setDownNew(true)
     }
     const printRelease = () =>{
@@ -60,6 +88,10 @@ function JointConnectorDisplay(props){
     
     useEffect(() => {
         populateArmJoints(setArmJoints);
+        listener.subscribe(function(message) {
+            console.log(message.data);
+           
+        });
     },[])
 
     const trackMouse = (event) =>{

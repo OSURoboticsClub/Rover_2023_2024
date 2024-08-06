@@ -1,7 +1,6 @@
 import {useState,useEffect} from 'react';
 //import UseRunOnce from './UseRunOnce.js'
-
-
+import { DRIVE_CONTROLLER_ID } from '../lib/constants';
 function Light(props){
     let startColor = ''
     if(props.startColor){
@@ -12,7 +11,7 @@ function Light(props){
     let [backgroundColor,changeColor] = useState(startColor)
     
     const flipColor = (e) => {
-        if(e.detail.buttonName === props.button){
+        if(e.detail.buttonName === props.button && DRIVE_CONTROLLER_ID == e.detail.gamepad["id"]){
             
             if(backgroundColor === "red"){    
                 

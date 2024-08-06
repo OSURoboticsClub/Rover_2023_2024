@@ -6,8 +6,8 @@ function StatusLights(props){
     //window.joypad.on('button_press', function(){flipColor("square1")});
     return (
         <p>
-            <Light text = "Bogies" id = "bogies"/>
-            <Light text = "Science" id = "science"/>
+            <Light text = "Chassis Cam" id = "chas_cam" controllerEvent = "button_press" button = "button_8" startColor = "green"/>
+            <Light text = "Tower Cam" id = "tower_cam" controllerEvent = "button_press" button = "button_8"/>
             
         </p>
         

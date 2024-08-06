@@ -103,17 +103,41 @@ function ChassisControl(props){
         leftWidth: 0,
         rightWidth: 0
     })
+    let [lightState,updateLightState] = useState(0)
     
-    const topic = new ROSLIB.Topic({
+    const controlTopic = new ROSLIB.Topic({
         ros: props.ros,
         name: "command_control/ground_station_drive",
         messageType: "rover2_control_interface/msg/DriveCommandMessage"
     })
+    const lightTopic = new ROSLIB.Topic({
+        ros: props.ros,
+        name: "/tower/light/control",
+        messageType: "rover2_control_interface/msg/LightControlMessage"
+    })
+
     const chassisControls = window.joypad.on('axis_move', function(e){driveOutput(e,props,updateChassisState);});
-    
+    const lightToggle = window.joypad.on('button_press', function(e){
+        if(DRIVE_CONTROLLER_ID === e.detail.gamepad["id"] && e.detail.buttonName === "button_16"){
+        
+            if(lightState === 0){
+                updateLightState(2)
+            }
+            else {
+                updateLightState(0)
+            }
+        }
+    });
+    useEffect(() => {
+        const data = new ROSLIB.Message({
+            light_mode: lightState
+        })
+        console.log(data)
+        lightTopic.publish(data)
+    },[lightState])
     useEffect(() => { //Must include these useEffects to unsub from chassis control listener to prevent CPU and memory leaks and overruns
         //chassisControls.unsubscribe() 
-        sendDriveMessage(topic,props.throttle)
+        sendDriveMessage(controlTopic,props.throttle)
         
     },[chassisState])
     
