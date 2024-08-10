@@ -95,60 +95,68 @@
 // export default VideoManager;
 
 
-// import React,{useState,useEffect} from 'react';
-// import ROSLIB from 'roslib';
-// import Light from './LightControl.js';
-// import axios from 'axios';
-// import { DRIVE_CONTROLLER_ID } from '../lib/constants.js';
+import React,{useState,useEffect} from 'react';
+import ROSLIB from 'roslib';
+import Light from './LightControl.js';
+import axios from 'axios';
+import { DRIVE_CONTROLLER_ID } from '../lib/constants.js';
 
-// function VideoManager(props){
-//   var buttonArr = [0,0,0,0,0,0,0,0,0,0,0]
-//   var stickArr = [0,0,0,0,0,0,0,0]
+function VideoManager(props){
 
-//   //   let ros = props.ros
-
-//   var chassis_controller = new ROSLIB.Topic({
-//     ros : ros,
-//     name : '/cameras/chassis/camera_control',
-//     messageType : 'rover2_camera_interface/msg/CameraControlMessage'
-//   });
-//   var tower_controller = new ROSLIB.Topic({
-//     ros : ros,
-//     name : '/cameras/main_navigation/camera_control',
-//     messageType : 'rover2_camera_interface/msg/CameraControlMessage'
-//   });
-//   var infrared_controller = new ROSLIB.Topic({
-//     ros : ros,
-//     name : '/cameras/infrared/camera_control',
-//     messageType : 'rover2_camera_interface/msg/CameraControlMessage'
-//   });
-//   var gripper_controller = new ROSLIB.Topic({
-//     ros : ros,
-//     name : '/cameras/gripper/camera_control',
-//     messageType : 'rover2_camera_interface/msg/CameraControlMessage'
-//   });
+  const chassis_controller = new ROSLIB.Topic({
+    ros : props.ros,
+    name : '/cameras/chassis/camera_control',
+    messageType : 'rover_camera_interface/msg/CameraControlMessage'
+  });
+  const tower_controller = new ROSLIB.Topic({
+    ros : props.ros,
+    name : '/cameras/main_navigation/camera_control',
+    messageType : 'rover_camera_interface/msg/CameraControlMessage'
+  });
+  const infrared_controller = new ROSLIB.Topic({
+    ros : props.ros,
+    name : '/cameras/infrared/camera_control',
+    messageType : 'rover_camera_interface/msg/CameraControlMessage'
+  });
+  const gripper_controller = new ROSLIB.Topic({
+    ros : props.ros,
+    name : '/cameras/gripper/camera_control',
+    messageType : 'rover_camera_interface/msg/CameraControlMessage'
+  });
 
   
-//   useEffect(() => {
-//     const dpadPressed = window.joypad.on('button_press', function(e){
-//       if(e.detail.gamepad["id"] !== ARM_CONTROLLER_ID){
-//         return ;
-//       }
-//       if(e.detail.buttonName == "button_12"){
+  useEffect(() => {
+    const dpadPressed = window.joypad.on('button_press', function(e){
+      if(e.detail.gamepad["id"] !== DRIVE_CONTROLLER_ID){
+        return ;
+      }
 
-//       }
-//       if(e.detail.buttonName == "button_13"){
-
-//       }
-//       if(e.detail.buttonName == "button_14"){
-
-//       }
-//       if(e.detail.buttonName == "button_15"){
-
-//       }
+      const data = new ROSLIB.Message({
+        enable_small_broadcast: true,
+        enable_medium_broadcast: false,
+        enable_large_broadcast: false,
+        take_photo: true
+      })
+      console.log(data)
+      if(e.detail.buttonName == "button_12"){
+        console.log("Took chassis photo")
+        chassis_controller.publish(data)
+      }
+      if(e.detail.buttonName == "button_13"){
+        console.log("Took tower photo")
+        tower_controller.publish(data)
+      }
+      if(e.detail.buttonName == "button_14"){
+        console.log("Took infrared photo")
+        infrared_controller.publish(data)
+      }
+      if(e.detail.buttonName == "button_15"){
+        console.log("Took gripper photo")
+        gripper_controller.publish(data)
+      }
       
-//     })
-//   })
-// }
+    })
+  },[])
+}
 
-// export default VideoManager;
+export default VideoManager;

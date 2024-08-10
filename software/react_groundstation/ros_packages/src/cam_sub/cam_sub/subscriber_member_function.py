@@ -31,8 +31,36 @@ import base64
 import time
 from rclpy.qos import QoSProfile, QoSHistoryPolicy, QoSReliabilityPolicy, QoSDurabilityPolicy
 
+import argparse
+
+import cv2
+import sys
+
 IMG_BYTES = b""
 app = Flask("img_backend")
+ARUCO_DICT = [
+	cv2.aruco.DICT_4X4_50,
+	 cv2.aruco.DICT_4X4_100,
+	 cv2.aruco.DICT_4X4_250,
+	cv2.aruco.DICT_4X4_1000,
+	cv2.aruco.DICT_5X5_50,
+	 cv2.aruco.DICT_5X5_100,
+	 cv2.aruco.DICT_5X5_250,
+	cv2.aruco.DICT_5X5_1000,
+	cv2.aruco.DICT_6X6_50,
+	 cv2.aruco.DICT_6X6_100,
+	 cv2.aruco.DICT_6X6_250,
+	cv2.aruco.DICT_6X6_1000,
+	cv2.aruco.DICT_7X7_50,
+	 cv2.aruco.DICT_7X7_100,
+	 cv2.aruco.DICT_7X7_250,
+	cv2.aruco.DICT_7X7_1000,
+	 cv2.aruco.DICT_ARUCO_ORIGINAL,
+	cv2.aruco.DICT_APRILTAG_16h5,
+	cv2.aruco.DICT_APRILTAG_25h9,
+	 cv2.aruco.DICT_APRILTAG_36h10,
+	 cv2.aruco.DICT_APRILTAG_36h11
+]
 
 @app.route("/img")
 def image():
@@ -43,6 +71,7 @@ headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 class MinimalSubscriber(Node):
 
     def __init__(self):
+        self.chassisFrames = 0
         qos_profile = QoSProfile(
             history=QoSHistoryPolicy.KEEP_LAST,
             depth=1,
@@ -81,7 +110,7 @@ class MinimalSubscriber(Node):
         # self.publisher = self.create_publisher(CompressedImage, '/cameras/main_navigation/forward', 1)
         self.subscription  # prevent unused variable warning
 
-    def tower_listener_callback(self, msg):
+    def tower_listener_callback(self, msg):   
         
         opencv_image = cv2.resize(self.bridge.compressed_imgmsg_to_cv2(msg, "bgr8"), (640, 360))
         cv2.imshow('tower', opencv_image)
@@ -90,6 +119,19 @@ class MinimalSubscriber(Node):
     def chassis_listener_callback(self, msg):
         opencv_image = cv2.resize(self.bridge.compressed_imgmsg_to_cv2(msg, "bgr8"), (640, 360))
         cv2.imshow('chassis', opencv_image)
+        if(self.chassisFrames>30):
+            for value in ARUCO_DICT:
+                arucoDict = cv2.aruco.Dictionary_get(value)
+                arucoParams = cv2.aruco.DetectorParameters_create()
+                (corners, ids, rejected) = cv2.aruco.detectMarkers(opencv_image, arucoDict,
+                parameters=arucoParams)
+                
+                if ids:
+                    print(ids)
+                
+
+            self.chassisFrames = 0
+        self.chassisFrames+=1
         cv2.waitKey(1)
 
     def infrared_listener_callback(self, msg):

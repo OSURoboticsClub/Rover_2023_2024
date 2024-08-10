@@ -5,6 +5,7 @@ import StatusLights from '../components/StatusLights.js'
 import ChassisManager from '../components/ChassisManager.js'
 import VideoManager from '../components/VideoManager.js'
 import FrontMountManager from '../components/FrontMountManager.js'
+import CameraPanTilt from '../components/CameraPanTilt.js';
 
 import ROSLIB from 'roslib'
 
@@ -46,17 +47,7 @@ function MainPage(){
       
     });
    
-    window.joypad.on('button_held', (e) => {
-        const { buttonName } = e.detail;
-      
-        console.log(`${buttonName} was held!`);
-      });
 
-      window.joypad.on('button_press', (e) => {
-        const { buttonName } = e.detail;
-      
-        console.log(`${buttonName} was pressed!`);
-      });
     
     return (
         
@@ -69,12 +60,17 @@ function MainPage(){
             <div className = "rightScreen">
                 <div className = "status">
                     <StatusLights ros = {ros}/>
+                    <CameraPanTilt  ros = {ros} button_switch = "button_8" button_center = "button_9" buttons_move = {["button_2",//"button_12"
+                                                                                                                                                 "button_0",//"button_13"
+                                                                                                                                                  "button_1",//"button_14*"
+                                                                                                                                                  "button_3"]}/*"button_15"*//>
                 </div>
                 <div className = "mining"> 
                     <FrontMountManager ros = {ros}/>
                 </div>
                 <div className = "control">
                     <ChassisManager ros = {ros}/>
+                    <VideoManager ros = {ros}/>
                 </div>
             </div>
         </div>

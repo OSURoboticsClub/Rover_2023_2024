@@ -9,6 +9,7 @@
     "axios": "^1.7.2",
     "body-parser": "^1.20.2",
     "express": "^4.19.2",
+    "haversine": "^1.1.1",
     "matrix-multiplication": "^0.5.2",
     "modern-normalize": "^2.0.0",
     "react": "^18.2.0",
