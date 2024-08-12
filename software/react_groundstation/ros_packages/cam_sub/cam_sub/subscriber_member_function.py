@@ -72,6 +72,7 @@ class MinimalSubscriber(Node):
 
     def __init__(self):
         self.chassisFrames = 0
+        self.towerFrames = 0
         qos_profile = QoSProfile(
             history=QoSHistoryPolicy.KEEP_LAST,
             depth=1,
@@ -114,6 +115,19 @@ class MinimalSubscriber(Node):
         
         opencv_image = cv2.resize(self.bridge.compressed_imgmsg_to_cv2(msg, "bgr8"), (640, 360))
         cv2.imshow('tower', opencv_image)
+        if(self.towerFrames>30):
+            for value in ARUCO_DICT:
+                arucoDict = cv2.aruco.Dictionary_get(value)
+                arucoParams = cv2.aruco.DetectorParameters_create()
+                (corners, ids, rejected) = cv2.aruco.detectMarkers(opencv_image, arucoDict,
+                parameters=arucoParams)
+                
+                if ids:
+                    print("tower", ids)
+                
+
+            self.towerFrames = 0
+        self.towerFrames+=1
         cv2.waitKey(1)
 
     def chassis_listener_callback(self, msg):
@@ -127,7 +141,7 @@ class MinimalSubscriber(Node):
                 parameters=arucoParams)
                 
                 if ids:
-                    print(ids)
+                    print("chassis", ids)
                 
 
             self.chassisFrames = 0
