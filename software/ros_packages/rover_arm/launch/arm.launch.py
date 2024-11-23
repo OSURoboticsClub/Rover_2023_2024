@@ -36,6 +36,12 @@ def generate_launch_description():
     moveit_config = (
         MoveItConfigsBuilder("rover_arm", package_name="rover_arm")
         .robot_description(file_path="config/rover_arm.urdf.xacro")
+	.planning_scene_monitor(
+            publish_robot_description=True, publish_robot_description_semantic=True
+        )
+        .planning_pipelines(
+            pipelines=["ompl", "chomp", "pilz_industrial_motion_planner"]
+        )
         .to_moveit_configs()
     )
 
@@ -44,20 +50,27 @@ def generate_launch_description():
     servo_params = {"moveit_servo": servo_yaml}
 
     # RViz
- #   rviz_config_file = (
- #       get_package_share_directory("rover_arm") + "/config/rviz_config.rviz"
- #   )
- #   rviz_node = Node(
- #       package="rviz2",
- #       executable="rviz2",
- #       name="rviz2",
- #       output="log",
- #       arguments=["-d", rviz_config_file],
- #       parameters=[
- #           moveit_config.robot_description,
- #           moveit_config.robot_description_semantic,
- #       ],
- #   )
+    rviz_config_file = (
+        get_package_share_directory("rover_arm") + "/config/rviz_config.rviz"
+    )
+    kinematics_yaml = load_yaml(
+        "rover_arm", "config/kinematics.yaml"
+    )
+    rviz_node = Node(
+        package="rviz2",
+        executable="rviz2",
+        name="rviz2",
+        output="log",
+        arguments=["-d", rviz_config_file],
+        parameters=[
+            moveit_config.robot_description,
+            moveit_config.robot_description_semantic,
+	    kinematics_yaml,
+	    moveit_config.planning_pipelines,
+            moveit_config.robot_description_kinematics,
+            moveit_config.joint_limits
+        ],
+    )
 
     # ros2_control using FakeSystem as hardware
     ros2_controllers_path = os.path.join(
@@ -150,7 +163,7 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
-#            rviz_node,
+            rviz_node,
             ros2_control_node,
             joint_state_broadcaster_spawner,
             panda_arm_controller_spawner,

@@ -5,6 +5,7 @@ moveit_controller_manager: moveit_simple_controller_manager/MoveItSimpleControll
 moveit_simple_controller_manager:
   controller_names:
     - rover_arm_controller_moveit
+#    - rover_arm_controller
 
   rover_arm_controller_moveit:
     type: FollowJointTrajectory
@@ -17,5 +18,12 @@ moveit_simple_controller_manager:
       - elbow_roll_joint
       - wrist_pitch_joint
       - wrist_roll_joint
-    action_ns: follow_joint_trajectory
-    default: true
+ # rover_arm_controller:
+ #   default: true
+ #   joints:
+ #     - base_joint
+ #     - shoulder_joint
+ #     - elbow_pitch_joint
+ #     - elbow_roll_joint
+ #     - wrist_pitch_joint
+ #     - wrist_roll_joint
