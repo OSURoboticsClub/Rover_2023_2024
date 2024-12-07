@@ -23,9 +23,15 @@ def generate_launch_description():
          get_package_share_directory('rosbridge_server'),
          'launch'), '/rosbridge_websocket_launch.xml'])
       )
+   arm = IncludeLaunchDescription(
+      PythonLaunchDescriptionSource([os.path.join(
+	 get_package_share_directory('rover_arm'),
+	 'launch'), '/arm.launch.py'])
+      )
 
    return LaunchDescription([
       control,
       cameras,
-      bridge
+      bridge,
+      arm
    ]) 
