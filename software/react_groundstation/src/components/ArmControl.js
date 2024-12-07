@@ -105,7 +105,7 @@ function publishArmControl(topic,inputArr,buttonArr){
         buttons: buttonArr
         
     })
-    //console.log(data)
+    console.log(inputArr)
     topic.publish(data)
 }
 
