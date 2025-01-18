@@ -27,7 +27,8 @@ setup(
             'drive_coordinator = rover2_control.drive_coordinator:main',
             'tower_pan_tilt_control = rover2_control.tower_pan_tilt_control:main',
             'chassis_pan_tilt_control = rover2_control.chassis_pan_tilt_control:main',
-            'effectors_control = rover2_control.effectors_control:main'
+            'effectors_control = rover2_control.effectors_control:main',
+            'auton_control_node = rover2_control.auton_control_node:main'
         ],
     },
 )

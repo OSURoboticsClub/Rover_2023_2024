@@ -32,6 +32,6 @@ def generate_launch_description():
    return LaunchDescription([
       control,
       cameras,
-      bridge,
-      arm
+      bridge
+#      arm
    ])
