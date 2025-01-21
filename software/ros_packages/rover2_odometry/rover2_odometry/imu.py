@@ -11,7 +11,7 @@ import math
 from sensor_msgs.msg import Imu
 import rclpy
 from rclpy.node import Node
-
+from scipy.spatial.transform import Rotation as R
 #####################################
 # Global Variables
 #####################################
@@ -50,8 +50,17 @@ class Odometry(Node):
 
     def process_messages(self):
         self.broadcast_imu()
+    def quat_to_euler(self):
+        r = R.from_quat([self.imu.quaternion[2], self.imu.quaternion[1], self.imu.quaternion[0], self.imu.quaternion[3]])  # Note: scipy uses (x, y, z, w)
+        euler_angles = r.as_euler('xyz', degrees=True)  # 'xyz' represents the order of rotation axes
 
+        # Convert to degrees (optional)
+        euler_angles_degrees = r.as_euler('xyz', degrees=True)
+
+        #print("Euler angles (radians):", euler_angles)
+        #print("Euler angles (degrees):", euler_angles_degrees)
     def broadcast_imu(self):
+        self.quat_to_euler()
         message = Imu()
         message.header.frame_id = "imu"
         message.header.stamp = self.get_clock().now().to_msg()
@@ -68,7 +77,6 @@ class Odometry(Node):
         message.linear_acceleration.x = self.imu.acceleration[0]
         message.linear_acceleration.y = self.imu.acceleration[1]
         message.linear_acceleration.z = self.imu.acceleration[2]
-        print(message)
         self.imu_data_publisher.publish(message)
 
 def main(args=None):

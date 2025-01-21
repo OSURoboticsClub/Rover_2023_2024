@@ -23,6 +23,11 @@ def generate_launch_description():
          get_package_share_directory('rosbridge_server'),
          'launch'), '/rosbridge_websocket_launch.xml'])
       )
+   imu = IncludeLaunchDescription(
+      PythonLaunchDescriptionSource([os.path.join(
+         get_package_share_directory('rover2_odometry')),
+         '/rover2_odometry_launch.py'])
+      )
    arm = IncludeLaunchDescription(
       PythonLaunchDescriptionSource([os.path.join(
 	 get_package_share_directory('rover_arm'),
@@ -32,6 +37,7 @@ def generate_launch_description():
    return LaunchDescription([
       control,
       cameras,
-      bridge
-#      arm
+      bridge,
+      imu,
+      arm
    ])

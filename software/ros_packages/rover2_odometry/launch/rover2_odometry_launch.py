@@ -11,8 +11,8 @@ def generate_launch_description():
     return LaunchDescription([
         Node(
             package='rover2_odometry',
-            executable='odometry',
-            name='gps_and_imu',
+            executable='imu',
+            name='imu',
             **config
         )
     ])
