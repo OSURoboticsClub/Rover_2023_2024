@@ -10,31 +10,31 @@ default_acceleration_scaling_factor: 0.1
 joint_limits:
   base_joint:
     has_velocity_limits: true
-    max_velocity: 2.5
+    max_velocity: 2.0
     has_acceleration_limits: false
     max_acceleration: 0
   elbow_pitch_joint:
     has_velocity_limits: true
-    max_velocity: 2.5
+    max_velocity: 2.0
     has_acceleration_limits: false
     max_acceleration: 0
   elbow_roll_joint:
     has_velocity_limits: true
-    max_velocity: 2.5
+    max_velocity: 2.0
     has_acceleration_limits: false
     max_acceleration: 0
   wrist_roll_joint:
     has_velocity_limits: true
-    max_velocity: 2.5
+    max_velocity: 2.0
     has_acceleration_limits: false
     max_acceleration: 0
   shoulder_joint:
     has_velocity_limits: true
-    max_velocity: 2.5
+    max_velocity: 2.0
     has_acceleration_limits: false
     max_acceleration: 0
   wrist_pitch_joint:
     has_velocity_limits: true
-    max_velocity: 2.5
+    max_velocity: 2.0
     has_acceleration_limits: false
     max_acceleration: 0

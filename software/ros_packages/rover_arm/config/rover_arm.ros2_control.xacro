@@ -6,7 +6,7 @@
         <ros2_control name="${name}" type="system">
             <hardware>
                 <plugin>odrive_ros2_control_plugin/ODriveHardwareInterface</plugin>
-                <param name="can">can0</param>
+                <param name="can">can1</param>
                 <!-- <plugin>mock_components/GenericSystem</plugin> -->
             </hardware>
             <joint name="base_joint">

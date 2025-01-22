@@ -8,13 +8,13 @@ from launch_xml.launch_description_sources import XMLLaunchDescriptionSource
 def generate_launch_description():
    control = IncludeLaunchDescription(
       PythonLaunchDescriptionSource([os.path.join(
-         get_package_share_directory('rover2_control'),
-         'rover2_control_launch.py')])
+         get_package_share_directory('rover2_control')),
+         '/rover2_control_launch.py'])
       )
 
    cameras = IncludeLaunchDescription(
       PythonLaunchDescriptionSource([os.path.join(
-         get_package_share_directory('rover2_camera'),
+         get_package_share_directory('rover_camera'),
          'launch'), '/camera_launch.py'])
       )
 
@@ -34,4 +34,4 @@ def generate_launch_description():
       cameras,
       bridge,
       arm
-   ]) 
+   ])

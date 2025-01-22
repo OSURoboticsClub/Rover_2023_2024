@@ -13,7 +13,7 @@ import minimalmodbus
 from std_msgs.msg import UInt8, UInt16
 
 # Custom Imports
-from rover2_control_interface.msg import TowerPanTiltControlMessage
+from rover2_control_interface.msg import TowerPanTiltControlMessage, LightControlMessage, GPSStatusMessage
 
 #####################################
 # Global Variables
@@ -23,10 +23,8 @@ NODE_NAME = "tower_pan_tilt_control"
 DEFAULT_PORT = "/dev/rover/ttyTowerAndPanTilt"
 DEFAULT_BAUD = 115200
 
-DEFAULT_INVERT = False
-
 DEFAULT_TOWER_LIGHT_CONTROL_TOPIC = "tower/light/control"
-DEFAULT_TOWER_CO2_STATUS_TOPIC = "tower/status/co2"
+DEFAULT_TOWER_GPS_STATUS_TOPIC = "tower/status/gps"
 DEFAULT_PAN_TILT_CONTROL_TOPIC = "tower/pan_tilt/control"
 
 TOWER_NODE_ID = 1
@@ -51,8 +49,19 @@ PAN_TILT_MODBUS_REGISTERS = {
 }
 
 TOWER_MODBUS_REGISTERS = {
-    "LED_CONTROL": 0,
-    "CO2_READING_PPM": 1
+    "LIGHT": 0,
+    "ROVER_LAT_SIGN": 1,
+    "ROVER_LAT_DEG": 2,
+    "ROVER_LAT_FRAC": 3,
+    "ROVER_LONG_SIGN": 4,
+    "ROVER_LONG_DEG": 5,
+    "ROVER_LONG_FRAC": 6,
+    "ASTRONAUT_LAT_SIGN": 7,
+    "ASTRONAUT_LAT_DEG": 8,
+    "ASTRONAUT_LAT_FRAC": 9,
+    "ASTRONAUT_LONG_SIGN": 10,
+    "ASTRONAUT_LONG_DEG": 11,
+    "ASTRONAUT_LONG_FRAC": 12
 }
 
 PAN_TILT_CONTROL_DEFAULT_MESSAGE = [
@@ -66,11 +75,9 @@ PAN_TILT_CONTROL_DEFAULT_MESSAGE = [
 ]
 
 TOWER_LIGHT_STATES = {
-    "NO_CHANGE": 0,
-    "LIGHT_OFF": 1,
-    "LIGHT_FLASH": 2,
-    "LIGHT_MED": 3,
-    "LIGHT_HIGH": 4
+    "LIGHT_OFF": 0,
+    "LIGHT_INFRARED": 1,
+    "LIGHT_LED": 2
 }
 
 TOWER_CONTROL_DEFAULT_MESSAGE = [
@@ -78,6 +85,15 @@ TOWER_CONTROL_DEFAULT_MESSAGE = [
 ]
 
 NODE_LAST_SEEN_TIMEOUT = 2  # seconds
+
+GPS_COORDINATES = {
+    "rover_latitude": 0,
+    "rover_longitude": 1,
+    "astronaut_latitude": 2,
+    "astronaut_longitude": 3
+}
+REGISTERS_PER_COORDINATE = 3 # each gps coordinate uses three modbus registers
+GPS_FRAC_DENOM = 2**16 # fraction of full degree expressed as uint16
 
 
 #####################################
@@ -98,8 +114,8 @@ class TowerPanTiltControl(Node):
         self.pan_tilt_control_subscriber_topic = self.declare_parameter("~pan_tilt_control_topic",
                                                                  DEFAULT_PAN_TILT_CONTROL_TOPIC).value
 
-        self.tower_co2_publisher_topic = self.declare_parameter("~tower_co2_status_topic",
-                                                         DEFAULT_TOWER_CO2_STATUS_TOPIC).value
+        self.tower_gps_publisher_topic = self.declare_parameter("~tower_gps_status_topic",
+                                                         DEFAULT_TOWER_GPS_STATUS_TOPIC).value
 
         self.wait_time = 1.0 / self.declare_parameter("~hertz", DEFAULT_HERTZ).value
 
@@ -112,10 +128,10 @@ class TowerPanTiltControl(Node):
                                                                 self.pan_tilt_control_subscriber_topic,
                                                                 self.pan_tilt_control_callback, 1)
 
-        self.tower_light_control_subscriber = self.create_subscription(UInt8, self.tower_light_control_subscriber_topic,
+        self.tower_light_control_subscriber = self.create_subscription(LightControlMessage, self.tower_light_control_subscriber_topic,
                                                                 self.tower_light_control_callback, 1)
 
-        self.tower_co2_publisher = self.create_publisher(UInt16, self.tower_co2_publisher_topic, 1)
+        self.tower_gps_publisher = self.create_publisher(GPSStatusMessage, self.tower_gps_publisher_topic, 1)
 
         self.pan_tilt_control_message = None
         self.tower_light_control_message = None
@@ -124,8 +140,6 @@ class TowerPanTiltControl(Node):
         self.new_tower_light_control_message = False
 
         self.modbus_nodes_seen_time = time()
-
-        self.send_startup_centering_and_lights_off_command()
 
         self.timer = self.create_timer(self.wait_time, self.main_loop)
 
@@ -148,7 +162,7 @@ class TowerPanTiltControl(Node):
 
         try:
             self.send_tower_control_message()
-            self.broadcast_co2_reading_message()
+            self.broadcast_gps_reading_message()
             self.modbus_nodes_seen_time = time()
 
         except Exception as error:
@@ -165,16 +179,6 @@ class TowerPanTiltControl(Node):
         self.tower_node = minimalmodbus.Instrument(self.port, int(self.tower_node_id))
         self.pan_tilt_node = minimalmodbus.Instrument(self.port, int(self.pan_tilt_node_id))
         self.__setup_minimalmodbus_for_485()
-
-    def send_startup_centering_and_lights_off_command(self):
-        try:
-            # registers = list(PAN_TILT_CONTROL_DEFAULT_MESSAGE)
-            # registers[PAN_TILT_MODBUS_REGISTERS["CENTER_ALL"]] = 1
-            # self.pan_tilt_node.write_registers(0, registers)
-
-            self.tower_node.write_register(0, TOWER_LIGHT_STATES["LIGHT_OFF"])
-        except Exception as e:
-            pass
 
     def send_pan_tilt_control_message(self):
         if self.new_pan_tilt_control_message:
@@ -203,12 +207,27 @@ class TowerPanTiltControl(Node):
         else:
             self.pan_tilt_node.write_registers(0, PAN_TILT_CONTROL_DEFAULT_MESSAGE)
 
-    def broadcast_co2_reading_message(self):
-        self.tower_co2_publisher.publish(UInt16(data=self.tower_node.read_register(1)))
+    def broadcast_gps_reading_message(self):
+        gps_status = GPSStatusMessage()
+        tower_data = self.tower_node.read_registers(1, len(GPS_COORDINATES) * REGISTERS_PER_COORDINATE) # skip light control
+
+        gps_coords = [0]*len(GPS_COORDINATES) 
+        for i in range(len(gps_coords)):
+            offset = i*REGISTERS_PER_COORDINATE                                                    # each gps coordinate has three registers
+            coord_sign, coord_deg, coord_frac = tower_data[offset:offset+REGISTERS_PER_COORDINATE] # extract parts of coordinate
+            gps_coords[i] += coord_deg + coord_frac / GPS_FRAC_DENOM                               # frac is [0, 1) mapped to uint16
+            gps_coords *= -1 if coord_sign else 1                                                  # sign 0 is positive (N, E) is negative (S, W)
+
+        gps_status.rover_latitude = gps_coords[GPS_COORDINATES["rover_latitude"]]
+        gps_status.rover_longitude = gps_coords[GPS_COORDINATES["rover_longitude"]]
+        gps_status.astronaut_latitude = gps_coords[GPS_COORDINATES["astronaut_latitude"]]
+        gps_status.astronaut_longitude = gps_coords[GPS_COORDINATES["astronaut_longitude"]]
+
+        self.tower_gps_publisher.publish(gps_status)
 
     def send_tower_control_message(self):
         if self.new_tower_light_control_message:
-            self.tower_node.write_register(0, self.tower_light_control_message.data)
+            self.tower_node.write_register(0, min(self.tower_light_control_message.light_mode, TOWER_LIGHT_STATES["LIGHT_LED"]))
             self.new_tower_light_control_message = False
 
     def pan_tilt_control_callback(self, pan_tilt_control):

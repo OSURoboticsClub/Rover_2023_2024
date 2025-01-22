@@ -137,40 +137,40 @@
     <parent link="base_link"/>
     <child link="arm_link_0"/>
     <origin rpy="0 0 0" xyz="0 0.055 0.087245"/>
-    <axis xyz="0 0 1"/>
-    <limit effort="1000.0" lower="-1.57079632679" upper="1.57079632679" velocity="2.5"/>
+    <axis xyz="0 0 -1"/>
+    <limit effort="1000.0" lower="-1.57079632679" upper="1.57079632679" velocity="2.0"/>
   </joint>
 
   <joint name="shoulder_joint" type="revolute">
     <parent link="arm_link_0"/>
     <child link="arm_link_1"/>
     <origin rpy="0 0 3.14159" xyz="0 0 0.151443"/>
-    <axis xyz="1 0 0"/>
-    <limit effort="1000.0" lower="-1.57079632679" upper="1.57079632679" velocity="2.5"/>
+    <axis xyz="-1 0 0"/>
+    <limit effort="1000.0" lower="-1.57079632679" upper="1.57079632679" velocity="2.0"/>
   </joint>
 
   <joint name="elbow_pitch_joint" type="revolute">
     <parent link="arm_link_1"/>
     <child link="arm_link_2"/>
     <origin rpy="0 0 0" xyz="0.05925 0 0.501983"/>
-    <axis xyz="1 0 0"/>
-    <limit effort="1000.0" lower="-1.57079632679" upper="1.57079632679" velocity="2.5"/>
+    <axis xyz="-1 0 0"/>
+    <limit effort="1000.0" lower="-1.57079632679" upper="1.57079632679" velocity="2.0"/>
   </joint>
 
   <joint name="elbow_roll_joint" type="revolute">
     <parent link="arm_link_2"/>
     <child link="arm_link_3"/>
     <origin rpy="0 0 0" xyz="0.063 0.000654 0.059505"/>
-    <axis xyz="0 0 1"/>
-    <limit effort="1000.0" lower="-3.141592653589793" upper="3.141592653589793" velocity="2.5"/>
+    <axis xyz="0 0 -1"/>
+    <limit effort="1000.0" lower="-3.141592653589793" upper="3.141592653589793" velocity="2.0"/>
   </joint>
 
   <joint name="wrist_pitch_joint" type="revolute">
     <parent link="arm_link_3"/>
     <child link="arm_link_4"/>
     <origin rpy="0 0 0" xyz="-0.065 0 0.3318"/>
-    <axis xyz="1 0 0"/>
-    <limit effort="1000.0" lower="-1.57079632679" upper="3.141592653589793" velocity="2.5"/>
+    <axis xyz="-1 0 0"/>
+    <limit effort="1000.0" lower="-1.57079632679" upper="3.141592653589793" velocity="2.0"/>
   </joint>
 
   <joint name="wrist_roll_joint" type="continuous">
@@ -178,7 +178,7 @@
     <child link="arm_gripper"/>
     <origin rpy="0 0 0" xyz="-0.050 0 0.050484"/>
     <axis xyz="0 0 1"/>
-    <limit effort="1000.0" velocity="2.5"/>
+    <limit effort="1000.0" velocity="2.0"/>
   </joint>
 
 </robot>
