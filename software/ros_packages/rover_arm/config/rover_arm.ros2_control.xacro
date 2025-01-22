@@ -1,13 +1,18 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-    <xacro:macro name="rover_arm_ros2_control" params="name initial_positions_file">
+    <xacro:macro name="rover_arm_ros2_control" params="name initial_positions_file ros2_control_hardware_type">
         <xacro:property name="initial_positions" value="${xacro.load_yaml(initial_positions_file)['initial_positions']}"/>
 
         <ros2_control name="${name}" type="system">
             <hardware>
+              <xacro:if value="${ros2_control_hardware_type == 'main'}">
                 <plugin>odrive_ros2_control_plugin/ODriveHardwareInterface</plugin>
-                <param name="can">can0</param>
+                <param name="can">can1</param>
                 <!-- <plugin>mock_components/GenericSystem</plugin> -->
+              </xacro:if>
+              <xacro:if value="${ros2_control_hardware_type == 'sim'}">
+                <plugin>mock_components/GenericSystem</plugin>
+              </xacro:if>
             </hardware>
             <joint name="base_joint">
                 <param name="node_id">0</param>
