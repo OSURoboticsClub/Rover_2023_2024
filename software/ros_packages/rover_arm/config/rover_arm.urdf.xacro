@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="rover_arm">
     <xacro:arg name="initial_positions_file" default="initial_positions.yaml" />
+    <xacro:arg name="ros2_control_hardware_type" default="main" />
 
     <!-- Import rover_arm urdf file -->
     <xacro:include filename="$(find rover_arm_urdf)/urdf/rover_arm.urdf" />
@@ -8,7 +9,14 @@
     <!-- Import control_xacro -->
     <xacro:include filename="rover_arm.ros2_control.xacro" />
 
+    <!--Import camera-->
+    <!-- Include sensors and other links -->
+    <xacro:include filename="$(find realsense2_description)/urdf/_d405.urdf.xacro"/>
+  
+    <!-- Instantiate micros  -->
+    <xacro:sensor_d405 parent ="arm_gripper" name="camera" use_nominal_extrinsics="true">
+        <origin xyz="0 0.05 0.1" rpy="-1.5707 -1.5707 0"/>
+    </xacro:sensor_d405>
 
-    <xacro:rover_arm_ros2_control name="RealSystem" initial_positions_file="$(arg initial_positions_file)"/>
-
+    <xacro:rover_arm_ros2_control name="RealSystem" initial_positions_file="$(arg initial_positions_file)" ros2_control_hardware_type="$(arg ros2_control_hardware_type)"/>
 </robot>
