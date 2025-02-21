@@ -40,6 +40,7 @@ def generate_launch_description():
         default_value="main",
         description="Ros2 Control Hardware Interface Type [main, sim]",
     )
+    #ros2_control_hardware_type = LaunchConfiguration(ros2_control_hardware_type)
     moveit_config = (
         MoveItConfigsBuilder("rover_arm", package_name="rover_arm")
         .robot_description(
@@ -70,6 +71,9 @@ def generate_launch_description():
         parameters=[
             moveit_config.robot_description,
             moveit_config.robot_description_semantic,
+            moveit_config.robot_description_kinematics,
+            moveit_config.planning_pipelines,
+            moveit_config.joint_limits,
         ],
     )
 
@@ -164,13 +168,13 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
+            ros2_control_hardware_type,
             rviz_node,
             ros2_control_node,
             joint_state_broadcaster_spawner,
             panda_arm_controller_spawner,
             servo_node,
             joy_to_servo_node,
-            ros2_control_hardware_type,
             container,
         ]
     )
