@@ -2,4 +2,6 @@ sudo modprobe can
 sudo modprobe can_raw
 sudo modprobe mttcan
 sudo ip link set can1 down
-sudo ip link set can1 up type can bitrate 500000 dbitrate 1000000 berr-reporting on fd on
+sudo ip link set can1 up type can bitrate 500000
+source /home/makemorerobot/Rover_2023_2024/software/install/setup.bash
+ros2 launch rover2_main rover2_main_launch.py
