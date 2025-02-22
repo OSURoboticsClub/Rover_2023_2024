@@ -9,21 +9,24 @@ import CameraPanTilt from '../components/CameraPanTilt.js';
 
 import ROSLIB from 'roslib'
 
-
-
 function MainPage(){
+    var ethIP = 'ws://192.168.1.139:9090'
+    var tpLinkIP = 'ws://192.168.1.101:9090'
+    var connectEth = true
+    
     var ros = new ROSLIB.Ros({
-      url : 'ws://192.168.1.138:9090'
+      url : tpLinkIP
     });
 
     ros.on('connection', function() {
-      console.log('Connected to websocket server.');
+      console.log('Connected to websocket server.\n\n\n\n\n\n\n\n');
     });
 
     ros.on('error', function(error) {
       console.log('Error connecting to websocket server: ', error);
-    });
 
+    });
+  
     ros.on('close', function() {
       console.log('Connection to websocket server closed.');
     });

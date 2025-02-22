@@ -71,7 +71,7 @@ const BUTTON_MAPPING = {
 const AXIS_MOVEMENT_THRESHOLD = 0.2;
 
 const ARM_CONTROLLER_ID = "24c6-543a-PowerA Xbox One wired controller"
-const DRIVE_CONTROLLER_ID = "0e6f-0213-Afterglow Gamepad for Xbox 360" //Sometimes randomly changes to 0e6f-0213-Afterglow Gamepad for Xbox 360
+const DRIVE_CONTROLLER_ID = "0e6f-0213-Afterglow Gamepad for Xbox 360"//"1bad-f900-Harmonix Xbox 360 Controller" //Sometimes randomly changes to 0e6f-0213-Afterglow Gamepad for Xbox 360
                                                                      //from 1bad-f900-Harmonix Xbox 360 Controller
                         
 

@@ -28,6 +28,11 @@ def generate_launch_description():
 	 get_package_share_directory('rover_arm'),
 	 'launch'), '/arm.launch.py'])
       )
+   odometry = IncludeLaunchDescription(
+      PythonLaunchDescriptionSource([os.path.join(
+         get_package_share_directory('rover2_odometry'),
+         'launch'), '/rover2_odometry_launch.py'])
+      )
 
    return LaunchDescription([
       control,

@@ -1,11 +1,21 @@
-import yaml, sys
+import yaml, sys, os
 from launch import LaunchDescription
 from launch.actions import RegisterEventHandler
 from launch.event_handlers import OnProcessExit
 from launch_ros.actions import Node
 from moveit_configs_utils import MoveItConfigsBuilder
-
 from ament_index_python.packages import get_package_share_directory
+
+
+def load_yaml(package_name, file_path):
+    package_path = get_package_share_directory(package_name)
+    absolute_file_path = os.path.join(package_path, file_path)
+
+    try:
+        with open(absolute_file_path, "r") as file:
+            return yaml.safe_load(file)
+    except EnvironmentError:  # parent of IOError, OSError *and* WindowsError where available
+        return None
 
 
 def generate_launch_description():
@@ -16,7 +26,7 @@ def generate_launch_description():
         .robot_description(file_path="config/rover_arm.urdf.xacro")
         .to_moveit_configs()
     )
-
+    
     
     servo_yaml = yaml.safe_load(open((get_package_share_directory("rover_arm") + "/config/servo_config.yaml"), "r"))
     servo_params = {"moveit_servo": servo_yaml}
@@ -24,12 +34,14 @@ def generate_launch_description():
     rviz_config_file = (
         get_package_share_directory("rover_arm") + "/config/rviz_config.rviz"
     )
-
+    kinematics_yaml = load_yaml(
+        "rover_arm", "config/kinematics.yaml"
+    )
     robot_controllers = (
         get_package_share_directory("rover_arm") + "/config/ros2_controllers.yaml"
     )
 
-    use_rviz = str('false')
+    use_rviz = str('true')
     for arg in sys.argv:
         if arg.startswith("use_rviz:="):
             use_rviz = arg.split(":=")[1]
@@ -44,6 +56,10 @@ def generate_launch_description():
             parameters=[
                 moveit_config.robot_description,
                 moveit_config.robot_description_semantic,
+                kinematics_yaml,
+	    	moveit_config.planning_pipelines,
+            	moveit_config.robot_description_kinematics,
+            	moveit_config.joint_limits
             ],
         )
 
@@ -107,13 +123,13 @@ def generate_launch_description():
 
 
     nodes = [
-        control_node,
-        robot_state_pub_node,
-        joint_state_broadcaster_spawner,
-        delay_robot_controller_spawner_after_joint_state_broadcaster_spawner,
-        joy_node,
-        servo_node,
-        joy_to_servo_node,
+#        control_node,
+#        robot_state_pub_node,
+#        joint_state_broadcaster_spawner,
+#        delay_robot_controller_spawner_after_joint_state_broadcaster_spawner,
+#        joy_node,
+#        servo_node,
+#        joy_to_servo_node,
     ]
     if use_rviz == 'true':
         nodes.append(rviz_node)

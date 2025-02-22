@@ -118,6 +118,7 @@ function ChassisControl(props){
 
     const chassisControls = window.joypad.on('axis_move', function(e){driveOutput(e,props,updateChassisState);});
     const lightToggle = window.joypad.on('button_press', function(e){
+        console.log(e.detail.gamepad["id"])
         if(DRIVE_CONTROLLER_ID === e.detail.gamepad["id"] && e.detail.buttonName === "button_16"){
         
             if(lightState === 0){
