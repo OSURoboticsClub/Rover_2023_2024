@@ -23,9 +23,22 @@ find_package(cv_bridge REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(OpenCV)
 find_package(sensor_msgs)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GST REQUIRED gstreamer-1.0)
+pkg_check_modules(GST_APPSINK REQUIRED gstreamer-app-1.0)
+
+include_directories(
+    ${GST_INCLUDE_DORS}
+    ${GST_APPSINK_INCLUDE_DIRS}
+)
+link_directories(${GST_LIBRARY_DIRS})
 
 add_executable(rover_camera src/rover_camera.cpp)
 ament_target_dependencies(rover_camera rclcpp rover_camera_interface cv_bridge image_transport OpenCV sensor_msgs)
+
+target_link_libraries(rover_camera
+    ${GST_LIBRARIES}
+    ${GST_APPSINK_LIBRARIES})
 
 install(TARGETS
   rover_camera
@@ -37,3 +50,4 @@ install(DIRECTORY
 )
 
 ament_package()
+
