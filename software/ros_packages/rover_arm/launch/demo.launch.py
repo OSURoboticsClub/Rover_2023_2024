@@ -3,6 +3,7 @@ from moveit_configs_utils.launches import generate_demo_launch
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from launch import LaunchDescription
 
 def generate_launch_description():
     
@@ -16,7 +17,10 @@ def generate_launch_description():
 #        default_value="true",
 #        description="Use simulated time for all nodes",
 #    )
+    launch_description = LaunchDescription()
+    launch_description.add_action(ros2_control_hardware_type)
     
+
     moveit_config = (MoveItConfigsBuilder("rover_arm", package_name="rover_arm")
         .robot_description(
             file_path="config/rover_arm.urdf.xacro",
@@ -25,6 +29,10 @@ def generate_launch_description():
                     "ros2_control_hardware_type"
                 )
             },
+        )
+        .trajectory_execution(file_path="config/moveit_controllers.yaml")
+        .planning_pipelines(
+            pipelines=["ompl", "pilz_industrial_motion_planner"]
         )
         .to_moveit_configs()
     )
@@ -54,10 +62,11 @@ def generate_launch_description():
 #        }]
 #    )
 
-    launch_description = generate_demo_launch(moveit_config)
+
+    launch_description.add_action(generate_demo_launch(moveit_config))
     #launch_description.add_action(use_sim_time)
     #launch_description.add_action(d405_node)
-
-    launch_description.add_action(ros2_control_hardware_type)
+    
+    
     
     return launch_description

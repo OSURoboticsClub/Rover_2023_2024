@@ -154,7 +154,7 @@
     <child link="arm_link_2"/>
     <origin rpy="0 0 0" xyz="0.05925 0 0.501983"/>
     <axis xyz="-1 0 0"/>
-    <limit effort="1000.0" lower="-1.57079632679" upper="1.57079632679" velocity="2.0"/>
+    <limit effort="1000.0" lower="-3.1415926" upper="3.1415926" velocity="2.0"/>
   </joint>
 
   <joint name="elbow_roll_joint" type="revolute">

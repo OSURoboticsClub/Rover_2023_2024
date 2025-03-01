@@ -12,6 +12,7 @@ import xacro
 from moveit_configs_utils import MoveItConfigsBuilder
 
 
+
 def load_file(package_name, file_path):
     package_path = get_package_share_directory(package_name)
     absolute_file_path = os.path.join(package_path, file_path)
@@ -32,14 +33,21 @@ def load_yaml(package_name, file_path):
             return yaml.safe_load(file)
     except EnvironmentError:  # parent of IOError, OSError *and* WindowsError where available
         return None
-
+    
 
 def generate_launch_description():
+
+
     ros2_control_hardware_type = DeclareLaunchArgument(
         "ros2_control_hardware_type",
         default_value="main",
         description="Ros2 Control Hardware Interface Type [main, sim]",
     )
+
+    kinematics_yaml = load_yaml(
+        "rover_arm", "config/kinematics.yaml"   
+    )
+
     #ros2_control_hardware_type = LaunchConfiguration(ros2_control_hardware_type)
     moveit_config = (
         MoveItConfigsBuilder("rover_arm", package_name="rover_arm")
@@ -51,14 +59,70 @@ def generate_launch_description():
                 )
             },
         )
+        .robot_description_semantic(file_path="config/rover_arm.srdf")
+        .trajectory_execution(file_path="config/moveit_controllers.yaml")
+        .sensors_3d(file_path="config/sensors_3d.yaml")
+        .planning_pipelines(
+            pipelines=["ompl", "pilz_industrial_motion_planner"]
+        )
         .to_moveit_configs()
     )
 
-    # Get parameters for the Servo node
-    servo_yaml = load_yaml("rover_arm", "config/servo_config.yaml")
-    servo_params = {"moveit_servo": servo_yaml}
+    move_group_node = Node(
+        package="moveit_ros_move_group", 
+        executable="move_group",
+        output="screen", 
+        parameters=[
+            moveit_config.to_dict(),
+            {
+                "octomap_frame": "base_link",
+                "octomap_resolution" : 0.005,
+                "max_range" : 0.5,
+            },    
+        ],
+        arguments=["--ros-args", "--log-level", "info"],
+    )
+        # ros2_control using FakeSystem as hardware
+    ros2_controllers_path = os.path.join(
+        get_package_share_directory("rover_arm"),
+        "config",
+        "ros2_controllers.yaml",
+    )
+    ros2_control_node = Node(
+        package="controller_manager",
+        executable="ros2_control_node",
+        parameters=[ros2_controllers_path],
+        remappings=[
+            ("/controller_manager/robot_description", "/robot_description"),
+        ],
+        output="screen",
+    )
 
-    # RViz
+    joint_state_broadcaster_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=[
+            "joint_state_broadcaster",
+            "--controller-manager-timeout",
+            "300",
+            "--controller-manager",
+            "/controller_manager",
+        ],
+    )
+
+    rover_arm_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["rover_arm_controller", "-c", "/controller_manager"],
+    )
+
+    rover_gripper_controller_spawner = Node(
+        package="controller_manager", 
+        executable="spawner", 
+        arguments=["rover_gripper_controller", "-c", "/controller_manager"],
+    )
+
+    #RViz
     rviz_config_file = (
         get_package_share_directory("rover_arm") + "/config/rviz_config.rviz"
     )
@@ -75,37 +139,6 @@ def generate_launch_description():
             moveit_config.planning_pipelines,
             moveit_config.joint_limits,
         ],
-    )
-
-    # ros2_control using FakeSystem as hardware
-    ros2_controllers_path = os.path.join(
-        get_package_share_directory("rover_arm"),
-        "config",
-        "ros2_controllers.yaml",
-    )
-    ros2_control_node = Node(
-        package="controller_manager",
-        executable="ros2_control_node",
-        parameters=[moveit_config.robot_description, ros2_controllers_path],
-        output="screen",
-    )
-
-    joint_state_broadcaster_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=[
-            "joint_state_broadcaster",
-            "--controller-manager-timeout",
-            "300",
-            "--controller-manager",
-            "/controller_manager",
-        ],
-    )
-
-    panda_arm_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["rover_arm_controller", "-c", "/controller_manager"],
     )
 
     # Launch as much as possible in components
@@ -128,16 +161,16 @@ def generate_launch_description():
             #     ],
             # ),
             ComposableNode(
-                package="robot_state_publisher",
-                plugin="robot_state_publisher::RobotStatePublisher",
-                name="robot_state_publisher",
-                parameters=[moveit_config.robot_description],
-            ),
-            ComposableNode(
                 package="tf2_ros",
                 plugin="tf2_ros::StaticTransformBroadcasterNode",
                 name="static_tf2_broadcaster",
                 parameters=[{"child_frame_id": "/base_link", "frame_id": "/world"}],
+            ),
+            ComposableNode(
+                package="robot_state_publisher",
+                plugin="robot_state_publisher::RobotStatePublisher",
+                name="robot_state_publisher",
+                parameters=[moveit_config.robot_description],
             ),
             ComposableNode(
                 package="joy",
@@ -147,6 +180,12 @@ def generate_launch_description():
         ],
         output="screen",
     )
+
+    # Get parameters for the Servo node
+    servo_yaml = load_yaml("rover_arm", "config/servo_config.yaml")
+    servo_params = {"moveit_servo": servo_yaml}
+    sensor_yaml = load_yaml("rover_arm", "config/sensors_3d.yaml")
+
     # Launch a standalone Servo node.
     # As opposed to a node component, this may be necessary (for example) if Servo is running on a different PC
     servo_node = Node(
@@ -154,9 +193,8 @@ def generate_launch_description():
         executable="servo_node_main",
         parameters=[
             servo_params,
-            moveit_config.robot_description,
-            moveit_config.robot_description_semantic,
-            moveit_config.robot_description_kinematics,
+            moveit_config.to_dict(),
+            sensor_yaml,
         ],
         output="screen",
     )
@@ -166,15 +204,31 @@ def generate_launch_description():
         executable="joy_to_servo_node",
     )
 
+    camera_node = Node(
+        package='realsense2_camera',
+        executable='realsense2_camera_node',
+        name='camera',
+        parameters=[{
+            'pointcloud.enable': True,
+            'align_depth.enable': True,
+        }],
+        output='screen'
+    )
+
+
     return LaunchDescription(
         [
-            ros2_control_hardware_type,
+            ros2_control_hardware_type, 
             rviz_node,
+            container,
+            move_group_node,
             ros2_control_node,
             joint_state_broadcaster_spawner,
-            panda_arm_controller_spawner,
-            servo_node,
+            rover_arm_controller_spawner,
             joy_to_servo_node,
-            container,
+            servo_node,
+            camera_node,
+            
+
         ]
     )
