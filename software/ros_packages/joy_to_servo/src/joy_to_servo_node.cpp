@@ -50,7 +50,7 @@
 const std::string JOY_TOPIC = "/joy";
 const std::string TWIST_TOPIC = "/servo_node/delta_twist_cmds";
 const std::string JOINT_TOPIC = "/servo_node/delta_joint_cmds";
-const std::string EEF_FRAME_ID = "rover_hand";
+const std::string EEF_FRAME_ID = "arm_gripper";
 const std::string BASE_FRAME_ID = "base_link";
 
 // Enums for button names -> axis/button array index
@@ -168,7 +168,7 @@ bool convertJoyToCmd(const std::vector<float>& axes, const std::vector<int>& but
 void updateCmdFrame(std::string& frame_name, const std::vector<int>& buttons)
 {
   if (buttons[CHANGE_VIEW] && frame_name == EEF_FRAME_ID)
-    frame_name = BASE_FRAME_ID;
+    frame_name = EEF_FRAME_ID;
   else if (buttons[MENU] && frame_name == BASE_FRAME_ID)
     frame_name = EEF_FRAME_ID;
 }
