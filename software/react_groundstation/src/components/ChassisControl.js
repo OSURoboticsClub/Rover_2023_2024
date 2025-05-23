@@ -72,7 +72,27 @@ function driveOutput(e,props,updateChassisState){
 function sendDriveMessage(topic,throttle){
     var adjustedYLeft = -1*throttle*leftYAxis
     var adjustedYRight = -1*throttle*rightYAxis
-    const data = new ROSLIB.Message({
+    var data = null;
+    if (adjustedYLeft === 0 && adjustedYRight === 0) {
+        data = new ROSLIB.Message({
+        controller_present: false,
+        ignore_drive_control: false,
+        drive_twist: {
+                linear : {
+                  x : 0,
+                  y : 0,
+                  z : 0
+                },
+                angular : {
+                  x : 0,
+                  y : 0,
+                  z : 0
+                }
+            }
+        })
+
+    } else {
+        data = new ROSLIB.Message({
         controller_present: true,
         ignore_drive_control: false,
         drive_twist: {
@@ -87,7 +107,10 @@ function sendDriveMessage(topic,throttle){
                   z : (adjustedYRight - adjustedYLeft) / 2.0
                 }
             }
-    })
+        })
+
+
+    }
     
     
     topic.publish(data)
@@ -118,7 +141,7 @@ function ChassisControl(props){
 
     const chassisControls = window.joypad.on('axis_move', function(e){driveOutput(e,props,updateChassisState);});
     const lightToggle = window.joypad.on('button_press', function(e){
-        console.log(e.detail.gamepad["id"])
+        
         if(DRIVE_CONTROLLER_ID === e.detail.gamepad["id"] && e.detail.buttonName === "button_16"){
         
             if(lightState === 0){

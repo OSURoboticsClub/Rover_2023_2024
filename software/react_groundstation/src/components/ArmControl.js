@@ -108,6 +108,26 @@ function publishArmControl(topic,inputArr,buttonArr){
     console.log(inputArr)
     topic.publish(data)
 }
+function publishArmControl2(button_change_topic,inputArr2,buttonArr2){
+    seqID+=1
+    
+    const data = new ROSLIB.Message({
+        header: {
+            
+            stamp : {
+              sec : 0,
+              nsec : 0
+            },
+            frame_id: ""
+        },
+        
+        axes: inputArr2,
+        buttons: buttonArr2
+        
+    })
+    console.log(inputArr2)
+    button_change_topic.publish(data)
+}
 
 
 
@@ -119,6 +139,11 @@ function ArmControl(props){
         name: "/joy",
         messageType: "sensor_msgs/Joy"
     })
+    const button_change_topic = new ROSLIB.Topic({
+        ros: props.ros,
+        name: "/joy2",
+        messageType: "sensor_msgs/Joy"
+    })
 
     const [movementMode,setMovementMode] = useState("DISABLED");
     const [dpadStatus,setDpadStatus] = useState([false,false,false,false])
@@ -126,7 +151,7 @@ function ArmControl(props){
 
     const armJoyMovement = window.joypad.on('axis_move', function(e){armOutput(e)})
     const dpadPressed = window.joypad.on('button_press', function(e){
-        //console.log(e.detail.buttonName)
+        
         
         if((movementMode === "DISABLED" || e.detail.gamepad["id"] !== ARM_CONTROLLER_ID) ){
             return 
@@ -225,6 +250,11 @@ function ArmControl(props){
         armJoyMovement.unsubscribe()
     },[buttonInterval])
 
+    const changeArmController = () => {
+        publishArmControl2(button_change_topic,[0],[0,0,0,0,0,0,0,0,0,0,0])
+        publishArmControl2(button_change_topic,[0],[0,0,0,0,0,0,0,0,1,0,0])
+        var buttonArr = [0,0,0,0,0,0,0,0,0,0,0]
+    };
     
     const armOutput = (e) => {
         //console.log(props.controlArm)
@@ -250,7 +280,9 @@ function ArmControl(props){
         //has a camera
         //control via end-effector with IK and joint-to-joiny control (JTJ control)
         //wireframe 3d (use euler angles with 3d rotation matricies for the 3 normal vectors)
-        
+        //<div class = "jointInformation"></div>
+        //<JointConnectorDisplay ros = {props.ros}/>
+        //<div class = "armCameraFeed"></div>c
         <div class = "arm">
             
             <h1> Control Mode: 
@@ -265,11 +297,13 @@ function ArmControl(props){
                 </select>
             </h1>
             
-            <div class = "jointInformation"></div>
             
-            <JointConnectorDisplay ros = {props.ros}/>
+            <button onClick={changeArmController}>
+                Change arm controller
+            </button>
+            
             <GripperControl ros = {props.ros}/>
-            <div class = "armCameraFeed"></div>
+            
 
         </div>
         
