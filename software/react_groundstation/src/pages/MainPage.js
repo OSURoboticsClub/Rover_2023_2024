@@ -15,7 +15,7 @@ function MainPage(){
     var connectEth = true
     
     var ros = new ROSLIB.Ros({
-      url : tpLinkIP
+      url : ethIP
     });
 
     ros.on('connection', function() {
