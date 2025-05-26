@@ -127,7 +127,7 @@ function VideoManager(props){
   
   useEffect(() => {
     const dpadPressed = window.joypad.on('button_press', function(e){
-      if(e.detail.gamepad["id"] !== DRIVE_CONTROLLER_ID){
+      if(  ! DRIVE_CONTROLLER_ID.includes(e.detail.gamepad["id"])){
         return ;
       }
 

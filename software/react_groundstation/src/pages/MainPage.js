@@ -46,7 +46,7 @@ function MainPage(){
     });
     
     window.joypad.on('axis_move', (e) => {
-      //console.log(e.detail);
+      console.log(e.detail);
       
     });
    

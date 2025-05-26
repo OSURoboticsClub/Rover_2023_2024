@@ -19,7 +19,7 @@ var rosTopic = null
 
 function buttonPressHandler(e,props,topic){
     
-    if(e.detail.gamepad["id"] !== DRIVE_CONTROLLER_ID){
+    if(!DRIVE_CONTROLLER_ID.includes(e.detail.gamepad["id"])){
         return ;
     }
     
