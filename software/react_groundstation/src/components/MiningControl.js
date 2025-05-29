@@ -21,6 +21,12 @@ function MiningControl(props){
         name: "/scimech_control/main_actuator",
         messageType: "rover2_control_interface/msg/DriveControlMessage"
     })
+
+    const FLEXINOL_CONTROL_TOPIC = new ROSLIB.Topic({
+        ros: props.ros,
+        name: "/scimech_control/flexinol",
+        messageType: "rover2_control_interface/msg/DriveControlMessage"
+    })
     
     const SECONDARY_ACTUATOR_CONTROL_TOPIC = new ROSLIB.Topic({
         ros: props.ros,
@@ -48,8 +54,20 @@ function MiningControl(props){
             data: moveValue*MAX_DRILL_RPS
         })
         console.log(data)
+        
         DRILL_CONTROL_TOPIC.publish(data)
     }
+
+    const publishFlexinol= (moveValue) => {
+        
+        const data = new ROSLIB.Message({
+            first_motor_speed: Math.round(65535*moveValue*0.05),
+            first_motor_direction: false
+        })
+        console.log(data)
+        FLEXINOL_CONTROL_TOPIC.publish(data)
+    }
+    
     
     const publishSecondaryActuatorControl= (moveValue) => {
         var direction = false
@@ -100,25 +118,30 @@ function MiningControl(props){
             
             return 
         }
-        if(e.detail.directionOfMovement && e.detail.stickMoved == "left_stick"){
+        
+        if(e.detail.directionOfMovement && e.detail.stickMoved === "left_stick"){
             publishMainActuatorControl(e.detail.axisMovementValue)
         }
-        if(e.detail.directionOfMovement && e.detail.stickMoved == "right_stick"){
+        if(e.detail.directionOfMovement && e.detail.stickMoved === "right_stick"){
             publishSecondaryActuatorControl(e.detail.axisMovementValue)
         }
-        if (!e.detail.directionOfMovement){
+        if (!e.detail.directionOfMovement && e.detail.axis === 5){
             publishDrill(e.detail.axisMovementValue)
+        }
+        if (!e.detail.directionOfMovement && e.detail.axis === 4){
+            publishFlexinol(e.detail.axisMovementValue)
+            console.log("LMAMAMAMMAMA")
         }
 
     }
     const changeServoBlock = () => {
-        publishCompartmentChange(1000,"block")
+        publishCompartmentChange(550,"block")
     };
     const changeServoCollect = () => {
         publishCompartmentChange(1500,"open")
     };
     const changeServoClean = () => {
-        publishCompartmentChange(2000,"clean")
+        publishCompartmentChange(2500,"clean")
     };
     useEffect(()=>{
         // const compartmentChange = window.joypad.on('button_press', function(e){compartmentControl(e)})

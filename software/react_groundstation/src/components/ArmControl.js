@@ -48,7 +48,7 @@ function translateJoystickMsg(e){
     
     
     if(e.detail.axis === 0 && (e.detail.directionOfMovement === "left" || e.detail.directionOfMovement === "right"))
-        stickArr[0] = e.detail.axisMovementValue * -1
+        stickArr[0] = e.detail.axisMovementValue 
         
     else if(e.detail.axis === 1 && (e.detail.directionOfMovement === "bottom" || e.detail.directionOfMovement === "top"))
         stickArr[1] = e.detail.axisMovementValue * -1
@@ -155,6 +155,14 @@ function ArmControl(props){
         
         if((movementMode === "DISABLED" || e.detail.gamepad["id"] !== ARM_CONTROLLER_ID) ){
             return 
+        }
+
+        if(e.detail.buttonName == "button_0"){
+            
+            buttonArr[0] = 1
+            console.log("lmao")
+            publishArmControl(topic,stickArr,buttonArr)
+            buttonArr[0] = 0
         }
 
         if(e.detail.buttonName == "button_8"){
