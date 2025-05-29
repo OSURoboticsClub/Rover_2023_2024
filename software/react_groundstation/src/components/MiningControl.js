@@ -4,7 +4,7 @@ import { ARM_CONTROLLER_ID } from '../lib/constants';
 //LINEAR_CONTROL_TOPIC = "mining/control/linear"
 //COMPARTMENT_CHANGE_TOPIC = "mining/control/compartment"
 //DRILL_CONTROL_TOPIC = "mining/drill/control"
-
+const MAX_DRILL_RPS = 100
 
 
 function MiningControl(props){
@@ -12,51 +12,89 @@ function MiningControl(props){
 
     const COMPARTMENT_CHANGE_TOPIC = new ROSLIB.Topic({
         ros: props.ros,
-        name: "/mining/control/compartment",
-        messageType: "rover2_control_interface/msg/MiningControlMessage"
+        name: "/drill/compartment",
+        messageType: "std_msgs/msg/Int16"
     })
     
-    const LINEAR_CONTROL_TOPIC = new ROSLIB.Topic({
+    const MAIN_ACTUATOR_CONTROL_TOPIC = new ROSLIB.Topic({
         ros: props.ros,
-        name: "/mining/control/linear",
-        messageType: "rover2_control_interface/msg/DrillControlMessage"
+        name: "/scimech_control/main_actuator",
+        messageType: "rover2_control_interface/msg/DriveControlMessage"
+    })
+
+    const FLEXINOL_CONTROL_TOPIC = new ROSLIB.Topic({
+        ros: props.ros,
+        name: "/scimech_control/flexinol",
+        messageType: "rover2_control_interface/msg/DriveControlMessage"
     })
     
+    const SECONDARY_ACTUATOR_CONTROL_TOPIC = new ROSLIB.Topic({
+        ros: props.ros,
+        name: "/scimech_control/secondary_actuator",
+        messageType: "rover2_control_interface/msg/DriveControlMessage"
+    })
+
     const DRILL_CONTROL_TOPIC = new ROSLIB.Topic({
         ros: props.ros,
-        name: "/mining/drill/control",
-        messageType: "rover2_control_interface/msg/DrillControlMessage"
+        name: "/drill/control",
+        messageType: "std_msgs/msg/Float32"
     })
     
     const publishCompartmentChange = (position) => {
         const data = new ROSLIB.Message({
-            compartment: position
+            data: position
         })
         setCompartment(position)
         console.log(data)
         COMPARTMENT_CHANGE_TOPIC.publish(data)
     }
-    
-    const publishLinearControl = (moveValue) => {
-        var dir = false
-        if(moveValue < 0)
-            dir = true
+
+    const publishDrill = (moveValue) => {
         const data = new ROSLIB.Message({
-            speed: Math.round(65535*Math.abs(moveValue)), 
-            direction: dir
-            
+            data: moveValue*MAX_DRILL_RPS
         })
         console.log(data)
-        LINEAR_CONTROL_TOPIC.publish(data)
+        
+        DRILL_CONTROL_TOPIC.publish(data)
+    }
+
+    const publishFlexinol= (moveValue) => {
+        
+        const data = new ROSLIB.Message({
+            first_motor_speed: Math.round(65535*moveValue*0.05),
+            first_motor_direction: false
+        })
+        console.log(data)
+        FLEXINOL_CONTROL_TOPIC.publish(data)
     }
     
-    const publishDrillControl= (moveValue) => {
+    
+    const publishSecondaryActuatorControl= (moveValue) => {
+        var direction = false
+        if (moveValue < 0){
+            direction = true
+            moveValue = -1 * moveValue
+        }
         const data = new ROSLIB.Message({
-            speed: Math.round(65535*moveValue),
-            direction: false
+            first_motor_speed: Math.round(65535*moveValue),
+            first_motor_direction: direction
         })
         console.log(data)
-        DRILL_CONTROL_TOPIC.publish(data)
+        SECONDARY_ACTUATOR_CONTROL_TOPIC.publish(data)
+    }
+    
+    const publishMainActuatorControl= (moveValue) => {
+        var direction = false
+        if (moveValue < 0){
+            direction = true
+            moveValue = -1 * moveValue
+        }
+        const data = new ROSLIB.Message({
+            first_motor_speed: Math.round(65535*moveValue),
+            first_motor_direction: direction
+        })
+        console.log(data)
+        MAIN_ACTUATOR_CONTROL_TOPIC.publish(data)
     }
 
     const compartmentControl = (e) => {
@@ -80,17 +118,33 @@ function MiningControl(props){
             
             return 
         }
-        if(e.detail.directionOfMovement && e.detail.stickMoved == "left_stick"){
-            publishLinearControl(e.detail.axisMovementValue)
+        
+        if(e.detail.directionOfMovement && e.detail.stickMoved === "left_stick"){
+            publishMainActuatorControl(e.detail.axisMovementValue)
         }
-        if(!e.detail.directionOfMovement){
-            publishDrillControl(e.detail.axisMovementValue)
+        if(e.detail.directionOfMovement && e.detail.stickMoved === "right_stick"){
+            publishSecondaryActuatorControl(e.detail.axisMovementValue)
+        }
+        if (!e.detail.directionOfMovement && e.detail.axis === 5){
+            publishDrill(e.detail.axisMovementValue)
+        }
+        if (!e.detail.directionOfMovement && e.detail.axis === 4){
+            publishFlexinol(e.detail.axisMovementValue)
+            console.log("LMAMAMAMMAMA")
         }
 
     }
-
+    const changeServoBlock = () => {
+        publishCompartmentChange(550,"block")
+    };
+    const changeServoCollect = () => {
+        publishCompartmentChange(1500,"open")
+    };
+    const changeServoClean = () => {
+        publishCompartmentChange(2500,"clean")
+    };
     useEffect(()=>{
-        const compartmentChange = window.joypad.on('button_press', function(e){compartmentControl(e)})
+        // const compartmentChange = window.joypad.on('button_press', function(e){compartmentControl(e)})
         const controlDrillAndLinear = window.joypad.on('axis_move',function(e){joystickHandling(e)})
     },[])
     
@@ -101,7 +155,25 @@ function MiningControl(props){
             </h1>
             <h2>
                 Current Compartment: {compartment}
+                
             </h2>
+            <h3>
+                <button onClick={changeServoBlock}>
+                    Change servo block
+                </button>
+            </h3>
+            <h3>
+                <button onClick={changeServoCollect}>
+                    Change servo collect
+                </button>
+            </h3>
+            <h3>
+                <button onClick={changeServoClean}>
+                    Change servo cleanup
+                </button>
+            </h3>
+            
+                
 
         </div>
     );

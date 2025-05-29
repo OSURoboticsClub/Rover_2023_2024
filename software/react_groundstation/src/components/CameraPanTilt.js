@@ -19,7 +19,7 @@ var rosTopic = null
 
 function buttonPressHandler(e,props,topic){
     
-    if(e.detail.gamepad["id"] !== DRIVE_CONTROLLER_ID){
+    if(!DRIVE_CONTROLLER_ID.includes(e.detail.gamepad["id"])){
         return ;
     }
     
@@ -27,11 +27,11 @@ function buttonPressHandler(e,props,topic){
         switchControlTopic(props)
     }
     
-    if(props.buttons_move.includes(e.detail.buttonName)){
+    else if(props.buttons_move.includes(e.detail.buttonName)){
         
         panTilt(e,props,topic)
     }
-    if(e.detail.buttonName === props.button_center){
+    else if(e.detail.buttonName === props.button_center){
         publishMessage(true,0,0,topic)
     }
 }

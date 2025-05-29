@@ -15,7 +15,7 @@ function MainPage(){
     var connectEth = true
     
     var ros = new ROSLIB.Ros({
-      url : ethIP
+      url : tpLinkIP
     });
 
     ros.on('connection', function() {
@@ -46,11 +46,14 @@ function MainPage(){
     });
     
     window.joypad.on('axis_move', (e) => {
-      //console.log(e.detail);
+      console.log(e.detail);
       
     });
    
-
+    window.joypad.on('button_press', (e) => {
+      console.log(e.detail);
+      
+    });
     
     return (
         

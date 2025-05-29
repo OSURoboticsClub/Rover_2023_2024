@@ -11,7 +11,7 @@ function Light(props){
     let [backgroundColor,changeColor] = useState(startColor)
     
     const flipColor = (e) => {
-        if(e.detail.buttonName === props.button && DRIVE_CONTROLLER_ID == e.detail.gamepad["id"]){
+        if( DRIVE_CONTROLLER_ID.includes(e.detail.gamepad["id"]) && e.detail.buttonName === "button_8"){
             
             if(backgroundColor === "red"){    
                 

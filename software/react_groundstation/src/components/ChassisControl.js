@@ -15,7 +15,7 @@ function truncateDecimals(number) {
 
 function driveOutput(e,props,updateChassisState){
     
-    if(DRIVE_CONTROLLER_ID !== e.detail.gamepad["id"] || (e.detail.directionOfMovement !== "top" && e.detail.directionOfMovement !== "bottom")){
+    if( !DRIVE_CONTROLLER_ID.includes(e.detail.gamepad["id"]) || (e.detail.directionOfMovement !== "top" && e.detail.directionOfMovement !== "bottom")){
         return ;
     }
     
@@ -142,7 +142,7 @@ function ChassisControl(props){
     const chassisControls = window.joypad.on('axis_move', function(e){driveOutput(e,props,updateChassisState);});
     const lightToggle = window.joypad.on('button_press', function(e){
         
-        if(DRIVE_CONTROLLER_ID === e.detail.gamepad["id"] && e.detail.buttonName === "button_16"){
+        if( !DRIVE_CONTROLLER_ID.includes(e.detail.gamepad["id"]) && e.detail.buttonName === "button_16"){
         
             if(lightState === 0){
                 updateLightState(2)
