@@ -24,22 +24,37 @@ def generate_launch_description():
 
         # Rtab params
         'frame_id':'base_link',           
-        # 'odom_frame_id': "odom",        # set this to get odom from the tf instead of a topic sub
+        'odom_frame_id': "odom",        # set this to get odom from the tf instead of a topic sub
         'map_frame_id': "world",          # set tf head to "world" instead of "map" to avoid tf conflicts
         'subscribe_depth':True,
         'subscribe_rgb':True,
-        'subscribe_odom_info':True,
+        'subscribe_odom_info':False,
         'approx_sync':False,              # Set to false because images are all from single camera, so will be synced
+        'publish_tf':False,
 
         # Internal parameters (must be strings)
-        'Grid/3D':"false",                 # We do not want octomap. Saves memory and time
+        'Grid/3D':"false",                 # We do not want octomap. Saves memory and time 
+        'Grid/CellSize':".05",
+        'Grid/MaxGroundAngle':"60",
+        # 'Grid/MaxGroundHeight':".1",
+        # 'Grid/MapFrameProjection':"true",
+
+        # filtering
+        # 'Grid/NoiseFilteringRadius':".05",
+        # 'Grid/NoiseFilteringMinNeighbors':"5",
+
+        # Fuse GPS as a prior
+        "Optimizer/PriorsIgnored":'false',
+        "Rtabmap/LoopGPS":'true'
         }]        
 
     remappings=[
         ('rgb/image', '/camera/d455/color/image_raw'),
         ('rgb/camera_info', '/camera/d455/color/camera_info'),
-        ('depth/image', '/camera/d455/aligned_depth_to_color/image_raw')]
-    
+        ('depth/image', '/camera/d455/aligned_depth_to_color/image_raw'),
+        ('odom', '/odometry/global'),
+        ]
+        
     config_rviz = os.path.join(
         get_package_share_directory('nav_autonomy'), 'config', 'map_display_cfg.rviz'
     )
