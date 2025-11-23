@@ -14,7 +14,7 @@ from rclpy.action import ActionClient
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
 
-from geometry_msgs.msg import TwistStamped, Twist, PoseStamped
+from geometry_msgs.msg import TwistStamped, Twist, PoseStamped, PointStamped
 from rcl_interfaces.msg import Parameter, ParameterValue, ParameterType
 from rcl_interfaces.srv import SetParameters
 from sensor_msgs.msg import JointState, Joy, PointCloud2
@@ -37,6 +37,8 @@ from pc_processing.srv import ResetObjects
 
 #python stuff
 import time
+from collections import deque
+import numpy as np
 
 class SquareMakingController(Node):
 
@@ -75,6 +77,7 @@ class SquareMakingController(Node):
         self.start_servo_client = self.make_client(Trigger, '/servo_node/start_servo')
         self.configure_servo_cli = self.make_client(SetParameters, '/servo_node/set_parameters')
         self.start_object_cli = self.make_client(ResetObjects, '/reset_pc_processing')
+        self.set_plane_cli = self.make_client(Trigger, '/set_ground_plane')
 
         #Publishers
         self.publisher_ = self.create_publisher(TwistStamped, '/servo_node/delta_twist_cmds', 1)
@@ -91,6 +94,13 @@ class SquareMakingController(Node):
             PointCloud2,
             "/obj_centroids",
             self.objects_callback,
+            10
+        )
+
+        self.pointing_sub = self.create_subscription(
+            PointStamped,
+            "/aruco/ground_intersection",
+            self.pointing_callback,
             10
         )
 
@@ -116,20 +126,29 @@ class SquareMakingController(Node):
         self.scan_iter = 0
         #Square sides [m]
         self.square_dict = {
-            "down" : self.make_posestamped([0.0, -0.15, 0.0, 0.0, 0.0, 0.0, 0.0]),
-            "up" : self.make_posestamped([0.0, 0.15, 0.0, 0.0, 0.0, 0.0, 0.0]),
-            "right" : self.make_posestamped([0.75, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
-            "left" : self.make_posestamped([-0.75 ,0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+            "down" : self.make_posestamped([-0.15, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
+            "up" : self.make_posestamped([0.15, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
+            "right" : self.make_posestamped([0.0, -0.75, 0.0, 0.0, 0.0, 0.0, 0.0]),
+            "left" : self.make_posestamped([0.0 ,0.75, 0.0, 0.0, 0.0, 0.0, 0.0])
         }
 
         #Arm params
         self.frame_id = "arm_gripper" # usually "arm_gripper"
         self.joint_names = ['base_joint', 'shoulder_joint', 'elbow_pitch_joint', 
                   'elbow_roll_joint', 'wrist_pitch_joint', 'wrist_roll_joint']
+        self.gripper_offset = 0.335
         
         #Visual segmentation params
-        self.object_pose = self.make_posestamped([0.0, 0.650, 0.304, 0.001, 1.000, 0.008, -0.005])
-        self.object_list = [self.make_posestamped([0.0, 0.650, 0.304, 0.001, 1.000, 0.008, -0.005])]
+        self.object_pose = None
+        self.object_list = []
+
+        #Ground intersection point params
+        self.deviation_threshold = 0.1  # meters
+        self.points = deque(maxlen=10)  # Store the last 10 points
+        self.points_mean = np.zeros(3)
+        self.points_std = 100 * np.ones(3)
+        self.within_radius = 0.2  # meters
+        self.pick_height = None
 
 
     def make_client(self, srv_type, name):
@@ -242,8 +261,21 @@ class SquareMakingController(Node):
         self.object_list = []
         for point in object_data:
             # self.get_logger().info(f"Point {type(point.x)}.")
-            self.object_list.append(self.make_posestamped([float(point.x), float(point.y), float(point.z) + 0.335, 0.0, -1.0, 0.0, 0.0]))
-
+            self.object_list.append(self.make_posestamped([float(point.x), float(point.y), float(point.z) + self.gripper_offset, 0.7071068, 0.7071068, 0.0, 0.0]))
+        
+    def pointing_callback(self, msg):
+        """Callback for recieving the current ground intersection point from aruco detector.
+        
+        Parameters
+        ----------
+        msg : PointStamped
+            The point message containing the ground intersection point.
+        """
+        self.points.append(np.array([msg.point.x, msg.point.y, msg.point.z]))
+        if len(self.points) > 0:
+            self.points_mean = np.mean(self.points, axis=0)
+            self.points_std = np.std(self.points, axis=0)
+            # self.get_logger().info(f"Pointing mean: {self.points_mean}, std: {self.points_std}")
 
     def move_to_joint_positions(self, joint_pose):
         """"Move arm to a set of joint angles.
@@ -366,6 +398,19 @@ class SquareMakingController(Node):
         send_goal_future = self.gripper_control_client.send_goal_async(goal_msg)
         send_goal_future.add_done_callback(self.goal_response_callback)
         self.sent_goal = True
+    
+    def set_ground_plane(self):
+        """Service call to set the ground plane in aruco detector node.
+
+        Returns
+        -------
+        future.result : Service Response
+            The response from the service call.
+        """
+        self.get_logger().info("Setting ground plane...")
+        request = Trigger.Request()
+        future = self.set_plane_cli.call_async(request)
+        return future.result()
 
     def move_to_absolute_pose(self, pose):
         self.move_success = False
@@ -376,6 +421,7 @@ class SquareMakingController(Node):
         send_goal_future = self.absolute_move_client.send_goal_async(goal_msg)
         send_goal_future.add_done_callback(self.goal_response_callback)
         self.sent_goal = True
+
     def move_to_relative_pose(self, pose):
         self.move_success = False
 
@@ -399,6 +445,36 @@ class SquareMakingController(Node):
         pose.pose.orientation.z = pose_arr[5]
         pose.pose.orientation.w = pose_arr[6]  # Neutral orientation
         return pose
+    
+    def get_object_from_intersection(self):
+        """Determine the object the user is pointing at. 
+        """
+        #return if not enough points or point has moved too much
+        if len(self.points) < 10 or np.any(self.points_std[0:2] > self.deviation_threshold) or self.object_list == []:
+            return None
+        best_dist = self.within_radius
+        best_point = None
+        for point in self.object_list:
+            dist = np.linalg.norm(
+                np.array([point.pose.position.x, point.pose.position.y])
+                - np.array([self.points_mean[0], self.points_mean[1]])
+            )
+            if dist <= best_dist:
+                best_point = point
+                # best_point.pose.position.z += self.gripper_offset
+        if best_point != None:
+            self.pick_height = best_point.pose.position.z
+        return best_point
+    
+    def get_location_from_intersection(self):
+        """Find the place location from ground intersection point.
+        """
+        if len(self.points) < 10 or np.any(self.points_std[0:2] > self.deviation_threshold):
+            return None
+        return self.make_posestamped([self.points_mean[0], self.points_mean[1], self.pick_height, 0.7071068, 0.7071068, 0.0, 0.0])
+
+
+
 
     
     def get_EE_pose(self):
@@ -444,6 +520,7 @@ class SquareMakingController(Node):
             elif self.move_success:
                 self.get_logger().info("goto scan")
                 self.reset_count_object(enable=True, reset=True)
+                self.set_ground_plane()
                 self.state = "scan"
                 # pose = self.get_EE_pose()
                 # self.get_logger().info(f"EE Pose: position=({pose.pose.position.x:.3f}, {pose.pose.position.y:.3f}, {pose.pose.position.z:.3f}), "
@@ -499,13 +576,23 @@ class SquareMakingController(Node):
             if self.move_success:
                 self.get_logger().info("goto get pick input")
                 self.state = "get_pick_input"
+                self.points.clear()
+                self.points_mean = np.zeros(3)
+                self.points_std = 100 * np.ones(3)
                 self.sent_goal = False
 
         #step 4 get pick input
         if self.state == "get_pick_input":
-            self.get_logger().info("goto object")
-            self.object_pose = self.object_list[0]
-            self.state = "move_to_object"
+            # self.get_logger().info("goto object")
+
+            if self.object_list == []:
+                self.state = "home"
+            else:
+                self.object_pose = self.get_object_from_intersection()
+                if self.object_pose != None:
+                    self.get_logger().info("Goto Move to object")
+                    self.state = "move_to_object"
+                    self.get_logger().info(f"object pose {self.object_pose}")
 
         #step 4.5 move to movement position
         if self.state == "move_to_pick_mobility":
@@ -523,6 +610,7 @@ class SquareMakingController(Node):
         if self.state == "move_to_object":
             if not self.sent_goal:
                 time.sleep(1.00)
+                self.get_logger().info(f"Sent this object pose: {self.object_pose}")
                 # self.object_pose = self.make_posestamped([0.0, 0.650, 0.304, 0.001, 1.000, 0.008, -0.005])
                 self.move_to_absolute_pose(self.object_pose)
             elif self.move_success:
@@ -563,14 +651,19 @@ class SquareMakingController(Node):
                 self.switch_controller(servo=False)
                 self.move_to_joint_positions(input_pos)
             if self.move_success:
-                self.get_logger().info("goto get pick input")
-                self.state = "get_placd_input"
+                self.get_logger().info("goto get place input")
+                self.state = "get_place_input"
+                self.points.clear()
+                self.points_mean = np.zeros(3)
+                self.points_std = 100 * np.ones(3)
                 self.sent_goal = False
 
         #step 8 get place input
-        if self.state == "get_placd_input":
-            self.get_logger().info("goto place location")
-            self.state = "move_above_place_location"
+        if self.state == "get_place_input":
+            self.object_pose = self.get_location_from_intersection()
+            if self.object_pose != None:
+                self.get_logger().info("goto place location")
+                self.state = "move_above_place_location"
         
         #step 8.5 move to place mobility
         if self.state == "move_to_place_mobility":
@@ -588,7 +681,8 @@ class SquareMakingController(Node):
         if self.state == "move_above_place_location":
             if not self.sent_goal:
                 time.sleep(0.500)
-                self.object_pose = self.make_posestamped([0.0, 0.650, 0.304, 0.001, 1.000, 0.008, -0.005])
+                self.get_logger().info(f"Above place location {self.object_pose.pose.position}")
+                #   self.object_pose = self.make_posestamped([0.0, 0.650, 0.304, 0.001, 1.000, 0.008, -0.005])
                 self.move_to_absolute_pose(self.object_pose)
             elif self.move_success:
                 current_pose = self.get_EE_pose()
