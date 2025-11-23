@@ -68,7 +68,7 @@ public:
         thresh_dist = 0.1;
 
         //Complementary filter value for weighted sum of centroids 
-        filter_val = 0.8;
+        filter_val = 0.4;
 
         //Start with this node disabled, user will enable it with a service call:
         enable = false;

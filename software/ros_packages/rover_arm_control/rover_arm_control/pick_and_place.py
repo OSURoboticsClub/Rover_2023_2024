@@ -126,8 +126,8 @@ class SquareMakingController(Node):
         self.scan_iter = 0
         #Square sides [m]
         self.square_dict = {
-            "down" : self.make_posestamped([-0.15, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
-            "up" : self.make_posestamped([0.15, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
+            "down" : self.make_posestamped([-0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
+            "up" : self.make_posestamped([0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
             "right" : self.make_posestamped([0.0, -0.75, 0.0, 0.0, 0.0, 0.0, 0.0]),
             "left" : self.make_posestamped([0.0 ,0.75, 0.0, 0.0, 0.0, 0.0, 0.0])
         }
@@ -625,7 +625,7 @@ class SquareMakingController(Node):
         if self.state == "approach":
             if not self.sent_goal:
                 time.sleep(0.500)
-                approach_pose = self.make_posestamped([0.0, 0.0, -0.09, 0.0, 0.0, 0.0, 0.0, 0.0])
+                approach_pose = self.make_posestamped([0.0, 0.0, -0.15, 0.0, 0.0, 0.0, 0.0, 0.0])
                 self.move_to_relative_pose(approach_pose)
             elif self.move_success:
                 self.get_logger().info("Goto pick")
@@ -696,7 +696,7 @@ class SquareMakingController(Node):
         if self.state == "place_approach":
             if not self.sent_goal:
                 time.sleep(0.500)
-                approach_pose = self.make_posestamped([0.0, 0.0, -0.09, 0.0, 0.0, 0.0, 0.0, 0.0])
+                approach_pose = self.make_posestamped([0.0, 0.0, -0.15, 0.0, 0.0, 0.0, 0.0, 0.0])
                 self.move_to_relative_pose(approach_pose)
             elif self.move_success:
                 self.get_logger().info("Goto place")
@@ -724,7 +724,7 @@ class SquareMakingController(Node):
                 self.move_to_joint_positions(input_pos)
             if self.move_success:
                 self.get_logger().info("Done")
-                self.state = "home"
+                self.state = "start"
                 self.sent_goal = False
 
         #step 12 Return to Home sometimes
