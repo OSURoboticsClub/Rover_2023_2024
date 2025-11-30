@@ -126,8 +126,8 @@ class SquareMakingController(Node):
         self.scan_iter = 0
         #Square sides [m]
         self.square_dict = {
-            "down" : self.make_posestamped([-0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
-            "up" : self.make_posestamped([0.25, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
+            "down" : self.make_posestamped([-0.15, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
+            "up" : self.make_posestamped([0.15, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
             "right" : self.make_posestamped([0.0, -0.75, 0.0, 0.0, 0.0, 0.0, 0.0]),
             "left" : self.make_posestamped([0.0 ,0.75, 0.0, 0.0, 0.0, 0.0, 0.0])
         }
@@ -521,7 +521,7 @@ class SquareMakingController(Node):
                 self.get_logger().info("goto scan")
                 self.reset_count_object(enable=True, reset=True)
                 self.set_ground_plane()
-                self.state = "scan"
+                self.state = "home"
                 # pose = self.get_EE_pose()
                 # self.get_logger().info(f"EE Pose: position=({pose.pose.position.x:.3f}, {pose.pose.position.y:.3f}, {pose.pose.position.z:.3f}), "
                 #                     f"orientation=({pose.pose.orientation.x:.3f}, {pose.pose.orientation.y:.3f}, "
@@ -575,7 +575,7 @@ class SquareMakingController(Node):
                 self.move_to_joint_positions(input_pos)
             if self.move_success:
                 self.get_logger().info("goto get pick input")
-                self.state = "get_pick_input"
+                self.state = "home"
                 self.points.clear()
                 self.points_mean = np.zeros(3)
                 self.points_std = 100 * np.ones(3)
