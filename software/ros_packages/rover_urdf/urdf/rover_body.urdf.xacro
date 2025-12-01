@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<!--
+Urdf of the rovers chassis and bogies
+-->
+<robot name="rover_body" xmlns:xacro="https://ros.org/wiki/xacro">
+    <xacro:macro name="rover_body" params="name">
+        <link name="rover_base_origin">
+            <visual>
+                <origin rpy="0 0 1.5708" xyz="0.26035 0 0"/>
+                <geometry>
+                <mesh filename="package://rover_urdf/urdf/stl_files/rover_body.stl" scale="0.001 0.001 0.001"/>
+                </geometry>
+            </visual>
+            <collision>
+                <origin rpy="0 0 1.5708" xyz="0.26035 0 0"/>
+                <geometry>
+                <mesh filename="package://rover_urdf/urdf/stl_files/rover_body.stl" scale="0.001 0.001 0.001"/>
+                </geometry>
+            </collision>
+        </link>
+    </xacro:macro>
+</robot>
