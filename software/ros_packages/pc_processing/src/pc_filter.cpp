@@ -66,13 +66,13 @@ private:
 	//Where the magic is supposed to happen...
 	void sub_callback(const PointCloud2::SharedPtr msg) {
 		//Log that we've recieved a msg
-		RCLCPP_INFO(this->get_logger(),"Point Cloud Recieved");
+		// RCLCPP_INFO(this->get_logger(),"Point Cloud Recieved");
 
 		//First, pull in the point cloud, translate from ROS PC2 to PCL:
 		//We get RGB data with this camera, as specified in the PC2 message fields
 		pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_cloud_in(new pcl::PointCloud<pcl::PointXYZRGB>); //Create the point cloud object
 		pcl::fromROSMsg(*msg, *pcl_cloud_in); //pass it and the msg by reference for conversion
-		RCLCPP_INFO(this->get_logger(),"Unpacked");
+		// RCLCPP_INFO(this->get_logger(),"Unpacked");
 
 		//Second, we want to remove any points that are close enough that it sees the gripper fingers, 
 		//or far enough that its significantly bebyond the accuarate range of the camera 
@@ -96,20 +96,20 @@ private:
 		
 		//Apply the box filter and save to the output object
 		box_filter.filter(*gripper_cloud_trunc);
-		RCLCPP_INFO(this->get_logger(),"filtered gripper");
+		// RCLCPP_INFO(this->get_logger(),"filtered gripper");
 
 
 		//Third, we want to transform the could into the robot frame, and use some bounding boxes to get rid any points related to the wheels:
 
 		//Create an output object in the robot frame:
 		pcl::PointCloud<pcl::PointXYZRGB>::Ptr rover_cloud_trunc(new pcl::PointCloud<pcl::PointXYZRGB>);
-		RCLCPP_INFO(this->get_logger(),"THis try is soo good");
+		// RCLCPP_INFO(this->get_logger(),"THis try is soo good");
 
 		//Try and get the transform tree
 		try {
 
 			geometry_msgs::msg::TransformStamped transform_stamped = tf_buffer_->lookupTransform(target_frame_, msg->header.frame_id, msg->header.stamp);
-			RCLCPP_INFO(this->get_logger(),"THis try sucks right here");
+			// RCLCPP_INFO(this->get_logger(),"THis try sucks right here");
 
 			if (gripper_cloud_trunc->empty()) {
 				RCLCPP_WARN(this->get_logger(), "Input cloud empty — skipping transform");
@@ -138,7 +138,7 @@ private:
 			RCLCPP_ERROR(this->get_logger(), "Unknown exception in transformPointCloud");
 			return;
 		}
-		RCLCPP_INFO(this->get_logger(),"THis try sucks");
+		// RCLCPP_INFO(this->get_logger(),"THis try sucks");
 
 
 		//Make two new box filters in front of the wheels (roughly where we see them show up in the scan)
@@ -167,7 +167,7 @@ private:
 		right_wheel.setInputCloud(rover_cloud_trunc);
 		right_wheel.setNegative(true);
 		right_wheel.filter(*rover_cloud_trunc);
-		RCLCPP_INFO(this->get_logger(), "Post_filter length: %zu", rover_cloud_trunc->size());
+		// RCLCPP_INFO(this->get_logger(), "Post_filter length: %zu", rover_cloud_trunc->size());
 
 
 		//And the left:
@@ -189,7 +189,7 @@ private:
 
 		//Publish and log the result:
 		this->publisher_->publish(msg_out);
-		RCLCPP_INFO(this->get_logger(), "point cloud truncated.");
+		// RCLCPP_INFO(this->get_logger(), "point cloud truncated.");
 
 	}
 };
