@@ -239,7 +239,7 @@ return_type ODriveHardwareInterface::perform_command_mode_switch(
             if (axis.pos_input_enabled_) {
                 RCLCPP_INFO(rclcpp::get_logger("ODriveHardwareInterface"), "Setting %s to position control", info_.joints[i].name.c_str());
                 msg.Control_Mode = CONTROL_MODE_POSITION_CONTROL;
-                msg.Input_Mode = INPUT_MODE_PASSTHROUGH;
+                msg.Input_Mode = INPUT_MODE_POS_FILTER;
             } else if (axis.vel_input_enabled_) {
                 RCLCPP_INFO(rclcpp::get_logger("ODriveHardwareInterface"), "Setting %s to velocity control", info_.joints[i].name.c_str());
                 msg.Control_Mode = CONTROL_MODE_VELOCITY_CONTROL;

@@ -65,7 +65,7 @@ void stepper_set_velocity(stepper_s *stepper, unsigned steps_per_sec, const step
 void stepper_set_position(stepper_s *stepper, int pos){
 	int delta = pos - stepper->position;			//find out how we need to move
 	
-	if(delta > 0) pio_set(stepper->dir_port, stepper->dir_pin);		//sets direction positive or negative.
+	if(delta <= 0) pio_set(stepper->dir_port, stepper->dir_pin);		//sets direction positive or negative.
 	else pio_clear(stepper->dir_port, stepper->dir_pin);
 	
 	delta = delta > 0? delta : -delta;				//take absolute value of delta

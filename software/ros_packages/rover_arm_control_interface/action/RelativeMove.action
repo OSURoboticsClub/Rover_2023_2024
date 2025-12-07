@@ -1,0 +1,7 @@
+geometry_msgs/PoseStamped relative_pose
+---
+bool success
+string message
+
+---
+string feedback

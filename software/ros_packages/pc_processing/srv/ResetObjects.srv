@@ -1,0 +1,6 @@
+#inputs
+bool enable
+bool reset
+---
+#outputs
+bool acknowledge

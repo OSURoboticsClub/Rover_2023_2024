@@ -8,6 +8,11 @@
 #define STEPPER_STEP_PORT PIOA
 #define STEPPER_STEP_PIN PIO_PA7
 
+// all floats for floating point math
+#define STEPS_PER_MOTOR_REVOLUTION 200.0 // 1.8 degrees per step
+#define MOTOR_GEAR_TEETH 28.0
+#define COMPARTMENT_GEAR_TEETH 48.0
+#define NUM_COMPARTMENTS 4.0
 
 #define GPIO_PORT PIOA
 
@@ -21,23 +26,25 @@
 #define VID_SEL1_PIN			PIO_PA15
 
 // modbus settings
-#define MODBUS_SLAVE_ID 15
+#define MODBUS_SLAVE_ID 4
 #define MODBUS_BPS 115200
 #define MODBUS_SER_PORT UART0
 #define MODBUS_EN_PORT PIOA
 #define MODBUS_EN_PIN PIO_PA11
 
 enum MODBUS_REGISTERS {
-	STEPPER_POSITION = 1,
-	CAMERA_SELECT = 2,
-	LAZER_EN = 3,
-	LIM_SW1 = 4,
-	LIM_SW2 = 5,
-	LIM_SW3 = 6,
-	LIM_SW4 = 7
+	COMPARTMENT_NUMBER = 0,
+	CAMERA_SELECT = 1,
+	LAZER_EN = 2,
+	LIM_SW1 = 3,
+	LIM_SW2 = 4,
+	LIM_SW3 = 5,
+	LIM_SW4 = 6
 };
 
 //int steps_per_rev = 465;
+const float steps_per_compartment = (COMPARTMENT_GEAR_TEETH * STEPS_PER_MOTOR_REVOLUTION) / (MOTOR_GEAR_TEETH * NUM_COMPARTMENTS);
+const int wraparound_position = (COMPARTMENT_GEAR_TEETH * STEPS_PER_MOTOR_REVOLUTION) / (MOTOR_GEAR_TEETH) + 0.5; // adding 0.5 will round to nearest int in conversion
 
 static void board_setup(void) {
 	WDT->WDT_MR |= WDT_MR_WDDIS; // Disable watchdog timer to prevent uC resetting every 15 seconds :)
@@ -66,9 +73,16 @@ int main(void) {
 
 	while (1) {
 		modbus_update();
-
-		if(stepper.position != intRegisters[STEPPER_POSITION]) {
-			stepper_set_position(&stepper, intRegisters[STEPPER_POSITION]);	//If the position needs to change, change it.
+		
+		// only move in one direction for compartment change
+		int compartment_position = steps_per_compartment * intRegisters[COMPARTMENT_NUMBER] + 0.5;
+		if(compartment_position < stepper.position) {
+			stepper_set_position(&stepper, wraparound_position); // first go back to first compartment and reset position, then go to compartment
+			stepper.position = 0;
+		}
+		
+		if (compartment_position != stepper.position) {
+			stepper_set_position(&stepper, compartment_position);	//If the position needs to change, change it.
 		}
 		
 		intRegisters[LIM_SW1] = pio_get(GPIO_PORT, PIO_TYPE_PIO_INPUT, LSW1_PIN);

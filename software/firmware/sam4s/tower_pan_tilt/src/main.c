@@ -20,12 +20,12 @@ enum MODBUS_REGISTERS {
 };
 
 // Pan/tilt hard limits
-int pan_min = 1470;
-int pan_center = 1605;
-int pan_max = 1725;
-int tilt_min = 1020;
-int tilt_center = 1820;
-int tilt_max = 2400;
+int pan_min = 600;
+int pan_center = 1425;
+int pan_max = 2250;
+int tilt_min = 750;
+int tilt_center = 1700;
+int tilt_max = 2700;
 
 
 static void board_setup(void) {
@@ -69,15 +69,12 @@ int main(void) {
 	
 	servo_s pan_servo;
 	servo_s tilt_servo;
-	servo_s hitch_servo;
 	
 	servo_setup(&pan_servo, PWM_CHANNEL_0, pan_min, pan_max, pan_center);
 	servo_setup(&tilt_servo, PWM_CHANNEL_1, tilt_min, tilt_max, tilt_center);
-	servo_setup(&tilt_servo, PWM_CHANNEL_2, 69, 69, 69); // CHANGE ME
 	
 	while (1) {
 		modbus_update();
 		handle_pan_tilt(&pan_servo, &tilt_servo);
-		handle_hitch(&hitch_servo);
 	}
 }

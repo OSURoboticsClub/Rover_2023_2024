@@ -389,7 +389,7 @@ void modbus_slave_update(void) {
 		{
 			uint16_t read_num_bytes = get_read_response_data_sz(start_reg, end_reg);
 			responsePacketSize = RD_RESP_PACKET_MIN_SIZE + read_num_bytes;
-			responsePacket[SLAVE_ID_IDX] = MASTER_ADRESS; // this is how the protocol is now to help identify when the master or slave is speaking
+			responsePacket[SLAVE_ID_IDX] = slaveID;
 			responsePacket[FC_IDX] = packet[FC_IDX];
 			responsePacket[RD_DATA_SIZE_IDX] = read_num_bytes;
 			read_handler(responsePacket+RD_DATA_BYTE_START, start_reg, end_reg);
@@ -398,7 +398,7 @@ void modbus_slave_update(void) {
 		case FC_WRITE_MULT:
 		{
 			responsePacketSize = WR_RESP_PACKET_SIZE;
-			responsePacket[SLAVE_ID_IDX] = MASTER_ADRESS;	
+			responsePacket[SLAVE_ID_IDX] = slaveID;	
 			responsePacket[FC_IDX] = packet[FC_IDX];
 			responsePacket[START_REG_H_IDX] = packet[START_REG_H_IDX];
 			responsePacket[START_REG_L_IDX] = packet[START_REG_L_IDX];

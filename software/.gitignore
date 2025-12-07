@@ -1,12 +1,14 @@
 .idea
-<<<<<<< HEAD
 
 build
 install
 log
+rosbags
+*.db3
 __pycache__
-=======
+./react_groundstation
+.vscode
 .atsuo
->>>>>>> origin/SAM4S_firmware
+origin/SAM4S_firmware
 
 react_groundstation/node_modules

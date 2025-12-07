@@ -5,9 +5,12 @@ controller_manager:
 
     rover_arm_controller:
       type: position_controllers/JointGroupPositionController
+      # type: forward_command_controller/ForwardCommandController
+      # type: velocity_controllers/JointGroupVelocityController
 
     rover_arm_controller_moveit:
       type: joint_trajectory_controller/JointTrajectoryController
+      # type:  ur_controllers/ScaledJointTrajectoryController
 #       type: position_controllers/JointGroupPositionController
 
     joint_state_broadcaster:
@@ -25,6 +28,8 @@ rover_arm_controller:
       - elbow_roll_joint
       - wrist_pitch_joint
       - wrist_roll_joint
+    interface_name: position
+
     command_interfaces:
        - position
        - velocity

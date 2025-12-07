@@ -51,8 +51,8 @@ class GripperMoveNode(Node):
         self.keyboard_offsets_inverse = self.inverse_pose(self.keyboard_offsets)
 
         self.push_button = {
-	    "push" :  [0.0, 0.0, 0.05],
-	    "back" :  [0.0, 0.0, -0.05]
+	    "push" :  [0.0, 0.0, -0.05],
+	    "back" :  [0.0, 0.0, 0.05]
       
 	    } #x, y, z for pressing a button
         self.push_button = self.make_pose(self.push_button)
@@ -125,6 +125,7 @@ class GripperMoveNode(Node):
 
                 #Move to key
                 j = 0
+                self.get_logger().info("Moving to key")
                 while not self.succeed and j < 5:
                     self.is_done = False
                     self.send_goal(goal_msg, "push")
@@ -135,6 +136,7 @@ class GripperMoveNode(Node):
                 self.is_done = False
                 
                 #push key
+                self.get_logger().info("Push")
                 goal_msg = self.setup_params(self.push_button, "push")
                 j = 0
                 while not self.succeed and j < 5:
@@ -147,6 +149,7 @@ class GripperMoveNode(Node):
                 self.is_done = False
                 
                 #return back
+                self.get_logger().info("Back")
                 goal_msg = self.setup_params(self.push_button, "back")
                 j = 0
                 while not self.succeed and j < 5:
@@ -159,6 +162,8 @@ class GripperMoveNode(Node):
                 self.succeed = False
 
                 #return to reference key
+                self.get_logger().info("Return to Home")
+
                 goal_msg = self.setup_params(self.keyboard_offsets_inverse, key_input)
                 j = 0
                 while not self.succeed and j < 5:
@@ -271,7 +276,15 @@ class GripperMoveNode(Node):
 
         #Initialize Constraints
         motion_request.goal_constraints = [Constraints()]
+        # motion_request.goal_constraints = [Constraints(
+        #     position_constraints=[],
+        #     orientation_constraints=[],
+        #     joint_constraints=[]
+        # )]
+
         motion_request.path_constraints = Constraints()
+
+        return motion_request
         
 
 

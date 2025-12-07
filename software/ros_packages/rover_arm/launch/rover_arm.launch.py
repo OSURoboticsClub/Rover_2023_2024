@@ -38,7 +38,7 @@ def load_yaml(package_name, file_path):
 def generate_launch_description():
 
     ros2_control_hardware_type = DeclareLaunchArgument(
-        "ros2_control_hardware_type",
+        "hardware_type",
         default_value="main",
         description="Ros2 Control Hardware Interface Type [main, sim]",
     )
@@ -59,6 +59,14 @@ def generate_launch_description():
         'respawn': True
     }
 
+    octomap_config = {
+        'octomap_frame': 'base_link',
+        'octomap_resolution': 0.05,
+        'max_range': 5.0
+    }
+
+    octomap_sensor_config = load_yaml('rover_arm', 'config/sensors_3d.yaml')
+    
     #ros2_control_hardware_type = LaunchConfiguration(ros2_control_hardware_type)
     moveit_config = (
         MoveItConfigsBuilder("rover_arm", package_name="rover_arm")
@@ -66,16 +74,21 @@ def generate_launch_description():
             file_path="config/rover_arm.urdf.xacro",
             mappings={
                 "ros2_control_hardware_type": LaunchConfiguration(
-                    "ros2_control_hardware_type"
+                    "hardware_type"
                 )
             },
         )
         .robot_description_semantic(file_path="config/rover_arm.srdf")
         .trajectory_execution(file_path="config/moveit_controllers.yaml")
-        .sensors_3d(file_path="config/sensors_3d.yaml")
+        # .sensors_3d(file_path="config/sensors_3d.yaml")
         .planning_pipelines(
             pipelines=["ompl", "pilz_industrial_motion_planner", "chomp_interface"],
             load_all=False
+        )
+        .planning_scene_monitor(
+            publish_robot_description=True,
+            publish_robot_description_semantic=True,
+            publish_planning_scene=True
         )
         .to_moveit_configs()
     )
@@ -88,19 +101,30 @@ def generate_launch_description():
     chomp_configs = load_yaml(
         "rover_arm", "config/chomp_interface_planner.yaml"
     )
+
+    octomap_config = {
+        "octomap_frame": "base_link",
+        "octomap_resolution" : 0.05,
+        "max_range" : 2.0,
+    }  
+
+    octomap_updater_config = load_yaml('rover_arm', 'config/sensors_3d.yaml')
+
+    planning_scene_monitor_parameters = {"publish_planning_scene": True,
+                 "publish_geometry_updates": True,
+                 "publish_state_updates": True,
+                 "publish_transforms_updates": True}
+
     move_group_node = Node(
         package="moveit_ros_move_group", 
         executable="move_group",
         output="screen", 
         parameters=[
+            moveit_config.to_dict(),
             planner_plugins,
             planner_configs,
-            moveit_config.to_dict(),
-            {
-                "octomap_frame": "base_link",
-                "octomap_resolution" : 0.01,
-                "max_range" : 0.5,
-            },    
+            # octomap_config,
+            # octomap_sensor_config,            
         ],
         arguments=["--ros-args", "--log-level", "info"],
     )
@@ -135,13 +159,19 @@ def generate_launch_description():
     rover_arm_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["rover_arm_controller", "-c", "/controller_manager"],
+        arguments=["rover_arm_controller", 
+                   "-c", "/controller_manager",
+
+        ],
     )
 
     moveit_arm_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["rover_arm_controller_moveit", "-c", "/controller_manager"],
+        arguments=["rover_arm_controller_moveit", 
+                   "-c", "/controller_manager",
+                   "--inactive"
+        ],
     )
 
 
@@ -187,7 +217,7 @@ def generate_launch_description():
                 package="tf2_ros",
                 plugin="tf2_ros::StaticTransformBroadcasterNode",
                 name="static_tf2_broadcaster",
-                parameters=[{"child_frame_id": "/base_link", "frame_id": "/world"}],
+                parameters=[{"child_frame_id": "/rover_base_origin", "frame_id": "/world"}],
             ),
             ComposableNode(
                 package="robot_state_publisher",
@@ -217,7 +247,10 @@ def generate_launch_description():
         parameters=[
             servo_params,
             moveit_config.to_dict(),
-            sensor_yaml,
+            #sensor_yaml,
+            # octomap_config,
+            # octomap_updater_config,
+            kinematics_yaml,
         ],
         output="screen",
     )
@@ -246,9 +279,16 @@ def generate_launch_description():
             "color_height": 720,
             "pointcloud.enable": True,
             "align_depth.enable": True,
+            #"enable_rgbd": True,
+            "decimation_filter": True,
+            "decimation_filter.filter_magnitude": 4,
+            "enable_sync": True,
+            "pointcloud.stream_filter": 2,
+            # "enable_color": True,
+            # "enable_depth": True,
             #"serial_no":"_218622273613",
-            "depth_fps": 10,
-            "rgb_fps": 10,
+            "depth_fps": 5,
+            "rgb_fps": 5,
         }],
         output='screen'
     )
