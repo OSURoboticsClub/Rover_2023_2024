@@ -12,4 +12,3 @@ planner_configs:
     smoothness_cost_weight: 0.1
     obstacle_cost_weight: 1.0
     learning_rate: 0.01
-    planning_time_limit: 10.0

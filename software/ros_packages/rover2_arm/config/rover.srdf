@@ -62,4 +62,5 @@
     <disable_collisions link1="rover_arm_shoulder" link2="rover_arm_wrist_pitch" reason="Never"/>
     <disable_collisions link1="rover_arm_shoulder" link2="rover_base_origin" reason="Never"/>
     <disable_collisions link1="rover_arm_wrist_pitch" link2="rover_arm_wrist_roll" reason="Adjacent"/>
+    <disable_collisions link1="rover_arm_gripper" link2="d405_link" reason="Adjacent"/>
 </robot>

@@ -1,14 +1,21 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-    <xacro:macro name="rover_ros2_control" params="name initial_positions_file">
+    <xacro:macro name="rover_ros2_control" params="name initial_positions_file ros2_control_hardware_type:=main">
         <xacro:property name="initial_positions" value="${load_yaml(initial_positions_file)['initial_positions']}"/>
 
         <ros2_control name="${name}" type="system">
             <hardware>
-                <!-- By default, set up controllers for simulation. This won't work on real hardware -->
+              <xacro:if value="${ros2_control_hardware_type == 'main'}">
+                <plugin>odrive_ros2_control_plugin/ODriveHardwareInterface</plugin>
+                <param name="can">can1</param>
+              </xacro:if>
+              <xacro:if value="${ros2_control_hardware_type == 'sim'}">
                 <plugin>mock_components/GenericSystem</plugin>
+              </xacro:if>
             </hardware>
             <joint name="rover_arm_base_joint">
+                <param name="node_id">0</param>
+                <param name="gear_ratio">400.0</param>
                 <command_interface name="position"/>
                 <command_interface name="velocity"/>
                 <state_interface name="position">
@@ -17,6 +24,8 @@
                 <state_interface name="velocity"/>
             </joint>
             <joint name="rover_arm_shoulder_joint">
+                <param name="node_id">1</param>
+                <param name="gear_ratio">640.0</param>
                 <command_interface name="position"/>
                 <command_interface name="velocity"/>
                 <state_interface name="position">
@@ -25,6 +34,8 @@
                 <state_interface name="velocity"/>
             </joint>
             <joint name="rover_arm_elbow_pitch_joint">
+                <param name="node_id">2</param>
+                <param name="gear_ratio">393.6</param>
                 <command_interface name="position"/>
                 <command_interface name="velocity"/>
                 <state_interface name="position">
@@ -33,6 +44,8 @@
                 <state_interface name="velocity"/>
             </joint>
             <joint name="rover_arm_elbow_roll_joint">
+                <param name="node_id">3</param>
+                <param name="gear_ratio">120.0</param>
                 <command_interface name="position"/>
                 <command_interface name="velocity"/>
                 <state_interface name="position">
@@ -41,6 +54,8 @@
                 <state_interface name="velocity"/>
             </joint>
             <joint name="rover_arm_wrist_pitch_joint">
+                <param name="node_id">4</param>
+                <param name="gear_ratio">370.0</param>
                 <command_interface name="position"/>
                 <command_interface name="velocity"/>
                 <state_interface name="position">
@@ -49,6 +64,8 @@
                 <state_interface name="velocity"/>
             </joint>
             <joint name="rover_arm_wrist_roll_joint">
+                <param name="node_id">5</param>
+                <param name="gear_ratio">100.0</param>
                 <command_interface name="position"/>
                 <command_interface name="velocity"/>
                 <state_interface name="position">

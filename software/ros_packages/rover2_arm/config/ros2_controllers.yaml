@@ -5,11 +5,9 @@ controller_manager:
 
     rover_arm_controller:
       type: joint_trajectory_controller/JointTrajectoryController
-
-
-    gripper_controller:
+    
+    rover_arm_controller_moveit:
       type: joint_trajectory_controller/JointTrajectoryController
-
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
@@ -29,13 +27,19 @@ rover_arm_controller:
     state_interfaces:
       - position
       - velocity
-gripper_controller:
+
+rover_arm_controller_moveit:
   ros__parameters:
     joints:
+      - rover_arm_base_joint
+      - rover_arm_shoulder_joint
+      - rover_arm_elbow_pitch_joint
+      - rover_arm_elbow_roll_joint
+      - rover_arm_wrist_pitch_joint
       - rover_arm_wrist_roll_joint
-    command_interfaces:
+    state_interfaces:
       - position
       - velocity
-    state_interfaces:
+    command_interfaces:
       - position
       - velocity
