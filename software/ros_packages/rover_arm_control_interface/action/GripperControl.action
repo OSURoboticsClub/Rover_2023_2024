@@ -1,0 +1,6 @@
+bool close
+---
+bool success
+string message
+---
+bool moving

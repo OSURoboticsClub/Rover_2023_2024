@@ -1,5 +1,0 @@
-float64 jetson_cpu
-float64 jetson_ram
-float64 jetson_emmc
-float64 jetson_nvme_ssd
-float64 jetson_gpu_temp

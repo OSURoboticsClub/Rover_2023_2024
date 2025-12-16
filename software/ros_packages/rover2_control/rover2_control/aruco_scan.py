@@ -6,18 +6,16 @@ def get_distance(point1, point2):
 
 def detect_first_aruco_marker(auton_class, image, aruco_dict_type=cv2.aruco.DICT_4X4_50):
     if image is None:
-        auton_class.get_logger().info(f"Image is None")
+        if auton_class is not None:
+            auton_class.get_logger().info("Image is None")
         return None, None
 
     aruco_dict = cv2.aruco.getPredefinedDictionary(aruco_dict_type)
-
-    # Use DetectorParameters_create() instead of DetectorParameters() for OpenCV 4.5.4
-    parameters = cv2.aruco.DetectorParameters_create()
+    parameters = cv2.aruco.DetectorParameters()
+    detector = cv2.aruco.ArucoDetector(aruco_dict, parameters)
 
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-
-    # Use detectMarkers instead of ArucoDetector().detectMarkers()
-    corners, ids, _ = cv2.aruco.detectMarkers(gray, aruco_dict, parameters=parameters)
+    corners, ids, _ = detector.detectMarkers(gray)
 
     if ids is None or len(corners) == 0:
         print("No arucos detected")
@@ -30,11 +28,12 @@ def detect_first_aruco_marker(auton_class, image, aruco_dict_type=cv2.aruco.DICT
     top_left = img_corners[0]
     bottom_right = img_corners[2]
     distance_pxls = get_distance(top_left, bottom_right)
-    marker_width_pct = (distance_pxls / img_width)
+    marker_width_pct = distance_pxls / img_width
 
     center_x_pct, center_y_pct = get_marker_center_percentage(corner[0], img_width, img_height)
 
     return center_x_pct, marker_width_pct
+
 
 def get_marker_center_percentage(corner_points, img_width, img_height):
     """
@@ -61,4 +60,4 @@ def get_distance(point1, point2):
 
 if __name__ == "__main__":
     image = cv2.imread("aruco_real_life1.png")
-    detect_first_aruco_marker(image)
+    detect_first_aruco_marker(None, image)

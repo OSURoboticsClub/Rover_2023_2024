@@ -14,7 +14,7 @@ def get_target_heading(rover_position, target):
     lat2 = target.latitude
     lon2 = target.longitude
     result = geod.Inverse(lat1, lon1, lat2, lon2)
-    return result['azi1']
+    return result['azi1'] # dont ask me why
 
 def get_distance_to_location(rover_position, target):
     geod = Geodesic.WGS84
@@ -25,8 +25,8 @@ def get_distance_to_location(rover_position, target):
     result = geod.Inverse(lat1, lon1, lat2, lon2)
     return result['s12'] * 3.28084  # Convert meters to feet because this is America
 
-def compute_curvature(target, heading_error):
-    dist_to_target = get_distance_to_location(target)
+def compute_curvature(rover_position, target, heading_error):
+    dist_to_target = get_distance_to_location(rover_position, target)
 
     # Compute lateral error (y)
     heading_error = math.radians(heading_error)  # Convert to radians

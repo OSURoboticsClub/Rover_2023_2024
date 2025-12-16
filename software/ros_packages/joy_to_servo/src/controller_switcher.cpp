@@ -32,7 +32,7 @@ public:
     
     // Create subscriber for joy messages
     joy_subscription_ = this->create_subscription<sensor_msgs::msg::Joy>(
-      "/joy", 10, 
+      "/joy2", 10, 
       std::bind(&ControllerSwitcher::joy_callback, this, std::placeholders::_1));
     
     // Create client for controller manager

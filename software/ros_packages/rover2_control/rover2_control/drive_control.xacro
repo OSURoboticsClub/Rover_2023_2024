@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="odrive_drive">
+    <xacro:arg name="ros2_control_hardware_type" default="main" />
+
+    <!-- Import rover_arm urdf file -->
+    <xacro:include filename="drive_dummy.urdf" />
+
+    <!-- Import control_xacro -->
+    <xacro:include filename="odrive_drive_ros2_control.xacro" />
+
+    <xacro:odrive_drive_ros2_control name="Drive_system" ros2_control_hardware_type="$(arg ros2_control_hardware_type)"/>
+</robot>

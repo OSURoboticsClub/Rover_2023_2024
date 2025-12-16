@@ -14,5 +14,42 @@ def generate_launch_description():
             executable='led_node',
             name='led_node',
             **config
-        )
+        ),
+	Node(
+			package='rover2_status',
+            executable='node_info',
+            arguments=[
+              "--ros-args",
+              "--disable-stdout-logs"]
+        ),
+	Node(
+			package='rover2_status',
+            executable='node_log',
+            arguments=[
+              "--ros-args",
+              "--disable-stdout-logs"]
+        ),
+	Node(
+			package='rover2_status',
+            executable='node_topic_detector',
+            arguments=[
+              "--ros-args",
+              "--disable-stdout-logs"]
+        ),
+	Node(
+			package='rover2_status',
+            executable='moveit_logger',
+            arguments=[
+              "--ros-args",
+              "--disable-stdout-logs"]
+        ),
+	Node(
+			package='rover2_status',
+            executable='drivetrain_telemetry',
+        ),
+	Node(
+			package='rover2_status',
+            executable='arm_telem',
+        ),
+
     ])

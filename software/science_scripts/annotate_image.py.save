@@ -1,0 +1,20 @@
+from PIL import Image, ImageDraw, ImageFont
+image = Image.open("/home/makemorerobot/images/pano_0.jpg")
+draw = ImageDraw.Draw(image)
+altitude = ""
+with open ('altitude.txt','r') as file:
+    altitude = file.read()
+font_size = 30
+text_position = (320,50)
+arrow_start = (320,180)
+arrow_end = (320,280)
+arrow_color = "Red"
+arrow_width = 15
+draw.text(text_position, altitude, fill = "red")
+
+draw.line([arrow_start,arrow_end], fill=arrow_color, width=arrow_width)
+draarrow_start = (320,180)
+arrow_start = (320,180)
+w.polygon([arrow_end,(arrow_end[0] -10, arrow_end[1] - 5), (arrow_end[0]-10, arrow_end[1] + 5)], fill=arrow_color)
+
+image.save("test.jpg")

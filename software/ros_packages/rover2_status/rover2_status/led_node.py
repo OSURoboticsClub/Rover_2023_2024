@@ -19,7 +19,7 @@ class AutonomousLEDSubscriber(Node):
             SPI, NUM_PIXELS, pixel_order=PIXEL_ORDER, auto_write=False
         )
         for i in range(NUM_PIXELS):
-            self.pixels[i] = (0, 255, 0)
+            self.pixels[i] = (0, 0, 255)
         self.pixels.show()
 
         self.subscription = self.create_subscription(

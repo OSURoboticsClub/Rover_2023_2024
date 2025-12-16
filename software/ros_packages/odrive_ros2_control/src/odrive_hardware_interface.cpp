@@ -239,7 +239,7 @@ return_type ODriveHardwareInterface::perform_command_mode_switch(
             if (axis.pos_input_enabled_) {
                 RCLCPP_INFO(rclcpp::get_logger("ODriveHardwareInterface"), "Setting %s to position control", info_.joints[i].name.c_str());
                 msg.Control_Mode = CONTROL_MODE_POSITION_CONTROL;
-                msg.Input_Mode = INPUT_MODE_PASSTHROUGH;
+                msg.Input_Mode = INPUT_MODE_POS_FILTER;
             } else if (axis.vel_input_enabled_) {
                 RCLCPP_INFO(rclcpp::get_logger("ODriveHardwareInterface"), "Setting %s to velocity control", info_.joints[i].name.c_str());
                 msg.Control_Mode = CONTROL_MODE_VELOCITY_CONTROL;
@@ -330,7 +330,19 @@ void Axis::on_can_msg(const rclcpp::Time&, const can_frame& frame) {
     switch (cmd) {
         case Get_Encoder_Estimates_msg_t::cmd_id: {
             if (Get_Encoder_Estimates_msg_t msg; try_decode(msg)) {
-                pos_estimate_ = M_TAU*msg.Pos_Estimate/gear_ratio_;
+                //Normalize to 0:2pi (Breaks joint by joint continuous, ik still doesn't work)
+                // double pos_temp = M_TAU * msg.Pos_Estimate/gear_ratio_;
+                // if (node_id_ == 5){
+                //     pos_temp = std::fmod(pos_temp, M_TAU);
+                //     if(pos_temp < 0){
+                //         pos_temp += M_TAU;
+                //     }
+                // }
+                // double pos_deg = pos_temp * 180 / 3.1415926;
+                // RCLCPP_INFO(rclcpp::get_logger("OdriveHardwareInterface"), "Position Feedback for %u : %f", node_id_, pos_deg);
+                // pos_estimate_ = pos_temp;
+                
+                pos_estimate_ = M_TAU * msg.Pos_Estimate/gear_ratio_;
                 vel_estimate_ = M_TAU*msg.Vel_Estimate/gear_ratio_;
             }
         } break;

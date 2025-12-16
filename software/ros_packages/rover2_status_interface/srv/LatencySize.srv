@@ -1,0 +1,5 @@
+# dummy data for testing latency
+int64[] dummydata
+---
+# timestamp for when rover receives data from groundstation
+builtin_interfaces/Time receivetime

@@ -58,6 +58,7 @@ class Odometry(Node):
         self.i2c = busio.I2C(board.SCL, board.SDA)
         self.imu = adafruit_bno055.BNO055_I2C(self.i2c)
         self.initial_offset = self.get_initial_offset()
+        self.magnetic_declination = 0
         self.calibration_offsets = {
 	    'acc_offset_x': -37,
 	    'acc_offset_y': 7,
@@ -73,7 +74,9 @@ class Odometry(Node):
         }
         self.imu.mode = Mode.CONFIG_MODE
         self.set_calibration_offsets()
+        self.set_magnetic_declination()
         self.write_calibration_offsets()
+
 
 #        self.imu.mode = Mode.NDOF_FMC_OFF_MODE
 #        self.imu.mode = Mode.NDOF_MODE
@@ -104,6 +107,11 @@ class Odometry(Node):
                     return
                 self.calibration_offsets[key] = int(offsets[i])
                 i+=1
+    def set_magnetic_declination(self):
+        with open('/home/makemorerobot/Rover_2023_2024/software/ros_packages/rover2_odometry/rover2_odometry/magnetic_declination.txt', 'r') as file:
+            line = file.readline()
+            self.magnetic_declination = int(line)
+
     def write_calibration_offsets(self):
         self.write_offset(0x55, self.calibration_offsets['acc_offset_x'])  # ACC_OFFSET_X_LSB
         self.write_offset(0x57, self.calibration_offsets['acc_offset_y'])  # ACC_OFFSET_Y_LSB
@@ -177,8 +185,14 @@ class Odometry(Node):
         """
         
         heading_message = Float32()
-        offset_heading = self.imu.euler[0] # - self.initial_offset
-        print(offset_heading)
+        offset_heading = self.imu.euler[0] + self.magnetic_declination # magnetic declination
+        if(offset_heading > 360):
+            offset_heading -=360
+
+        if (offset_heading > 180):
+            offset_heading -=360
+        
+        #print(offset_heading)
 #        if(offset_heading > 180):
 #            offset_heading-=360
         heading_message.data = offset_heading

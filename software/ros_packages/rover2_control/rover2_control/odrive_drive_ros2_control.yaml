@@ -1,0 +1,28 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 100
+
+    use_sim_time: false
+
+    drive_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+      parameters:
+          use_local_topics: true
+
+    can_controller:
+      type: forward_command_controller/ForwardCommandController    
+
+
+
+can_controller:
+  ros__parameters:
+    joints:
+      - front_left
+      - middle_left
+      - back_left
+      - front_right
+      - middle_right
+      - back_right
+    interface_name: velocity
+
+

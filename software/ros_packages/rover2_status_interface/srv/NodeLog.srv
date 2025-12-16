@@ -1,0 +1,7 @@
+#Request
+bool enable
+float32 hz
+string node
+---
+#Response
+bool acknowledge

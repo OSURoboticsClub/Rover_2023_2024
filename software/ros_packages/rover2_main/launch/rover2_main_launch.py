@@ -9,14 +9,13 @@ def generate_launch_description():
    drive_control = IncludeLaunchDescription(
       PythonLaunchDescriptionSource([os.path.join(
          get_package_share_directory('rover2_control')),
-         '/rover2_control_launch.py'])
+         '/odrive_drive_control_launch.py'])
       )
    cameras = IncludeLaunchDescription(
       PythonLaunchDescriptionSource([os.path.join(
          get_package_share_directory('rover_camera'),
          'launch'), '/camera_launch.py'])
       )
-
    bridge = IncludeLaunchDescription(
       XMLLaunchDescriptionSource([os.path.join(
          get_package_share_directory('rosbridge_server'),
@@ -29,20 +28,19 @@ def generate_launch_description():
       )
    arm = IncludeLaunchDescription(
       PythonLaunchDescriptionSource([os.path.join(
-	 get_package_share_directory('rover_arm'),
-	 'launch'), '/arm.launch.py'])
+         get_package_share_directory('rover_arm'),
+         'launch'), '/rover_arm.launch.py'])
       )
-
-#   status = IncludeLaunchDescription(
-#      PythonLaunchDescriptionSource([os.path.join(
-#         get_package_share_directory('rover2_status'),
-#         'launch'), '/rover2_status_launch.py'])
-#      )
+   status = IncludeLaunchDescription(
+      PythonLaunchDescriptionSource([os.path.join(
+         get_package_share_directory('rover2_status'),
+         'launch'), '/rover2_status_launch.py'])
+      )
    return LaunchDescription([
       drive_control,
-      cameras,
-      bridge,
+#      cameras,
+#      bridge,
       imu,
-      arm
-#      status
+      arm,
+      status
    ])

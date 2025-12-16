@@ -1,0 +1,6 @@
+#Request
+string controller
+---
+#Response
+string message
+bool success

@@ -2,8 +2,8 @@
 
 initial_positions:
   base_joint: 0
+  shoulder_joint: 0
   elbow_pitch_joint: 0
   elbow_roll_joint: 0
-  wrist_roll_joint: 0
-  shoulder_joint: 0
   wrist_pitch_joint: 0
+  wrist_roll_joint: 0

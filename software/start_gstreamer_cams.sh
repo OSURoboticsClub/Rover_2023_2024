@@ -1,5 +1,6 @@
 #!/bin/bash
-gst-launch-1.0 v4l2src device=/dev/video10 !   video/x-raw,width=640,height=480,framerate=30/1 !   nvvidconv ! nvv4l2h265enc !   h265parse !   rtph265pay config-interval=1 !   udpsink host=192.168.1.1 port=42067 sync=false &
-gst-launch-1.0 v4l2src device=/dev/video11 !   video/x-raw,width=640,height=480,framerate=30/1 !   nvvidconv !   nvv4l2h265enc !   udpsink host=192.168.1.1 port=42068 sync=false &
-gst-launch-1.0 v4l2src device=/dev/video12 !   video/x-raw,width=640,height=480,framerate=30/1 !   nvvidconv !  nvv4l2h265enc !   h265parse !   rtph265pay config-interval=1 !   udpsink host=192.168.1.1 port=42069 sync=false &
+sleep 10
+/home/makemorerobot/Rover_2023_2024/software/start_ir.bash &
+/home/makemorerobot/Rover_2023_2024/software/start_tower.bash &
+/home/makemorerobot/Rover_2023_2024/software/start_gripper.bash &
 wait

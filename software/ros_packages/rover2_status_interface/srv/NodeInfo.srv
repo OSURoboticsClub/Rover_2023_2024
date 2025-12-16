@@ -1,0 +1,6 @@
+string node
+string nodenamespace
+---
+string[] pub_topics
+string[] sub_topics
+string[] services

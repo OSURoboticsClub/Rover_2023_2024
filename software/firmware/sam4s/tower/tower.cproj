@@ -203,16 +203,15 @@
         <documentation help="https://asf.microchip.com/docs/3.52.0/common.applications.user_application.user_board.sam4s/html/index.html" />
         <offline-documentation help="" />
         <dependencies>
-          <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.52.0" />
+          <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.44.0" />
         </dependencies>
         <project id="common.applications.user_application.user_board.sam4s" value="Add" config="" content-id="Atmel.ASF" />
         <board id="board.user_board.sam4s" value="Add" config="" content-id="Atmel.ASF" />
       </framework-data>
     </AsfFrameworkConfig>
-    <avrtool>
-    </avrtool>
+    <avrtool>com.atmel.avrdbg.tool.samice</avrtool>
     <avrtoolserialnumber>801028741</avrtoolserialnumber>
-    <avrdeviceexpectedsignature>0x289B09E0</avrdeviceexpectedsignature>
+    <avrdeviceexpectedsignature>0x288B09E0</avrdeviceexpectedsignature>
     <com_atmel_avrdbg_tool_samice>
       <ToolOptions>
         <InterfaceProperties>
@@ -235,6 +234,21 @@
     </com_atmel_avrdbg_tool_samice>
     <avrtoolinterface>JTAG</avrtoolinterface>
     <avrtoolinterfaceclock>4000000</avrtoolinterfaceclock>
+    <AAFDebugger>
+      <AAFDebugFiles>
+        <DebugFile>
+          <path>\Debug\tower.lss</path>
+          <AAFSetting>
+            <Label>Lss Files</Label>
+            <Extention>.lss</Extention>
+            <Regex>^\s*(?&lt;address&gt;[a-f0-9]*):\s*.*$</Regex>
+            <DebugEnabled>true</DebugEnabled>
+            <RegexGroups>address</RegexGroups>
+            <DebuggerExpression>$pc</DebuggerExpression>
+          </AAFSetting>
+        </DebugFile>
+      </AAFDebugFiles>
+    </AAFDebugger>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <ToolchainSettings>
@@ -500,9 +514,6 @@
     <Folder Include="src\ASF\thirdparty\CMSIS\Lib\" />
     <Folder Include="src\ASF\thirdparty\CMSIS\Lib\GCC\" />
     <Folder Include="src\config\" />
-    <Folder Include="src\gps" />
-    <Folder Include="src\FastLED" />
-    <Folder Include="src\led_control" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\config\conf_clock.h">
@@ -967,24 +978,6 @@
     <None Include="src\config\conf_uart_serial.h">
       <SubType>compile</SubType>
     </None>
-    <Compile Include="src\FastLED\FastLED.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\FastLED\FastLED.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\gps\gps.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\gps\gps.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\led_control\led_control.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\led_control\led_control.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="src\main.c">
       <SubType>compile</SubType>
     </Compile>

@@ -14,10 +14,17 @@ scale:
 # Optionally override Servo's internal velocity scaling when near singularity or collision (0.0 = use internal velocity scaling)
 # override_velocity_scaling_factor = 0.0 # valid range [0.0:1.0]
 
+# This is a fudge factor to account for any latency in the system, e.g. network latency or poor low-level
+# controller performance. It essentially increases the timestep when calculating the target pose, to move the target
+# pose farther away. [seconds]
+system_latency_compensation: 0.04
+
+
 ## Properties of outgoing commands
-publish_period: 0.01  # 1/Nominal publish rate [seconds]
-#max_expected_latency: 0.1  # delay between sending a command and the robot executing it [seconds]
+publish_period: 0.005  # 1/Nominal publish rate [seconds]
+max_expected_latency: 0.1  # delay between sending a command and the robot executing it [seconds]
 low_latency_mode: false
+
 
 # What type of topic does your robot driver expect?
 # Currently supported are std_msgs/Float64MultiArray or trajectory_msgs/JointTrajectory
@@ -31,6 +38,10 @@ publish_joint_accelerations: false
 use_smoothing: true
 smoothing_filter_plugin_name: "online_signal_smoothing::ButterworthFilterPlugin"
 
+## Incoming Joint State properties
+low_pass_filter_coeff: 5.0  # Larger --> trust the filtered data more, trust the measurements less.
+
+
 # If is_primary_planning_scene_monitor is set to true, the Servo server's PlanningScene advertises the /get_planning_scene service,
 # which other nodes can use as a source for information about the planning environment.
 # NOTE: If a different node in your system is responsible for the "primary" planning scene instance (e.g. the MoveGroup node),
@@ -43,7 +54,11 @@ move_group_name:  rover_arm  # Often 'manipulator' or 'arm'
 planning_frame: base_link
 
 ee_frame_name: arm_gripper
-robot_link_command_frame: base_link
+robot_link_command_frame: arm_gripper
+
+apply_twist_commands_about_ee_frame: true
+
+# angular_tolerance: 0.0001
 
 ## Stopping behaviour
 incoming_command_timeout:  0.1  # Stop servoing if X seconds elapse without a new command
@@ -52,12 +67,13 @@ incoming_command_timeout:  0.1  # Stop servoing if X seconds elapse without a ne
 num_outgoing_halt_msgs_to_publish: 4
 
 ## Configure handling of singularities and joint limits
-lower_singularity_threshold:  17.0  # Start decelerating when the condition number hits this (close to singularity)
-hard_stop_singularity_threshold: 30.0  # Stop when the condition number hits this
+lower_singularity_threshold:  100.0  # Start decelerating when the condition number hits this (close to singularity) [was 17]
+hard_stop_singularity_threshold: 400.0  # Stop when the condition number hits this [Was 30]
 joint_limit_margin: 0.1  # added as a buffer to joint limits [radians or meters]. If moving quickly, make this larger.
 leaving_singularity_threshold_multiplier: 3.0  # Multiply the hard stop limit by this when leaving singularity (see https://github.com/ros-planning/moveit2/pull/620)
 
 ## Topic names
+pose_command_in_topic: ~/pose_target_cmds
 cartesian_command_in_topic: ~/delta_twist_cmds  # Topic for incoming Cartesian twist commands
 joint_command_in_topic: ~/delta_joint_cmds  # Topic for incoming joint angle commands
 joint_topic: /joint_states  # Get joint states from this tpoic

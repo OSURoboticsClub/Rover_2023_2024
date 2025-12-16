@@ -56,7 +56,7 @@ class DriveCoordinator(Node):
                 "last_time": time()
             }
         }
-
+        print(DriveCommandMessage())
         # ########## Class Variables ##########
         self.iris_drive_command_subscriber = self.create_subscription(DriveCommandMessage,
                                                                 self.iris_drive_command_topic,
@@ -76,17 +76,15 @@ class DriveCoordinator(Node):
         # ########## Run the Class ##########
         self.timer = self.create_timer(self.wait_time, self.main_loop)
 
-    def main_loop(self):
-        try:
-            self.process_drive_commands()
-        except Exception as error:
-            print (f"COORDINATOR: Error occurred: {error}")
 
     def process_drive_commands(self):
-        if not self.drive_command_data["iris"]["message"].ignore_drive_control:
-            self.send_drive_control_command(self.drive_command_data["iris"])
-        else:
+        if self.drive_command_data["ground_station"]["message"].controller_present:
+            print("ground_station")
+            print(self.drive_command_data["ground_station"]["message"])
             self.send_drive_control_command(self.drive_command_data["ground_station"])
+        else:
+            print("iris")
+            self.send_drive_control_command(self.drive_command_data["iris"])
 
     def send_drive_control_command(self, drive_command_data):
         if (time() - drive_command_data["last_time"]) > WATCHDOG_TIMEOUT:

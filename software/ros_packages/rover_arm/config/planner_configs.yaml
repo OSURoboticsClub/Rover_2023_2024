@@ -1,0 +1,14 @@
+planner_configs:
+  RRTConnect:
+    type: geometric
+    planner_type: RRTConnectkConfigDefault
+
+  PTP:
+    planner_type: pilz_industrial_motion_planner/Planner
+
+  LIN:
+    planner_type: pilz_industrial_motion_planner/Planner
+    
+  CHOMPPlanner:
+    planning_plugin: chomp_interface/CHOMPPlanner
+    planner_id: CHOMPPlanner

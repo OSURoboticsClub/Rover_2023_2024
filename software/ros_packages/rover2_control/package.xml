@@ -21,7 +21,7 @@
   <depend>builtin_interfaces</depend>
   <depend>moveit_ros_planning_interface</depend>
   <depend>action_msgs</depend>
-
+  <depend>odrive</depend>
   <export>
     <build_type>ament_python</build_type>
   </export>

@@ -1,0 +1,14 @@
+chomp:
+  planning_plugin: chomp_interface/CHOMPPlanner
+  start_state_max_bounds_error: 0.1
+
+planner_configs:
+  CHOMPConfig:
+    group: rover_arm
+    planning_time_limit: 5.0
+    max_iterations: 500
+    max_iterations_after_collision_free: 200
+    max_retries: 5
+    smoothness_cost_weight: 0.1
+    obstacle_cost_weight: 1.0
+    learning_rate: 0.01

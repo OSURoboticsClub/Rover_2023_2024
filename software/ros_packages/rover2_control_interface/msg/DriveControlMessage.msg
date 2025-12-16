@@ -2,6 +2,3 @@ bool first_motor_direction
 bool first_motor_sleep
 uint16 first_motor_speed
 
-bool second_motor_direction
-bool second_motor_sleep
-uint16 second_motor_speed
