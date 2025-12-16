@@ -49,9 +49,9 @@ def generate_launch_description():
         description="Ros2 Control Hardware Interface Type [xbox, ps, flight]",
     )
 
-    # kinematics_yaml = load_yaml(
-    #     "rover2_arm", "config/kinematics.yaml"   
-    # )
+    kinematics_yaml = load_yaml(
+        "rover2_arm", "config/kinematics.yaml"   
+    )
 
     config = {
         'emulate_tty': True,
@@ -117,7 +117,7 @@ def generate_launch_description():
         output="screen", 
         parameters=[
             moveit_config.to_dict(),
-            # octomap_config,
+            octomap_config,
             # octomap_sensor_config,            
         ],
         arguments=["--ros-args", "--log-level", "info"],
@@ -155,6 +155,7 @@ def generate_launch_description():
         executable="spawner",
         arguments=["rover_arm_controller", 
                    "-c", "/controller_manager",
+                   "--inactive"
 
         ],
     )
@@ -164,7 +165,6 @@ def generate_launch_description():
         executable="spawner",
         arguments=["rover_arm_controller_moveit", 
                    "-c", "/controller_manager",
-                   "--inactive"
         ],
     )
 
@@ -229,25 +229,27 @@ def generate_launch_description():
     )
 
     # Get parameters for the Servo node
-    # servo_yaml = load_yaml("rover2_arm", "config/servo_config.yaml")
-    # servo_params = {"moveit_servo": servo_yaml}
-    # sensor_yaml = load_yaml("rover2_arm", "config/sensors_3d.yaml")
+    servo_yaml = load_yaml("rover2_arm", "config/servo_parameters.yaml")
+    # Get parameters for the Servo node
+    servo_params = {"moveit_servo": servo_yaml}
 
     # Launch a standalone Servo node.
     # As opposed to a node component, this may be necessary (for example) if Servo is running on a different PC
-    # servo_node = Node(
-    #     package="moveit_servo",
-    #     executable="servo_node_main",
-    #     parameters=[
-    #         servo_params,
-    #         moveit_config.to_dict(),
-    #         #sensor_yaml,
-    #         # octomap_config,
-    #         # octomap_updater_config,
-    #         kinematics_yaml,
-    #     ],
-    #     output="screen",
-    # )
+    servo_node = Node(
+        package="moveit_servo",
+        executable="servo_node_main",
+        parameters=[
+            servo_params,
+            moveit_config.robot_description,
+            moveit_config.robot_description_semantic,
+            moveit_config.robot_description_kinematics,
+            moveit_config.joint_limits,
+            # octomap_config,
+            # octomap_updater_config,
+            kinematics_yaml,
+        ],
+        output="screen",
+    )
 
     joy_to_servo_node = Node(
         package="joy_to_servo",
@@ -320,7 +322,7 @@ def generate_launch_description():
             moveit_arm_controller_spawner,
             # joy_to_servo_node,
             controller_switcher_node,
-            # servo_node,
+            servo_node,
             d405_node,
             #d455_node,
 

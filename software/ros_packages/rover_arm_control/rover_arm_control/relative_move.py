@@ -11,6 +11,8 @@ Notes
 Currently (11/17/25) relative orientation is not implemented and orientation is held fixed during movements.
 In the current implementation this means that the end-effector will maintain its start or current 
 orientation throughout the move. 
+
+This should be combined with absolute move with changes to the srv call definition to allow for both relative and absolute moves.
 """
 import rclpy
 from rclpy.node import Node

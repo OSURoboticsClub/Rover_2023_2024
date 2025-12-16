@@ -253,6 +253,14 @@ class SquareMakingController(Node):
     
     def objects_callback(self, msg):
         """Callback for object centroids.
+
+        This function receives a PointCloud2 message containing the centroids of detected objects and stores
+        them in self.object_list as PoseStamped messages.
+
+        Parameters
+        ----------
+        msg : PointCloud2
+            The point cloud message containing object centroids.
         """
         object_data = point_cloud2.read_points_list(msg, field_names=("x", "y", "z"), skip_nans=True)
         self.get_logger().info(f"Points {object_data}.")
@@ -378,7 +386,12 @@ class SquareMakingController(Node):
         self.get_logger().info(f"Latest joint states: {self.latest_joint_state.position}")
 
     def make_square(self, direction):
-        """
+        """This function sends a goal from the square_dict dictionary.
+
+        Parameters
+        ----------
+        direction : "right", "left", "up", "down"
+            The direction to move in the square.
         """
         self.move_success = False
         
@@ -390,6 +403,13 @@ class SquareMakingController(Node):
         self.sent_goal = True
 
     def gripper_control(self, close=True):
+        """ This function sends a goal to the gripper control action server.
+
+        Parameters
+        ----------
+        close : bool
+            Whether to close the gripper (True) or open it (False).
+        """
         self.move_success = False
 
         self.get_logger().info(f"sent gripper command close = {close}")
