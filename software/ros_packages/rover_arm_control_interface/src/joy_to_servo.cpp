@@ -60,7 +60,7 @@ The below code is covered under the 3-clause BSD license.
 */
 
 
-#include "joy_to_servo.hpp"
+#include "rover_arm_control_interface/joy_to_servo.hpp"
 
 /*Converts a joy message to a TwistStamped or JointJog message
 
@@ -89,6 +89,8 @@ bool
 Notes
 -----
 - Need to switch output message to be in actual units (m/s, rad/s) rather than normalized -1 to 1
+
+- Lights and laser should be in the gripper node not here anyways, but it is incomplete. 
 */
 bool convertJoyToCmd(const std::vector<float>& axes, const std::vector<int>& buttons,
                      std::unique_ptr<geometry_msgs::msg::TwistStamped>& twist,
@@ -96,6 +98,14 @@ bool convertJoyToCmd(const std::vector<float>& axes, const std::vector<int>& but
                      bool& use_ik, const ControllerMappings& controllerMappings, float& slowdown)
 {
 
+  if (buttons[controllerMappings.BUTTON_MAP.at("RIGHT_BUMPER")]){
+    //Turn on/off lights
+    slowdown = 1.0;
+  }
+  if (buttons[controllerMappings.BUTTON_MAP.at("LEFT_BUMPER")]){
+    //Turn on/off laser
+    slowdown = 1.0;
+  }
   if(use_ik){ //ik controls
     //Maintain joint by joint shoulder control if D_PAD is used
     if (axes[controllerMappings.AXIS_MAP.at("D_PAD_Y")])
@@ -163,12 +173,14 @@ Notes
 */
 void updateCmdFrame(std::string& frame_name, const std::vector<int>& buttons, const ControllerMappings& controllerMappings, bool& use_ik)
 {
-  if (buttons[controllerMappings.BUTTON_MAP.at("CHANGE_VIEW")] && frame_name == EEF_FRAME_ID)
+  if (buttons[controllerMappings.BUTTON_MAP.at("CHANGE_VIEW")] && frame_name == EEF_FRAME_ID){
     frame_name = BASE_FRAME_ID;
     use_ik = false; 
-  else if (buttons[controllerMappings.BUTTON_MAP.at("MENU")] && frame_name == BASE_FRAME_ID)
+  }
+  else if (buttons[controllerMappings.BUTTON_MAP.at("MENU")] && frame_name == BASE_FRAME_ID){
     frame_name = EEF_FRAME_ID;
     use_ik = true;
+  }
 }
 
 namespace moveit_servo
