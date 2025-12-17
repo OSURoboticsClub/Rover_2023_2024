@@ -113,6 +113,8 @@ class SquareMakingController(Node):
         self.move_success = False
         self.sent_goal = False
         self.servo = True
+        self.wait_time = self.get_clock().now().nanoseconds
+        self.motion_status = True
 
         #define scan params
         self.sequence = {"down":"right", "right":"up", "up":"left", "left":"down"}
@@ -141,6 +143,7 @@ class SquareMakingController(Node):
         #Visual segmentation params
         self.object_pose = None
         self.object_list = []
+        self.object_pose_refined = None
 
         #Ground intersection point params
         self.deviation_threshold = 0.1  # meters
@@ -371,10 +374,12 @@ class SquareMakingController(Node):
         if status == 4:  # Succeeded
             self.get_logger().info('Motion execution succeeded!')
             self.move_success = True
+            self.motion_status = True
 
         else:
             self.get_logger().error(f'Motion execution failed with status: {status}')
             self.move_success = False
+            self.motion_status = False
         self.get_logger().info(f"Latest joint states: {self.latest_joint_state.position}")
 
     def make_square(self, direction):
@@ -462,6 +467,33 @@ class SquareMakingController(Node):
             if dist <= best_dist:
                 best_point = point
                 # best_point.pose.position.z += self.gripper_offset
+        if best_point != None:
+            self.pick_height = best_point.pose.position.z
+        return best_point
+    def get_closest_object(self, point):
+        """Determine the closest object to a given point. 
+
+        Parameters
+        ----------
+        point : PoseStamped
+            The reference point to find the closest object to.
+        Returns
+        -------
+        best_point : PoseStamped
+            The closest object pose within the defined radius, or None if no object is found.
+        """
+        if self.object_list == []:
+            return None
+        best_dist = self.within_radius
+        best_point = None
+        for obj in self.object_list:
+            dist = np.linalg.norm(
+                np.array([obj.pose.position.x, obj.pose.position.y])
+                - np.array([point.pose.position.x, point.pose.position.y])
+            )
+            if dist <= best_dist:
+                best_point = obj
+                best_dist = dist
         if best_point != None:
             self.pick_height = best_point.pose.position.z
         return best_point
@@ -575,7 +607,7 @@ class SquareMakingController(Node):
                 self.move_to_joint_positions(input_pos)
             if self.move_success:
                 self.get_logger().info("goto get pick input")
-                self.state = "home"
+                self.state = "get_pick_input"
                 self.points.clear()
                 self.points_mean = np.zeros(3)
                 self.points_std = 100 * np.ones(3)
@@ -615,7 +647,31 @@ class SquareMakingController(Node):
                 self.move_to_absolute_pose(self.object_pose)
             elif self.move_success:
                 current_pose = self.get_EE_pose()
-                self.get_logger().info(f"Current EE Pose {current_pose.pose}, Commanded Pose {self.object_pose.pose}")
+                # self.get_logger().info(f"Current EE Pose {current_pose.pose}, Commanded Pose {self.object_pose.pose}")
+                self.get_logger().info("goto servo to object")
+                self.sent_goal = False
+                time.sleep(0.25)
+                #Relocate the object for better alignment
+                self.object_list.clear()
+                self.reset_count_object(enable=True, reset=True)
+                #set the new object pose
+                self.wait_time = self.get_clock().now().nanoseconds
+
+                self.state = "servo_to_object"
+
+        #step 5.5 servo to object
+        if self.state == "servo_to_object":
+            if self.get_clock().now().nanoseconds - self.wait_time < 5e9:
+                return
+            elif not self.sent_goal:
+                self.reset_count_object(enable=False, reset=False)
+                self.object_pose_refined = self.get_closest_object(self.object_pose)
+                time.sleep(0.5)
+                self.get_logger().info(f"Sent this object pose: {self.object_pose_refined}")
+                self.move_to_absolute_pose(self.object_pose_refined)
+            elif self.move_success:
+                current_pose = self.get_EE_pose()
+                # self.get_logger().info(f"Current EE Pose {current_pose.pose}, Commanded Pose {self.object_pose.pose}")
                 self.get_logger().info("goto approach")
                 self.sent_goal = False
                 time.sleep(0.25)
@@ -675,6 +731,7 @@ class SquareMakingController(Node):
             if self.move_success:
                 self.get_logger().info("goto move above place location")
                 self.state = "move_above_place_location"
+                self.motion_status = True
                 self.sent_goal = False
 
         #step 9 move to above place
@@ -689,8 +746,13 @@ class SquareMakingController(Node):
                 self.get_logger().info(f"Current EE Pose {current_pose.pose}, Commanded Pose {self.object_pose.pose}")
                 self.get_logger().info("goto place")
                 self.sent_goal = False
+                self.motion_status = True
                 time.sleep(0.25)
                 self.state = "place_approach"
+            elif self.move_success == False and self.motion_status == False:
+                self.get_logger().info("Failed to move to place location, getting input again")
+                self.state = "move_to_place_input"
+                self.sent_goal = False
         
         #step 10 place object
         if self.state == "place_approach":

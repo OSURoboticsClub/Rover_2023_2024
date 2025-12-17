@@ -115,8 +115,8 @@ private:
             pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_object_centers(new pcl::PointCloud<pcl::PointXYZ>);
             int object_count = 0;
             
-            RCLCPP_INFO(this->get_logger(),"Input Width: %d",pcl_cloud->width);
-            RCLCPP_INFO(this->get_logger(),"Input Height: %d",pcl_cloud->height);
+            // RCLCPP_INFO(this->get_logger(),"Input Width: %d",pcl_cloud->width);
+            // RCLCPP_INFO(this->get_logger(),"Input Height: %d",pcl_cloud->height);
 
             //Clustering with a Kd tree and euclidian clustering
             //Creating the KdTree object for the search method of the extraction
@@ -128,7 +128,7 @@ private:
             pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
             ec.setClusterTolerance(0.01);
             ec.setMinClusterSize(1000);
-            ec.setMaxClusterSize(15000);
+            ec.setMaxClusterSize(20000);
             //Running the search and extracting to our indices vector
             ec.setSearchMethod(tree);
             ec.setInputCloud(pcl_cloud);
@@ -180,7 +180,7 @@ private:
             }
 
             
-            RCLCPP_INFO(this->get_logger(),"Starting Comparison");
+            // RCLCPP_INFO(this->get_logger(),"Starting Comparison");
 
             //Check if there are points in the centroid list
             if (this->obj_centroids.width * this->obj_centroids.height == 0){
@@ -190,7 +190,7 @@ private:
                 //This should get run again if pcl_object_centers happens to also be zero length
             }
             else {
-                RCLCPP_INFO(this->get_logger(),"Comparing with Existing Cloud");
+                // RCLCPP_INFO(this->get_logger(),"Comparing with Existing Cloud");
                 //If the list exists, Compare the new centroids against our existing vector of centroids
                 //Iterate over the new centroids
                 for (pcl::PointXYZ new_center : *pcl_object_centers){
