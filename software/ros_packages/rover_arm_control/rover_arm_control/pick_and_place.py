@@ -121,9 +121,9 @@ class SquareMakingController(Node):
         self.curr_dir = "down"
         self.loops = 0
         self.cycles = 0
-
         self.sq_keys = ["down", "right", "up", "left"]
         self.scan_iter = 0
+
         #Square sides [m]
         self.square_dict = {
             "down" : self.make_posestamped([-0.15, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
@@ -149,7 +149,6 @@ class SquareMakingController(Node):
         self.points_std = 100 * np.ones(3)
         self.within_radius = 0.2  # meters
         self.pick_height = None
-
 
     def make_client(self, srv_type, name):
         """ Create a client to a service.
@@ -220,9 +219,18 @@ class SquareMakingController(Node):
         self.future = self.configure_servo_cli.call_async(req)
 
     def joint_states_callback(self, msg):
+        """Callback function to stores joint states.
+        """
         self.latest_joint_state = msg
 
     def start_servo(self):
+        """Start moveit servo.
+
+        Returns
+        -------
+        future.result : Service Response
+            The result from the service call.
+        """
         # Starts servo node
         self.request = Trigger.Request()
         self.future = self.start_servo_client.call_async(self.request)
@@ -433,6 +441,13 @@ class SquareMakingController(Node):
         return future.result()
 
     def move_to_absolute_pose(self, pose):
+        """Sends a goal to absolute move action server.
+
+        Parameters
+        ----------
+        pose : PoseStamped
+            The pose to move the EE in the base frame.
+        """
         self.move_success = False
 
         self.get_logger().info(f"sent pose")
@@ -443,6 +458,13 @@ class SquareMakingController(Node):
         self.sent_goal = True
 
     def move_to_relative_pose(self, pose):
+        """Sends a goal to the relative move action server.
+
+        Parameters
+        ----------
+        pose : PoseStamped
+            The pose to move the EE relative to current pose.
+        """
         self.move_success = False
 
         self.get_logger().info(f"sent pose")
@@ -453,6 +475,22 @@ class SquareMakingController(Node):
         self.sent_goal = True
     
     def make_posestamped(self, pose_arr):
+        """Build a pose stamped message from an array.
+
+        Parameters
+        ----------
+        pose_arr : list
+            A list of pose values [x, y, z, qx, qy, qz, qw].
+
+        Returns
+        -------
+        pose : PoseStamped
+            The constructed PoseStamped message.
+        
+        Notes
+        -----
+        A header frame id should be added as a parameter.
+        """
         pose = PoseStamped()
         pose.header.frame_id = "base_link"
         #set array to x,y,z pose positions
@@ -468,6 +506,16 @@ class SquareMakingController(Node):
     
     def get_object_from_intersection(self):
         """Determine the object the user is pointing at. 
+
+        This function uses the intersection of an ArUco markers x-axis and the "ground" plane to find the 
+        closest object. The closes object must be within a set radius and the marker (intersection point) 
+        must not be moving too much (ie small standard deviation over the last 10 points). The function 
+        stores the pick height of the object for later use.
+
+        Returns
+        -------
+        best_point : PoseStamped
+            The pose of the selected object.
         """
         #return if not enough points or point has moved too much
         if len(self.points) < 10 or np.any(self.points_std[0:2] > self.deviation_threshold) or self.object_list == []:
@@ -488,17 +536,28 @@ class SquareMakingController(Node):
     
     def get_location_from_intersection(self):
         """Find the place location from ground intersection point.
+
+        This function returns the mean of the last 10 intersection points if they are stable enough (ie small 
+        standard deviation). Unlike the get_object_from_intersection function, this function is only finding 
+        a location not an object. 
+
+        Returns
+        -------
+        best_point : PoseStamped
+            The pose of the selected place location.
         """
         if len(self.points) < 10 or np.any(self.points_std[0:2] > self.deviation_threshold):
             return None
         return self.make_posestamped([self.points_mean[0], self.points_mean[1], self.pick_height, 0.7071068, 0.7071068, 0.0, 0.0])
-
-
-
-
     
     def get_EE_pose(self):
-        # Get the current pose of the gripper
+        """Get the current EE pose.
+
+        Returns
+        -------
+        current_pose : PoseStamped
+            The current EE pose.
+        """
         current_pose = PoseStamped()
         try:
             trans = self.tf_buffer.lookup_transform(
@@ -519,6 +578,15 @@ class SquareMakingController(Node):
         return current_pose
 
     def timer_callback(self): 
+        """The main control loop for the pick and place routine.
+
+        Notes
+        -----
+        The current routine uses moveit trajectory planner for all movements do to servo drift (12/16/2025).
+
+        Object detection finds the centroid of the top of the object. Does not fit a shape or determine grasp
+        orientation. This cannot be used for collision detection when moving around the objects or placing. 
+        """
         #step 1 move to scan position
         if self.state == "start":
             #self.get_logger().info(f"{self.state}")

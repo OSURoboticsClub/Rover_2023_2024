@@ -105,7 +105,8 @@ void updateCmdFrame(
     std::string& frame_name,
     const std::vector<int>& buttons);
 
-
+namespace moveit_servo
+{
 class JoyToServoPub : public rclcpp::Node
 {
 public:
@@ -130,5 +131,6 @@ private:
 
   void initializeControllerMappings(const std::string& controller_type);
 };
+} // namespace moveit_servo
 
 #endif //JOY_TO_SERVO_HPP

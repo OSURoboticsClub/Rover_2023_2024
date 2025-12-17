@@ -11,8 +11,6 @@ from launch.actions import ExecuteProcess
 import xacro
 from moveit_configs_utils import MoveItConfigsBuilder
 
-
-
 def load_file(package_name, file_path):
     package_path = get_package_share_directory(package_name)
     absolute_file_path = os.path.join(package_path, file_path)
@@ -22,7 +20,6 @@ def load_file(package_name, file_path):
             return file.read()
     except EnvironmentError:  # parent of IOError, OSError *and* WindowsError where available
         return None
-
 
 def load_yaml(package_name, file_path):
     package_path = get_package_share_directory(package_name)
@@ -34,7 +31,6 @@ def load_yaml(package_name, file_path):
     except EnvironmentError:  # parent of IOError, OSError *and* WindowsError where available
         return None
     
-
 def generate_launch_description():
 
     ros2_control_hardware_type = DeclareLaunchArgument(
@@ -168,7 +164,6 @@ def generate_launch_description():
         ],
     )
 
-
     #RViz
     rviz_config_file = (
         get_package_share_directory("rover2_arm") + "/config/moveit.rviz"
@@ -188,6 +183,11 @@ def generate_launch_description():
         ],
     )
 
+    # Get parameters for the Servo node
+    servo_yaml = load_yaml("rover2_arm", "config/servo_parameters.yaml")
+    # Get parameters for the Servo node
+    servo_params = {"moveit_servo": servo_yaml}
+
     # Launch as much as possible in components
     container = ComposableNodeContainer(
         name="moveit_servo_demo_container",
@@ -197,16 +197,22 @@ def generate_launch_description():
         composable_node_descriptions=[
             # Example of launching Servo as a node component
             # Assuming ROS2 intraprocess communications works well, this is a more efficient way.
-            # ComposableNode(
-            #     package="moveit_servo",
-            #     plugin="moveit_servo::ServoServer",
-            #     name="servo_server",
-            #     parameters=[
-            #         servo_params,
-            #         moveit_config.robot_description,
-            #         moveit_config.robot_description_semantic,
-            #     ],
-            # ),
+            ComposableNode(
+                package="moveit_servo",
+                plugin="moveit_servo::ServoNode",
+                name="servo_node",
+                parameters=[
+                    servo_params,
+                    moveit_config.robot_description,
+                    moveit_config.robot_description_semantic,
+                    moveit_config.robot_description_kinematics,
+                    moveit_config.joint_limits,
+                    # octomap_config,
+                    # octomap_updater_config,
+                    kinematics_yaml,
+                ],
+                extra_arguments=[{'use_intra_process_comms': True}],
+            ),
             ComposableNode(
                 package="tf2_ros",
                 plugin="tf2_ros::StaticTransformBroadcasterNode",
@@ -224,40 +230,18 @@ def generate_launch_description():
                 plugin="joy::Joy",
                 name="joy_node",
             ),
+            ComposableNode(
+                package="rover_arm_control_interface",
+                plugin="moveit_servo::JoyToServoPub",
+                name="joy_to_servo_pub_node",
+                parameters=[{
+                    'controller_type': LaunchConfiguration('controller_type')
+                }],
+            ),
         ],
         output="screen",
     )
 
-    # Get parameters for the Servo node
-    servo_yaml = load_yaml("rover2_arm", "config/servo_parameters.yaml")
-    # Get parameters for the Servo node
-    servo_params = {"moveit_servo": servo_yaml}
-
-    # Launch a standalone Servo node.
-    # As opposed to a node component, this may be necessary (for example) if Servo is running on a different PC
-    servo_node = Node(
-        package="moveit_servo",
-        executable="servo_node_main",
-        parameters=[
-            servo_params,
-            moveit_config.robot_description,
-            moveit_config.robot_description_semantic,
-            moveit_config.robot_description_kinematics,
-            moveit_config.joint_limits,
-            # octomap_config,
-            # octomap_updater_config,
-            kinematics_yaml,
-        ],
-        output="screen",
-    )
-
-    joy_to_servo_node = Node(
-        package="joy_to_servo",
-        executable="joy_to_servo_node",
-        parameters=[{
-            'controller_type': LaunchConfiguration('controller_type')
-        }]
-    )
     controller_switcher_node = Node(
         package="joy_to_servo",
         executable="controller_switcher",
@@ -308,7 +292,6 @@ def generate_launch_description():
         output='screen'
     )
 
-
     return LaunchDescription(
         [
             ros2_control_hardware_type, 
@@ -320,11 +303,8 @@ def generate_launch_description():
             joint_state_broadcaster_spawner,
             rover_arm_controller_spawner,
             moveit_arm_controller_spawner,
-            # joy_to_servo_node,
             controller_switcher_node,
-            servo_node,
             d405_node,
             #d455_node,
-
         ]
     )
