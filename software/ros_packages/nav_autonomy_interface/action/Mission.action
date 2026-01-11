@@ -1,0 +1,38 @@
+# searchObject enum
+uint8 NONE=0
+uint8 CIRCLE=1
+uint8 SQUARE=2
+
+# searchPattern enum
+uint8 NONE=0
+uint8 BOTTLE=1
+uint8 OG_HAMMER=2
+UINT8 ORANGE_HAMMER=3
+
+# currentAction enum
+uint8 NONE=0
+uint8 NAVIGATING=1
+uint8 SEARCHING=2
+
+# completionStatus enum
+uint8 NOT_STARTED=0
+uint8 IN_PROGRESS=1
+uint8 COMPLTED=2
+uint8 FAILED=3
+
+
+
+# Request
+std_msgs/msg/Header header
+uint16 searchObject
+uint16 searchPattern
+GPSWaypoint[] navWaypoints 
+---
+# Result
+std_msgs/msg/Header header
+uint16 ackComplete
+---
+# Feedback
+std_msgs/msg/Header header
+uint16 currentAction
+uint16 completionStatus 
