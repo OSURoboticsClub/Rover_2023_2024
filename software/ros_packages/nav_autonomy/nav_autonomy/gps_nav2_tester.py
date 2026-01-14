@@ -12,7 +12,7 @@ class GPSNav2Tester(Node):
         super().__init__('gps_nav2_tester')
 
         # Publisher to Nav2 goal topic
-        self.goal_pub = self.create_publisher(PoseStamped, '/goal_pose', 10)
+        self.goal_pub = self.create_publisher(PoseStamped, '/gps_test_pose', 10)
 
         # TF buffer and listener
         self.tf_buffer = Buffer()
@@ -36,7 +36,9 @@ class GPSNav2Tester(Node):
 
     def timer_callback(self):
         if self.current_index >= len(self.gps_points):
-            self.get_logger().info("All GPS points sent. Shutting down...")
+            self.current_index = 0  # Reset to first point or stop
+            self.get_logger().info("All GPS points sent. Restarting")
+            return
             rclpy.shutdown()
             return
 
