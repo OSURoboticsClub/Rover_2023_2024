@@ -77,7 +77,7 @@ def generate_launch_description():
         Node(
             package='robot_localization',
             executable='ekf_node_odom',
-            name='ekf_global',
+            name='ekf_local',
             output='screen',
             parameters=[{
                 'frequency': 30.0,
