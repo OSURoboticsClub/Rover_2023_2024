@@ -29,6 +29,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'gps_nav2_tester = nav_autonomy.gps_nav2_tester:main',
         ],
     },
 )
