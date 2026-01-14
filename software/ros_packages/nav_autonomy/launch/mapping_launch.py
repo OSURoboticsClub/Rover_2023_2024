@@ -30,7 +30,7 @@ def generate_launch_description():
         ]
         
     config_rviz = os.path.join(
-        get_package_share_directory('nav_autonomy'), 'config', 'map_display_cfg.rviz'
+        get_package_share_directory('nav_autonomy'), 'config', 'depth_nav.rviz'
     )
 
     return LaunchDescription([
