@@ -31,7 +31,8 @@ class GPSNav2Tester(Node):
         self.timer = self.create_timer(self.timer_period, self.timer_callback)
 
         # Optional: frame of your GPS origin (usually "gps_link")
-        self.gps_frame = "gps_link"
+        self.gps_frame = "rover_base_origin"
+        # self.gps_frame = "gps_link"
         self.map_frame = "map"
 
     def timer_callback(self):
