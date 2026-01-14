@@ -76,7 +76,7 @@ def generate_launch_description():
         # Local EKF 
         Node(
             package='robot_localization',
-            executable='ekf_node_odom',
+            executable='ekf_node',
             name='ekf_local',
             output='screen',
             parameters=[{
@@ -224,11 +224,11 @@ def generate_launch_description():
             'use_odometry_yaw': True,
 
             # Let first GPS message set origin
-            'wait_for_datum': False,
+            #'wait_for_datum': False,
 
             # Manual datum (only used if wait_for_datum is true)
-            # 'use_manual_datum': False,
-            # 'datum': [40.0, -105.0, 0.0],  # [lat, lon, alt] - Automatically set to first GPS reading 
+            'use_manual_datum': True,
+            'datum': [44.5671654, -123.274424, 0.0],  # [lat, lon, alt] - Automatically set to first GPS reading 
 
             # # Frame IDs
             # 'map_frame_id': 'map',
