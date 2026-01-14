@@ -1,16 +1,14 @@
-1764115104.293030 [0]        tev: ddsi_udp_conn_write to udp/239.255.0.1:7400 failed with retcode -1
-1764115104.393065 [0]        tev: ddsi_udp_conn_write to udp/239.255.0.1:7400 failed with retcode -1
-1764115104.395072 [0]        tev: ddsi_udp_conn_write to udp/239.255.0.1:7400 failed with retcode -1
-1764115104.493141 [0]        tev: ddsi_udp_conn_write to udp/239.255.0.1:7400 failed with retcode -1
-1764115104.593211 [0]        tev: ddsi_udp_conn_write to udp/239.255.0.1:7400 failed with retcode -1
-1764115104.693279 [0]        tev: ddsi_udp_conn_write to udp/239.255.0.1:7400 failed with retcode -1
-1764115104.793356 [0]        tev: ddsi_udp_conn_write to udp/239.255.0.1:7400 failed with retcode -1
-1764115104.893428 [0]        tev: ddsi_udp_conn_write to udp/239.255.0.1:7400 failed with retcode -1
-1764115105.093485 [0]        tev: ddsi_udp_conn_write to udp/239.255.0.1:7400 failed with retcode -1
-1764115105.293571 [0]        tev: ddsi_udp_conn_write to udp/239.255.0.1:7400 failed with retcode -1
-1764115105.693776 [0]        tev: ddsi_udp_conn_write to udp/239.255.0.1:7400 failed with retcode -1
-1764115106.093715 [0]        tev: ddsi_udp_conn_write to udp/239.255.0.1:7400 failed with retcode -1
-1764115106.893793 [0]        tev: ddsi_udp_conn_write to udp/239.255.0.1:7400 failed with retcode -1
-1764115107.693865 [0]        tev: ddsi_udp_conn_write to udp/239.255.0.1:7400 failed with retcode -1
-1764115109.293935 [0]        tev: ddsi_udp_conn_write to udp/239.255.0.1:7400 failed with retcode -1
-1764115112.395184 [0]        tev: ddsi_udp_conn_write to udp/239.255.0.1:7400 failed with retcode -1
+Future exception was never retrieved
+future: <Future finished exception=InvalidHandle('cannot use Destroyable because destruction was requested')>
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/opt/ros/humble/lib/python3.10/site-packages/launch_ros/actions/load_composable_nodes.py", line 197, in _load_in_sequence
+    self._load_node(next_load_node_request, context)
+  File "/opt/ros/humble/lib/python3.10/site-packages/launch_ros/actions/load_composable_nodes.py", line 119, in _load_node
+    while not self.__rclpy_load_node_client.wait_for_service(timeout_sec=1.0):
+  File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/client.py", line 180, in wait_for_service
+    return self.service_is_ready()
+  File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/client.py", line 159, in service_is_ready
+    with self.handle:
+rclpy._rclpy_pybind11.InvalidHandle: cannot use Destroyable because destruction was requested
