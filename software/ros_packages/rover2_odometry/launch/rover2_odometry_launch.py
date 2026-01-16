@@ -73,7 +73,7 @@ def generate_launch_description():
                  ('odom', '/odometry/visual'),
              ]),
 
-        # Local EKF 
+        # Local EKF (odom)
         Node(
             package='robot_localization',
             executable='ekf_node',
@@ -89,7 +89,7 @@ def generate_launch_description():
                 'debug': False,
                 'publish_tf': True,
                 
-                'map_frame': 'map',
+                # 'map_frame': 'map',
                 'odom_frame': 'odom',
                 'base_link_frame': 'rover_base_origin',
                 'world_frame': 'odom',
@@ -133,7 +133,7 @@ def generate_launch_description():
             ]
         ),
         
-        # EKF Map
+        # Global EKF (map)
         Node(
             package='robot_localization',
             executable='ekf_node',
@@ -149,10 +149,10 @@ def generate_launch_description():
                 'debug': False,
                 'publish_tf': True,
                 
-                'map_frame': 'map',
                 'odom_frame': 'odom',
                 'base_link_frame': 'rover_base_origin',
                 'world_frame': 'map',
+                'map_frame': 'map', # published map fram tf name
                 
                 # Local odometry 
                 'odom0': '/wheel_odom',
@@ -213,7 +213,6 @@ def generate_launch_description():
             # 2D navigation
             'zero_altitude': True,
 
-
             # Publishing options
             'broadcast_cartesian_transform': True,
             'publish_filtered_gps': True,
@@ -224,24 +223,24 @@ def generate_launch_description():
             'use_odometry_yaw': True,
 
             # Let first GPS message set origin
-            #'wait_for_datum': False,
+            'wait_for_datum': True,
 
             # Manual datum (only used if wait_for_datum is true)
-            'use_manual_datum': True,
-            'datum': [44.5671654, -123.274424, 0.0],  # [lat, lon, alt] - Automatically set to first GPS reading 
+            # 'use_manual_datum': True,
+            # 'datum': [40.0, -105.0, 0.0],  # [lat, lon, alt] - Automatically set to first GPS reading 
 
             # # Frame IDs
             # 'map_frame_id': 'map',
             # 'odom_frame_id': 'odom',
-            # 'base_link_frame_id': 'rover_base_origin',
-            # 'world_frame_id': 'odom',  # Match the EKFs
+            'base_link_frame_id': 'rover_base_origin',
+            'world_frame_id': 'map',  # Match the EKFs
          }],
          remappings=[
             ('/imu/data', '/imu/data'),                  # Your IMU topic
             ('/gps/fix', '/gps/fix'),                    # YOUR GPS INPUT TOPIC
-            ('/gps/filtered', '/gps/filtered'),          # YOUR GPS INPUT TOPIC
-            ('/odometry/gps', '/odometry/gps'),          # GPS output topic
+            # ('/gps/filtered', '/gps/filtered'),          # YOUR GPS INPUT TOPIC
             ('/odometry/filtered', '/odometry/local'),  # Which EKF to use for heading
+            ('/odometry/gps', '/odometry/gps'),          # GPS output topic
          ]
       ),
     ])
