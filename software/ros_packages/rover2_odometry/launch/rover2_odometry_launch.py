@@ -77,7 +77,7 @@ def generate_launch_description():
         Node(
             package='robot_localization',
             executable='ekf_node',
-            name='ekf_local',
+            name='ekf_node_odom',
             output='screen',
             parameters=[{
                 'frequency': 30.0,
@@ -241,7 +241,7 @@ def generate_launch_description():
             ('/gps/fix', '/gps/fix'),                    # YOUR GPS INPUT TOPIC
             ('/gps/filtered', '/gps/filtered'),          # YOUR GPS INPUT TOPIC
             ('/odometry/gps', '/odometry/gps'),          # GPS output topic
-            ('/odometry/filtered', '/odometry/global'),  # Which EKF to use for heading
+            ('/odometry/filtered', '/odometry/local'),  # Which EKF to use for heading
          ]
       ),
     ])
