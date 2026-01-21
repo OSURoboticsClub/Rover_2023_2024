@@ -4,7 +4,7 @@ from rclpy.node import Node
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import NavSatFix
 from tf2_ros import Buffer, TransformListener, LookupException, ConnectivityException, ExtrapolationException
-from tf2_geometry_msgs import do_transform_pose
+from tf2_geometry_msgs import do_transform_pose_stamped
 import time
 import utm
 
