@@ -1,38 +1,37 @@
-# searchObject enum
-uint8 NONE=0
-uint8 CIRCLE=1
-uint8 SQUARE=2
+# Goal
+std_msgs/Header header
 
-# searchPattern enum
-uint8 NONE=0
-uint8 BOTTLE=1
-uint8 OG_HAMMER=2
-UINT8 ORANGE_HAMMER=3
+uint16 search_object
+uint16 NO_OBJECT=0
+uint16 BOTTLE=1
+uint16 OG_HAMMER=2
+uint16 ORANGE_HAMMER=3
 
-# currentAction enum
-uint8 NONE=0
-uint8 NAVIGATING=1
-uint8 SEARCHING=2
+uint16 search_pattern
+uint16 NO_PATTERN=0
+uint16 SPIRAL=1
 
-# completionStatus enum
-uint8 NOT_STARTED=0
-uint8 IN_PROGRESS=1
-uint8 COMPLETED=2
-uint8 FAILED=3
+GPSWaypoint[] nav_waypoints 
 
-
-
-# Request
-std_msgs/msg/Header header
-uint16 searchObject
-uint16 searchPattern
-GPSWaypoint[] navWaypoints 
 ---
 # Result
-std_msgs/msg/Header header
-uint16 ackComplete
+std_msgs/Header header
+
+uint16 ack
+uint16 CANCELED=0
+uint16 SUCCESS=1
+
 ---
 # Feedback
-std_msgs/msg/Header header
-uint16 currentAction
-uint16 completionStatus 
+std_msgs/Header header
+
+uint16 current_action
+uint16 NO_ACTION=0
+uint16 NAVIGATING=1
+uint16 SEARCHING=2
+
+uint16 completion_status 
+uint16 NOT_STARTED=0
+uint16 IN_PROGRESS=1
+uint16 COMPLETED=2
+uint16 FAILED=3

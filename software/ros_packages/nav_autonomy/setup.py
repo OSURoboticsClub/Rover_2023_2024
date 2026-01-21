@@ -29,6 +29,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'mission_manager = nav_autonomy.mission_manager:main'
         ],
     },
 )
