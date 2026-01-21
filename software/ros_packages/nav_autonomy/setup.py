@@ -29,7 +29,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'mission_manager = nav_autonomy.mission_manager:main'
+            'mission_manager = nav_autonomy.mission_manager:main',
+            'gps_nav2_tester = nav_autonomy.gps_nav2_tester:main',
         ],
     },
 )
