@@ -2,6 +2,7 @@
 
 from typing import List
 import time
+import math
 
 import rclpy
 from rclpy.node import Node
@@ -9,27 +10,16 @@ from rclpy.action import ActionServer, CancelResponse, GoalResponse
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
 from nav2_simple_commander.robot_navigator import BasicNavigator
+from robot_localization.srv import FromLL
 
 from std_msgs.msg import Header
-from geographic_msgs.msg import GeoPose
-
-from nav_autonomy.utils.gps_utils import latLonYaw2Geopose
+from geometry_msgs.msg import PoseStamped
 
 # Custom action and message
 from nav_autonomy_interface.action import Mission
 from nav_autonomy_interface.msg import GPSWaypoint
 
-
-def wps_to_geopose(waypoints: List[GPSWaypoint]) -> List[GeoPose]:
-    """
-    Convert array of give GPSWaypoint to geographic_msgs/msg/GeoPose 
-    """
-    gepose_wps = []
-    for wp in waypoints:
-        latitude, longitude, yaw = wp.latitude, wp.longitude, 0.0
-        gepose_wps.append(latLonYaw2Geopose(latitude, longitude, yaw))
-    return gepose_wps
-
+from nav_autonomy.utils import search_patterns
 
 class MissionManager(Node):
     """
@@ -41,15 +31,14 @@ class MissionManager(Node):
 
         self.callback_group = ReentrantCallbackGroup()
         self.navigator = BasicNavigator("basic_navigator")
+        self.fromLL_client = self.navigator.create_client(FromLL, '/fromLL')
 
         # Mission data
-        self.search_object: int = Mission.NONE
-        self.search_pattern: int = Mission.NONE
-        self.waypoints: List[GPSWaypoint] = []
+        self.waypoints: List[PoseStamped] = []
 
         # Feedback
-        self.current_action = Mission.NONE
-        self.completion_status = Mission.NOT_STARTED 
+        self.current_action = Mission.Feedback.NO_ACTION
+        self.completion_status = Mission.Feedback.NOT_STARTED 
 
         # Action Server
         self._action_server = ActionServer(
@@ -64,36 +53,67 @@ class MissionManager(Node):
 
         self.get_logger().info('MissionManager action server ready.')
 
+    def gps_to_map_pose(self, lat, lon, yaw=0.0):           # KRJ TODO: Need to test how nav2 behaves if yaw on each point is 0
+        """Use robot_localization to convert GPS to map pose"""
+        
+        request = FromLL.Request()
+        request.ll_point.latitude = lat
+        request.ll_point.longitude = lon
+        request.ll_point.altitude = 0.0
+        
+        # Wait for service
+        self.fromLL_client.wait_for_service()
+        
+        # Call service
+        future = self.fromLL_client.call_async(request)
+        rclpy.spin_until_future_complete(self.navigator, future)
+        
+        response = future.result()
+        
+        # Create PoseStamped
+        pose = PoseStamped()
+        pose.header.frame_id = 'map'
+        pose.header.stamp = self.navigator.get_clock().now().to_msg()
+        pose.pose.position.x = response.map_point.x
+        pose.pose.position.y = response.map_point.y
+        pose.pose.orientation.z = math.sin(yaw / 2.0)
+        pose.pose.orientation.w = math.cos(yaw / 2.0)
+        
+        return pose
 
     def goal_callback(self, goal_request):
         """Accept or reject a client request to begin an action."""
         self.get_logger().info(
             f'Received goal request: '
-            f'searchObject={goal_request.searchObject}, '
-            f'searchPattern={goal_request.searchPattern}, '
-            f'num_waypoints={len(goal_request.navWaypoints)}'
+            f'search_object={goal_request.search_object}, '
+            f'search_pattern={goal_request.search_pattern}, '
+            f'num_waypoints={len(goal_request.nav_waypoints)}'
         )
         # Check if already busy
-        if self.current_action != Mission.NONE:
+        if self.current_action != Mission.Feedback.NO_ACTION:
             self.get_logger().info('Rejecting new goal - already executing a mission')
             return GoalResponse.REJECT
         
         # Validate input
-        if len(goal_request.navWaypoints) == 0:
+        if goal_request.search_pattern != Mission.Goal.NO_PATTERN:
+            if goal_request.search_object not in [Mission.Goal.BOTTLE, Mission.Goal.OG_HAMMER, Mission.Goal.ORANGE_HAMMER]:
+                self.get_logger().warn('Rejecting goal - invalid or missing search object')
+                return GoalResponse.REJECT
+        
+        if goal_request.search_object != Mission.Goal.NO_OBJECT:
+            if goal_request.search_pattern not in [Mission.Goal.SPIRAL]:
+                self.get_logger().warn('Rejecting goal - invalid or missing search pattern')
+                return GoalResponse.REJECT
+        
+        if len(goal_request.nav_waypoints) == 0:
             self.get_logger().warn('Rejecting goal - no waypoints provided')
             return GoalResponse.REJECT
-        # KRJ TODO: Verify lat long range?
         
-        if goal_request.searchObject != Mission.NONE or goal_request.pattern != Mission.NONE:
-            if goal_request.searchObject not in [Mission.CIRCLE, Mission.SQUARE]:
-                self.get_logger().warn('Rejecting goal - no search object specified')
-                return GoalResponse.REJECT
-    
-            if goal_request.searchPattern not in [Mission.BOTTLE, Mission.OG_HAMMER, Mission.ORANGE_HAMMER]:
-                self.get_logger().warn('Rejecting goal - no search object specified')
-                return GoalResponse.REJECT
+        # Convert waypoints             KRJ TODO: Can this error?           
+        self.waypoints = [self.gps_to_map_pose(gps.latitude, gps.longitude) for gps in goal_request.nav_waypoints]          # KRJ TODO: Is converting all at once bad if gps corrects?
         
         self.get_logger().info('Accepting goal request')
+        self.current_action = Mission.Feedback.NAVIGATING
         return GoalResponse.ACCEPT
 
     def cancel_callback(self, goal_handle):
@@ -114,10 +134,11 @@ class MissionManager(Node):
             """
             Function to start the waypoint following
             """
+            self.completion_status = Mission.Feedback.IN_PROGRESS
             self.navigator.waitUntilNav2Active(localizer='robot_localization')
-            self.navigator.followGpsWaypoints(wps)
+            self.navigator.followWaypoints(wps)
             self.get_logger().info('Following waypoints')
-        
+
         def wait_for_finish():
             """
             Wait for navigation to complete, checking for cancellation
@@ -133,6 +154,8 @@ class MissionManager(Node):
                 
                 # KRJ TODO: Do something with navigator feedback: self.navigator.getFeedback()
 
+                # KRJ TODO: we should rethink feedback. This isn't very useful. Maybe send back completion percent and make a progress bar?
+                
                 # Send feedback
                 feedback = Mission.Feedback()
                 feedback.header = Header()
@@ -142,6 +165,7 @@ class MissionManager(Node):
                 
                 time.sleep(0.1)
             
+            self.completion_status = Mission.Feedback.COMPLETED
             self.get_logger().info('Navigation step complete')
         
         try:                                        # KRJ TODO: set completion statuses and current actions
@@ -149,24 +173,21 @@ class MissionManager(Node):
             # Navigate to location
             # ==============================
             self.get_logger().info('Navigation to search location')
-            self.current_action = Mission.NAVIGATING
-            navigation_path = wps_to_geopose(self.waypoints)
-            start_wpf(navigation_path)
+            start_wpf(self.waypoints)
             wait_for_finish()
             
             # ==============================
             # Execute search
             # ==============================
-            if goal_handle.searchObject != Mission.NONE and goal_handle.pattern != Mission.NONE:
+            goal_request = goal_handle.request
+            if goal_request.search_object != Mission.Goal.NO_OBJECT and goal_request.search_pattern != Mission.Goal.NO_PATTERN:
                 self.get_logger().info('Executing Search')
-                self.current_action = Mission.SEARCHING
+                self.current_action = Mission.Feedback.SEARCHING
 
                 # KRJ TODO: call yolo node action server to begin looking for given object
 
-                final_pose = navigation_path[-1]
-                search_path = [final_pose]  # KRJ TODO: make search pattern, add final pose to each item in search path
+                search_path = search_patterns.spiral(self.waypoints[-1], 10, 2)
                 start_wpf(search_path)
-
                 wait_for_finish()
             
             # ==============================
@@ -176,7 +197,7 @@ class MissionManager(Node):
             goal_handle.succeed()
             result = Mission.Result()
             result.header = Header()
-            result.ackComplete = 1  # ACK success
+            result.ack = Mission.Result.SUCCESS
             return result
             
         except MissionCanceled:
@@ -184,7 +205,7 @@ class MissionManager(Node):
             self.get_logger().info('Mission was canceled')
             result = Mission.Result()
             result.header = Header()
-            result.ackComplete = 0  # Indicate cancellation
+            result.ack = Mission.Result.CANCELED
             return result
 
 
@@ -201,8 +222,11 @@ def main(args=None):
     except KeyboardInterrupt:
         pass
     finally:
+        executor.shutdown()
         node.destroy_node()
-        rclpy.shutdown()
+
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == '__main__':
