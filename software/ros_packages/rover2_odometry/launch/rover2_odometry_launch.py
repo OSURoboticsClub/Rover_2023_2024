@@ -40,6 +40,13 @@ def generate_launch_description():
             **config
         ),
 
+        Node(
+            package='rover2_odometry',
+            executable='GPSNode',
+            name='RTK_GPS',
+            **config
+        ),
+
         # Launch visual odom
          Node(
              package='rtabmap_odom', 
