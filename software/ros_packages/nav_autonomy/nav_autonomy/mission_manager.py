@@ -135,7 +135,7 @@ class MissionManager(Node):
             Function to start the waypoint following
             """
             self.completion_status = Mission.Feedback.IN_PROGRESS
-            self.navigator.waitUntilNav2Active(localizer='robot_localization')
+            # self.navigator.waitUntilNav2Active(localizer='robot_localization')
             self.navigator.followWaypoints(wps)
             self.get_logger().info('Following waypoints')
 
@@ -159,8 +159,8 @@ class MissionManager(Node):
                 # Send feedback
                 feedback = Mission.Feedback()
                 feedback.header = Header()
-                feedback.currentAction = self.current_action
-                feedback.completionStatus = self.completion_status
+                feedback.current_action = self.current_action
+                feedback.completion_status = self.completion_status
                 goal_handle.publish_feedback(feedback)
                 
                 time.sleep(0.1)
