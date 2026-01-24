@@ -70,8 +70,8 @@ class MissionTestClient(Node):
         }
         
         self.get_logger().info(
-            f'Feedback - Action: {action_names.get(feedback.currentAction, "UNKNOWN")}, '
-            f'Status: {status_names.get(feedback.completionStatus, "UNKNOWN")}'
+            f'Feedback - Action: {action_names.get(feedback.current_action, "UNKNOWN")}, '
+            f'Status: {status_names.get(feedback.completion_status, "UNKNOWN")}'
         )
     
     def get_result_callback(self, future):
@@ -110,8 +110,8 @@ def main(args=None):
     
     # Example 1: Simple navigation waypoints (no search)
     waypoints = [
-        GPSWaypoint(latitude=40.7128, longitude=-74.0060),  # New York
-        GPSWaypoint(latitude=40.7589, longitude=-73.9851),  # Times Square
+        GPSWaypoint(latitude=44.56728, longitude=-123.27430),  # New York
+        GPSWaypoint(latitude=44.56736, longitude=-123.27426),  # Times Square
     ]
     
     # Example 2: Navigation with search

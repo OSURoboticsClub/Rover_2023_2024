@@ -140,7 +140,7 @@ def generate_launch_description():
             name='ekf_node_map',
             output='screen',
             parameters=[{
-                'frequency': 30.0,
+                'frequency': 20.0,
                 'two_d_mode': True,
                 # 'sensor_timeout': 0.1,
                 # 'transform_time_offset': 0.0,
