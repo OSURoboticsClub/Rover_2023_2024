@@ -12,11 +12,11 @@
     <group name="rover_arm">
         <link name="rover_arm_base_link"/>
         <link name="rover_arm_shoulder"/>
-        <link name="rover_arm_elbow_pitch"/>
+        <link name="rover_arm_long_arm"/>
         <link name="rover_arm_elbow_roll"/>
-        <link name="rover_arm_wrist_pitch"/>
+        <link name="rover_arm_short_arm"/>
         <link name="rover_arm_wrist_roll"/>
-        <link name="rover_arm_gripper"/>
+        <link name="rover_arm_tool0"/>
         <link name="rover_arm_jaws_link"/>
         <joint name="rover_arm_base_joint"/>
         <joint name="rover_arm_shoulder_joint"/>
@@ -40,27 +40,29 @@
         <joint name="rover_arm_wrist_roll_joint" value="0"/>
     </group_state>
     <!--END EFFECTOR: Purpose: Represent information about an end effector.-->
-    <end_effector name="gripper" parent_link="rover_arm_wrist_roll" group="gripper"/>
+    <end_effector name="gripper" parent_link="rover_arm_tool0" group="gripper"/>
     <!--VIRTUAL JOINT: Purpose: this element defines a virtual joint between a robot link and an external frame of reference (considered fixed with respect to the robot)-->
     <virtual_joint name="World_Joint" type="floating" parent_frame="world" child_link="rover_base_origin"/>
     <!--PASSIVE JOINT: Purpose: this element is used to mark joints that are not actuated-->
     <passive_joint name="World_Joint"/>
     <!--DISABLE COLLISIONS: By default it is assumed that any link of the robot could potentially come into collision with any other link in the robot. This tag disables collision checking between a specified pair of links. -->
-    <disable_collisions link1="rover_arm_base_link" link2="rover_arm_elbow_pitch" reason="Never"/>
+    <disable_collisions link1="rover_arm_base_link" link2="rover_arm_long_arm" reason="Never"/>
     <disable_collisions link1="rover_arm_base_link" link2="rover_arm_elbow_roll" reason="Never"/>
     <disable_collisions link1="rover_arm_base_link" link2="rover_arm_shoulder" reason="Adjacent"/>
     <disable_collisions link1="rover_arm_base_link" link2="rover_base_origin" reason="Adjacent"/>
-    <disable_collisions link1="rover_arm_elbow_pitch" link2="rover_arm_elbow_roll" reason="Adjacent"/>
-    <disable_collisions link1="rover_arm_elbow_pitch" link2="rover_arm_shoulder" reason="Adjacent"/>
-    <disable_collisions link1="rover_arm_elbow_pitch" link2="rover_arm_wrist_pitch" reason="Never"/>
-    <disable_collisions link1="rover_arm_elbow_roll" link2="rover_arm_gripper" reason="Never"/>
+    <disable_collisions link1="rover_arm_long_arm" link2="rover_arm_elbow_roll" reason="Adjacent"/>
+    <disable_collisions link1="rover_arm_long_arm" link2="rover_arm_shoulder" reason="Adjacent"/>
+    <disable_collisions link1="rover_arm_long_arm" link2="rover_arm_short_arm" reason="Never"/>
+    <disable_collisions link1="rover_arm_elbow_roll" link2="rover_arm_tool0" reason="Never"/>
     <disable_collisions link1="rover_arm_elbow_roll" link2="rover_arm_shoulder" reason="Never"/>
-    <disable_collisions link1="rover_arm_elbow_roll" link2="rover_arm_wrist_pitch" reason="Adjacent"/>
+    <disable_collisions link1="rover_arm_elbow_roll" link2="rover_arm_short_arm" reason="Adjacent"/>
     <disable_collisions link1="rover_arm_elbow_roll" link2="rover_arm_wrist_roll" reason="Never"/>
     <disable_collisions link1="rover_arm_elbow_roll" link2="rover_base_origin" reason="Never"/>
-    <disable_collisions link1="rover_arm_gripper" link2="rover_arm_wrist_roll" reason="Adjacent"/>
-    <disable_collisions link1="rover_arm_shoulder" link2="rover_arm_wrist_pitch" reason="Never"/>
+    <disable_collisions link1="rover_arm_tool0" link2="rover_arm_wrist_roll" reason="Adjacent"/>
+    <disable_collisions link1="rover_arm_shoulder" link2="rover_arm_short_arm" reason="Never"/>
     <disable_collisions link1="rover_arm_shoulder" link2="rover_base_origin" reason="Never"/>
-    <disable_collisions link1="rover_arm_wrist_pitch" link2="rover_arm_wrist_roll" reason="Adjacent"/>
+    <disable_collisions link1="rover_arm_short_arm" link2="rover_arm_wrist_roll" reason="Adjacent"/>
+    <disable_collisions link1="rover_arm_tool0" link2="d405_link" reason="Adjacent"/>
     <disable_collisions link1="rover_arm_gripper" link2="d405_link" reason="Adjacent"/>
+    <disable_collisions link1="rover_arm_tool0" link2="rover_arm_gripper" reason="Adjacent"/>
 </robot>

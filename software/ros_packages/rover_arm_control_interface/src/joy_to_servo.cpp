@@ -116,11 +116,12 @@ bool convertJoyToCmd(const std::vector<float>& axes, const std::vector<int>& but
     }
 
     //Map joystick to twist commands
-    twist->twist.linear.y = axes[controllerMappings.AXIS_MAP.at("LEFT_STICK_Y")] * slowdown;
+    twist->twist.linear.y = -1.0 * axes[controllerMappings.AXIS_MAP.at("LEFT_STICK_Y")] * slowdown;
     twist->twist.linear.x = -1.0 * axes[controllerMappings.AXIS_MAP.at("LEFT_STICK_X")] * slowdown;
 
-    double lin_z_in = -1.0 * (axes[controllerMappings.AXIS_MAP.at("RIGHT_TRIGGER")] - controllerMappings.AXIS_DEFAULTS.at("RIGHT_TRIGGER"));
-    double lin_y_out = 1.0 * (axes[controllerMappings.AXIS_MAP.at("LEFT_TRIGGER")] - controllerMappings.AXIS_DEFAULTS.at("LEFT_TRIGGER"));
+    //Triggers range from 1 to -1 and start at 1. Need to remap to 0 to 1
+    double lin_z_in = -0.5 * (axes[controllerMappings.AXIS_MAP.at("RIGHT_TRIGGER")] - controllerMappings.AXIS_DEFAULTS.at("RIGHT_TRIGGER"));
+    double lin_y_out = 0.5 * (axes[controllerMappings.AXIS_MAP.at("LEFT_TRIGGER")] - controllerMappings.AXIS_DEFAULTS.at("LEFT_TRIGGER"));
     twist->twist.linear.z = (lin_y_out + lin_z_in) * slowdown;
 
     //pitch
@@ -133,18 +134,18 @@ bool convertJoyToCmd(const std::vector<float>& axes, const std::vector<int>& but
     return true;
   }
   else{ //joint by joint control
-    joint->joint_names.push_back("base_joint");
-    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("D_PAD_X")] * -1.0);
-    joint->joint_names.push_back("shoulder_joint");
-    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("D_PAD_Y")] * -1.0);
-    joint->joint_names.push_back("elbow_pitch_joint");
+    joint->joint_names.push_back("rover_arm_base_joint");
+    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("D_PAD_X")] * 1.0);
+    joint->joint_names.push_back("rover_arm_shoulder_joint");
+    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("D_PAD_Y")] * 1.0);
+    joint->joint_names.push_back("rover_arm_elbow_pitch_joint");
     joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("LEFT_STICK_Y")] * 1.0);
-    joint->joint_names.push_back("elbow_roll_joint");
+    joint->joint_names.push_back("rover_arm_elbow_roll_joint");
     joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("LEFT_STICK_X")] * -1.0);
-    joint->joint_names.push_back("wrist_pitch_joint");
-    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("RIGHT_STICK_Y")] * -1.0);
-    joint->joint_names.push_back("wrist_roll_joint");
-    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("RIGHT_STICK_X")]);
+    joint->joint_names.push_back("rover_arm_wrist_pitch_joint");
+    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("RIGHT_STICK_Y")] * 1.0);
+    joint->joint_names.push_back("rover_arm_wrist_roll_joint");
+    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("RIGHT_STICK_X")] * 1.0);
 
     return false;
   }
@@ -208,6 +209,8 @@ JoyToServoPub::JoyToServoPub(const rclcpp::NodeOptions& options)
     //Setup Services
     servo_start_client_ = this->create_client<std_srvs::srv::Trigger>("/servo_node/start_servo");
     servo_start_client_->wait_for_service(std::chrono::seconds(1));
+
+    // Start the servo node
     servo_start_client_->async_send_request(std::make_shared<std_srvs::srv::Trigger::Request>());
 
     //Initialize mappings
@@ -281,16 +284,18 @@ void JoyToServoPub::joyCB(const sensor_msgs::msg::Joy::ConstSharedPtr& msg)
     // Create the messages we might publish
     auto twist_msg = std::make_unique<geometry_msgs::msg::TwistStamped>();
     auto joint_msg = std::make_unique<control_msgs::msg::JointJog>();
-
+    bool prev_use = use_ik_;
     // This call updates the frame for twist commands
     updateCmdFrame(frame_to_publish_, msg->buttons, controller_map_, use_ik_);
-
+    if (prev_use != use_ik_){
+      RCLCPP_INFO(this->get_logger(), "Control mode changed: %s", use_ik_ ? "IK Control" : "Joint by Joint Control");
+    } 
     // Convert the joystick message to Twist or JointJog and publish
     if (convertJoyToCmd(msg->axes, msg->buttons, twist_msg, joint_msg, use_ik_, controller_map_, slowdown_))
     {
       // publish the TwistStamped
       twist_msg->header.frame_id = frame_to_publish_;
-      twist_msg->header.stamp = this->now();
+      twist_msg->header.stamp = this->now();  
       twist_pub_->publish(std::move(twist_msg));
     }
     else

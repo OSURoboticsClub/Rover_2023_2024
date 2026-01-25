@@ -14,7 +14,8 @@
   
     <!-- Instantiate micros  -->
     <xacro:sensor_d405 parent ="rover_arm_gripper" name="d405" use_nominal_extrinsics="true">
-        <origin xyz="0 0.04075 0.1" rpy="0 -1.3963 -1.5708"/> 
+        <!-- For older urdf <origin xyz="0 0.04075 0.1" rpy="0 -1.3963 -1.5708"/> -->
+        <origin xyz="-0.001611 -0.040711 0.099525" rpy="0.0 -1.3963635 1.5707963"/> 
     </xacro:sensor_d405>
 
 

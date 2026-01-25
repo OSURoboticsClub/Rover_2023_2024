@@ -82,7 +82,7 @@ The below code is covered under the 3-clause BSD license.
 const std::string JOY_TOPIC = "/joy";
 const std::string TWIST_TOPIC = "/servo_node/delta_twist_cmds";
 const std::string JOINT_TOPIC = "/servo_node/delta_joint_cmds";
-const std::string EEF_FRAME_ID = "rover_arm_gripper";
+const std::string EEF_FRAME_ID = "rover_arm_tool0";
 const std::string BASE_FRAME_ID = "rover_arm_base_link";
 
 struct ControllerMappings {
@@ -122,11 +122,11 @@ private:
     rclcpp::Publisher<moveit_msgs::msg::PlanningScene>::SharedPtr collision_pub_;
     rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr servo_start_client_;
 
-    std::string frame_to_publish_;
+    std::string frame_to_publish_{EEF_FRAME_ID};
     std::thread collision_pub_thread_;
     ControllerMappings controller_map_;
-    bool use_ik_;
-    float slowdown_; //Scalar to slow down velocity
+    bool use_ik_{true}; //Whether to use inverse kinematics or joint jogging
+    float slowdown_{1.0}; //Scalar to slow down velocity
 
 
   void initializeControllerMappings(const std::string& controller_type);

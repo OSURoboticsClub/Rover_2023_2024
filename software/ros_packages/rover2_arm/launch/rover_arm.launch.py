@@ -146,20 +146,19 @@ def generate_launch_description():
         ],
     )
 
-    rover_arm_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["rover_arm_controller", 
-                   "-c", "/controller_manager",
-                   "--inactive"
-
-        ],
-    )
-
     moveit_arm_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
         arguments=["rover_arm_controller_moveit", 
+                   "-c", "/controller_manager",
+                   "--inactive",
+        ],
+    )
+
+    rover_arm_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["rover_arm_controller", 
                    "-c", "/controller_manager",
         ],
     )
@@ -211,7 +210,7 @@ def generate_launch_description():
                     # octomap_updater_config,
                     kinematics_yaml,
                 ],
-                extra_arguments=[{'use_intra_process_comms': True}],
+                extra_arguments=[{'use_intra_process_comms': False}],
             ),
             ComposableNode(
                 package="tf2_ros",

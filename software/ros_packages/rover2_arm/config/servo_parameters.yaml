@@ -5,9 +5,9 @@ max_expected_latency: 0.1 #latency between command generation and controller rec
 move_group_name: "rover_arm" 
 active_subgroup: "" #Switches to a subgroup of the move group
 use_gazebo: false #true if running in gazebo
-ee_frame_name: "rover_arm_gripper" #end effector frame
+ee_frame_name: "rover_arm_tool0" #end effector frame
 planning_frame: "rover_arm_base_link" #planning frame
-robot_link_command_frame: "rover_arm_gripper" #robot link for command frame
+robot_link_command_frame: "rover_arm_tool0" #robot link for command frame
 
 #Incoming command settings
 pose_command_in_topic: "~/pose_target_cmds" #Pose command topic
@@ -15,9 +15,9 @@ cartesian_command_in_topic: "~/delta_twist_cmds" #Cartesian command topic
 joint_command_in_topic: "~/delta_joint_cmds" #Joint command topic
 command_in_type: "unitless" # "unitless"> in the range [-1:1], as if from joystick. "speed_units"> cmds are in m/s and rad/s
 scale: #Since these are applied to each joint or total motion, they either should be set to the limiting joints speed or the opposite depending on how moveit handles what limits the joints and if the commands sent to moveit servo limits these already.
-  linear:  0.5  # "Max linear velocity in m/s if using speed units or tracking a pose, else a scaling factor on the unitless commanded velocity. Used for Cartesian and pose tracking commands."
-  rotational: 3.5  # "Max angular velocity in rad/s if using speed units or tracking a pose, else a scaling factor on the unitless commanded velocity. Used for Cartesian and pose tracking commands."
-  joint: 3.5  # "Joint angular/linear velocity scale. Only used for unitless joint commands."
+  linear:  5.0  # "Max linear velocity in m/s if using speed units or tracking a pose, else a scaling factor on the unitless commanded velocity. Used for Cartesian and pose tracking commands."
+  rotational: 10.0  # "Max angular velocity in rad/s if using speed units or tracking a pose, else a scaling factor on the unitless commanded velocity. Used for Cartesian and pose tracking commands."
+  joint: 10.0  # "Joint angular/linear velocity scale. Only used for unitless joint commands."
 incoming_command_timeout: 0.1 #discard commands older than timeout [sec]
 
 #Twist Settings
@@ -30,10 +30,10 @@ pose_tracking:
 
 #outgoing command settings
 status_topic: "~/status" #Status topic
-command_out_topic: "/rover_arm_controller_moveit/joint_trajectory" #Command publish topic
-command_out_type: "trajectory_msgs/JointTrajectory" # type of command to publish
+command_out_topic: "/rover_arm_controller/commands" #Command publish topic [joint_trajectory, commands]
+command_out_type: "std_msgs/Float64MultiArray" #[std_msgs/Float64MultiArray, trajectory_msgs/JointTrajectory] # type of command to publish
 publish_joint_positions: true #publish joint positions in output
-publish_joint_velocities: true #publish joint velicities in output
+publish_joint_velocities: false #publish joint velicities in output
 publish_joint_accelerations: false #publish joint accelerations in output
 
 #Planning Scene Monitor
