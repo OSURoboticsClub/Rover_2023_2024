@@ -4,7 +4,8 @@ controller_manager:
     update_rate: 100  # Hz
 
     rover_arm_controller:
-      type: joint_trajectory_controller/JointTrajectoryController
+      type: position_controllers/JointGroupPositionController
+      #type: joint_trajectory_controller/JointTrajectoryController
     
     rover_arm_controller_moveit:
       type: joint_trajectory_controller/JointTrajectoryController
