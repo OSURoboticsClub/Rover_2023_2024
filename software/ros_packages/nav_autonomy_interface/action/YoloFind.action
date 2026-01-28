@@ -1,0 +1,26 @@
+# Goal
+std_msgs/Header header
+
+uint16 search_object
+uint16 NO_OBJECT=0
+uint16 BOTTLE=1
+uint16 OG_HAMMER=2
+uint16 ORANGE_HAMMER=3
+
+---
+# Result
+std_msgs/Header header
+
+uint16 ack
+uint16 CANCELED=0
+uint16 SUCCESS=1
+uint16 FAILED=2
+
+---
+# Feedback
+std_msgs/Header header
+
+float32 confidence
+float32 direction   # Relative radians
+# TODO: Can we get something to tell us how far away? Object size?
+# float32 distance
