@@ -62,10 +62,10 @@ def generate_launch_description():
                  # config params
                  'publish_tf':False, 
                  'approx_sync':False,
-                 'wait_imu_to_init':True,
+                 'wait_imu_to_init':False,
 
                  # Internal Params (must be strings)
-                 'Odom/Strategy':'4',        # 0=Frame-to-Map (F2M) 1=Frame-to-Frame (F2F) 2=Fovis 3=viso2 4=DVO-SLAM 5=ORB_SLAM 6=OKVIS 7=LOAM 8=MSCKF_VIO 9=VINS-Fusion 10=OpenVINS 11=FLOAM 12=Open3D 13=cuVSLAM
+                 #'Odom/Strategy':'4',        # 0=Frame-to-Map (F2M) 1=Frame-to-Frame (F2F) 2=Fovis 3=viso2 4=DVO-SLAM 5=ORB_SLAM 6=OKVIS 7=LOAM 8=MSCKF_VIO 9=VINS-Fusion 10=OpenVINS 11=FLOAM 12=Open3D 13=cuVSLAM
                     # There are paramters to set for each strategy 
                  'Odom/FilteringStrategy':'0',        # 0=No filtering (default), 1 = Kalman , 2 = particle filter. Just for smoothing, not combining
                     # There are parameters to set for each filter too
