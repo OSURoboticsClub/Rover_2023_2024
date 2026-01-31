@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
+import asyncio
 from typing import List
-import time
 import math
 
 import rclpy
@@ -17,9 +17,9 @@ from geometry_msgs.msg import PoseStamped
 
 # Custom action and message
 from nav_autonomy_interface.action import Mission
-from nav_autonomy_interface.msg import GPSWaypoint
 
-from nav_autonomy.utils import search_patterns
+from nav_autonomy.utils.search_fsm import SearchFSM, SearchState, SearchPattern
+
 
 class MissionManager(Node):
     """
@@ -30,30 +30,31 @@ class MissionManager(Node):
         super().__init__('mission_manager')
 
         self.callback_group = ReentrantCallbackGroup()
+
         self.navigator = BasicNavigator("basic_navigator")
         self.fromLL_client = self.navigator.create_client(FromLL, '/fromLL')
 
-        # Mission data
-        self.waypoints: List[PoseStamped] = []
-
-        # Feedback
-        self.current_action = Mission.Feedback.NO_ACTION
-        self.completion_status = Mission.Feedback.NOT_STARTED 
-
-        # Action Server
         self._action_server = ActionServer(
             self,
             Mission,
             'mission',
-            execute_callback=self.mission_callback,
+            execute_callback=self.execute_callback,
             callback_group=self.callback_group,
             goal_callback=self.goal_callback,
             cancel_callback=self.cancel_callback,
         )
 
+        self.search_fsm = SearchFSM(
+            node=self, 
+            navigator=self.navigator, 
+            confidence_topic="yolo/confidence", 
+            status_topic="search/status"
+        )
+        
         self.get_logger().info('MissionManager action server ready.')
 
-    def gps_to_map_pose(self, lat, lon, yaw=0.0):           # KRJ TODO: Need to test how nav2 behaves if yaw on each point is 0
+
+    async def gps_to_map_pose(self, lat, lon, yaw=0.0):           # KRJ TODO: Need to test how nav2 behaves if yaw on each point is 0
         """Use robot_localization to convert GPS to map pose"""
         
         request = FromLL.Request()
@@ -62,24 +63,27 @@ class MissionManager(Node):
         request.ll_point.altitude = 0.0
         
         # Wait for service
-        self.fromLL_client.wait_for_service()
+        if not self.fromLL_client.wait_for_service(timeout_sec=5.0):
+            self.get_logger().error('Service /fromLL not available')
+            return None
         
         # Call service
-        future = self.fromLL_client.call_async(request)
-        rclpy.spin_until_future_complete(self.navigator, future)
-        
-        response = future.result()
+        response = await self.fromLL_client.call_async(request)
         
         # Create PoseStamped
         pose = PoseStamped()
         pose.header.frame_id = 'map'
-        pose.header.stamp = self.navigator.get_clock().now().to_msg()
+        pose.header.stamp = self.get_clock().now().to_msg()
         pose.pose.position.x = response.map_point.x
         pose.pose.position.y = response.map_point.y
         pose.pose.orientation.z = math.sin(yaw / 2.0)
         pose.pose.orientation.w = math.cos(yaw / 2.0)
-        
         return pose
+
+
+    # -------------------------
+    # Action server callbacks
+    # -------------------------
 
     def goal_callback(self, goal_request):
         """Accept or reject a client request to begin an action."""
@@ -89,124 +93,144 @@ class MissionManager(Node):
             f'search_pattern={goal_request.search_pattern}, '
             f'num_waypoints={len(goal_request.nav_waypoints)}'
         )
-        # Check if already busy
-        if self.current_action != Mission.Feedback.NO_ACTION:
+
+        if self.search_fsm.is_active():
             self.get_logger().info('Rejecting new goal - already executing a mission')
             return GoalResponse.REJECT
-        
-        # Validate input
-        if goal_request.search_pattern != Mission.Goal.NO_PATTERN:
-            if goal_request.search_object not in [Mission.Goal.BOTTLE, Mission.Goal.OG_HAMMER, Mission.Goal.ORANGE_HAMMER]:
-                self.get_logger().warn('Rejecting goal - invalid or missing search object')
-                return GoalResponse.REJECT
-        
-        if goal_request.search_object != Mission.Goal.NO_OBJECT:
-            if goal_request.search_pattern not in [Mission.Goal.SPIRAL]:
-                self.get_logger().warn('Rejecting goal - invalid or missing search pattern')
-                return GoalResponse.REJECT
         
         if len(goal_request.nav_waypoints) == 0:
             self.get_logger().warn('Rejecting goal - no waypoints provided')
             return GoalResponse.REJECT
-        
-        # Convert waypoints             KRJ TODO: Can this error?           
-        self.waypoints = [self.gps_to_map_pose(gps.latitude, gps.longitude) for gps in goal_request.nav_waypoints]          # KRJ TODO: Is converting all at once bad if gps corrects?
+
+        # # Validate input
+        # if goal_request.search_pattern != Mission.Goal.NO_PATTERN:
+        #     if goal_request.search_object not in [Mission.Goal.BOTTLE, Mission.Goal.OG_HAMMER, Mission.Goal.ORANGE_HAMMER]:
+        #         self.get_logger().warn('Rejecting goal - invalid or missing search object')
+        #         return GoalResponse.REJECT
         
         self.get_logger().info('Accepting goal request')
-        self.current_action = Mission.Feedback.NAVIGATING
         return GoalResponse.ACCEPT
+
 
     def cancel_callback(self, goal_handle):
         """Accept or reject a client request to cancel an action."""
         self.get_logger().info('Received cancel request')
         return CancelResponse.ACCEPT
     
+
     # ------------------------------------------------
     # Execute a mission
     # ------------------------------------------------
-    async def mission_callback(self, goal_handle):
-        
-        class MissionCanceled(Exception):
-            """Custom exception to handle mission cancellation"""
-            pass
-        
-        def start_wpf(wps):
-            """
-            Function to start the waypoint following
-            """
-            self.completion_status = Mission.Feedback.IN_PROGRESS
-            # self.navigator.waitUntilNav2Active(localizer='robot_localization')
-            self.navigator.followWaypoints(wps)
-            self.get_logger().info('Following waypoints')
+    async def execute_callback(self, goal_handle):
 
-        def wait_for_finish():
-            """
-            Wait for navigation to complete, checking for cancellation
-            Raises MissionCanceled if cancel is requested
-            """
-            while not self.navigator.isTaskComplete():
-                # Check for cancellation request
-                if goal_handle.is_cancel_requested:
-                    self.get_logger().info('Cancel requested - stopping navigation')
-                    self.navigator.cancelTask()  # Stop the navigator
-                    goal_handle.canceled()
-                    raise MissionCanceled()
-                
-                # KRJ TODO: Do something with navigator feedback: self.navigator.getFeedback()
+        try:
+            self.get_logger().info('Starting mission execution')
+            req = goal_handle.request
 
-                # KRJ TODO: we should rethink feedback. This isn't very useful. Maybe send back completion percent and make a progress bar?
-                
-                # Send feedback
-                feedback = Mission.Feedback()
-                feedback.header = Header()
-                feedback.current_action = self.current_action
-                feedback.completion_status = self.completion_status
-                goal_handle.publish_feedback(feedback)
-                
-                time.sleep(0.1)
-            
-            self.completion_status = Mission.Feedback.COMPLETED
-            self.get_logger().info('Navigation step complete')
-        
-        try:                                        # KRJ TODO: set completion statuses and current actions
-            # ==============================
-            # Navigate to location
-            # ==============================
-            self.get_logger().info('Navigation to search location')
-            start_wpf(self.waypoints)
-            wait_for_finish()
-            
+            # Convert waypoints
+            waypoints: List[PoseStamped] = []
+            for gps in req.nav_waypoints:
+                self.get_logger().info(f'Waypoint: lat={gps.latitude}, lon={gps.longitude}')
+                wp = await self.gps_to_map_pose(gps.latitude, gps.longitude)
+                if wp is None:
+                    self.get_logger().error(f'Failed to convert GPS ({gps.latitude}, {gps.longitude}) to map pose')
+                    goal_handle.abort()
+                    result = Mission.Result()
+                    result.ack = Mission.Result.CANCELLED
+                    return result
+                waypoints.append(wp)
+
+
+            # Call Yolo Action Server
+
             # ==============================
             # Execute search
             # ==============================
-            goal_request = goal_handle.request
-            if goal_request.search_object != Mission.Goal.NO_OBJECT and goal_request.search_pattern != Mission.Goal.NO_PATTERN:
-                self.get_logger().info('Executing Search')
-                self.current_action = Mission.Feedback.SEARCHING
 
-                # KRJ TODO: call yolo node action server to begin looking for given object
+            search_pattern = SearchPattern.NONE
+            match req.search_pattern:
+                case Mission.Goal.SPIRAL:
+                    search_pattern = SearchPattern.SPIRAL
+                case Mission.Goal.LAWNMOWER:
+                    search_pattern = SearchPattern.LAWNMOWER
+                    # TODO: convert corners to map points
+                case _:
+                    self.get_logger().error(f'Unknown search pattern: {req.search_pattern}. Falling back to lawnmower.')
+                    search_pattern = SearchPattern.LAWNMOWER
 
-                search_path = search_patterns.spiral(self.waypoints[-1], 10, 2)
-                start_wpf(search_path)
-                wait_for_finish()
-            
+            self.search_fsm.start(
+                start_paths=waypoints,
+                search_points=waypoints[-1],
+                pattern=search_pattern,
+                success_threshold=0.9,
+                investigate_threshold=0.7
+            )
+
+            # ==============================
+            # Poll search feedback
+            # ==============================
+
+            while rclpy.ok() and self.search_fsm.is_active():
+                if goal_handle.is_cancel_requested:
+                    goal_handle.canceled()
+                    return Mission.Result(ack=Mission.Result.CANCELED)
+
+                goal_handle.publish_feedback(self._map_search_feedback())
+                await asyncio.sleep(0.4) #TODO: adjust polling rate
+
+
             # ==============================
             # Complete action
             # ==============================
-            self.get_logger().info('Mission Completed')
-            goal_handle.succeed()
+
             result = Mission.Result()
-            result.header = Header()
-            result.ack = Mission.Result.SUCCESS
+            final_state = self.search_fsm.get_state()
+
+            if final_state == SearchState.SUCCESS:
+                self.get_logger().info('Mission succeeded')
+                goal_handle.succeed()
+                result.ack = Mission.Result.SUCCESS
+            else:
+                self.get_logger().info(f'Mission stopped with state: {final_state.name}')
+                goal_handle.abort()
+                result.ack = Mission.Result.FAILED
+
             return result
-            
-        except MissionCanceled:
-            # Handle cancellation
-            self.get_logger().info('Mission was canceled')
-            result = Mission.Result()
-            result.header = Header()
-            result.ack = Mission.Result.CANCELED
-            return result
+
+        finally:
+            self.search_fsm.stop()
+
+
+    def _map_search_feedback(self):
+
+        fb = Mission.Feedback()
+        fb.header = Header()
+        fb.header.stamp = self.get_clock().now().to_msg()
+
+        # Map FSM state to Action feedback
+        fsm_state = self.search_fsm.get_state()
+
+        if fsm_state == SearchState.MOVING_TO_START:
+            fb.current_action = Mission.Feedback.NAVIGATING
+            fb.completion_status = Mission.Feedback.IN_PROGRESS
+
+        elif fsm_state in (SearchState.SEARCHING, SearchState.INVESTIGATING,):
+            fb.current_action = Mission.Feedback.SEARCHING
+            fb.completion_status = Mission.Feedback.IN_PROGRESS
+
+        elif fsm_state == SearchState.SUCCESS:
+            fb.current_action = Mission.Feedback.IDLE
+            fb.completion_status = Mission.Feedback.COMPLETED
+
+        elif fsm_state == SearchState.FAILED:
+            fb.current_action = Mission.Feedback.IDLE
+            fb.completion_status = Mission.Feedback.FAILED
+
+        elif fsm_state == SearchState.STOPPED:
+            fb.current_action = Mission.Feedback.NO_ACTION
+            fb.completion_status = Mission.Feedback.NOT_STARTED
+
+        return fb
 
 
 def main(args=None):
