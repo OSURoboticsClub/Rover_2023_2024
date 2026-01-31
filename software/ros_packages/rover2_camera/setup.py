@@ -26,7 +26,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
-        'camera_capture = rover2_camera.camera_capture:main'
+        'camera_capture = rover2_camera.camera_capture:main',
+        'camera_muxing = rover2_camera.camera_muxing:main'
         ],
     },
 )

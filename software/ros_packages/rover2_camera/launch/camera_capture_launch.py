@@ -56,7 +56,8 @@ def generate_launch_description():
             'stream_height': 480,
             'fec_percentage': 30,
             'udp_host': '192.168.1.1',
-            'udp_port': 42067
+            'udp_port': 42067,
+            'mux_port': 20001
         }],
         respawn=True
     )
@@ -76,7 +77,7 @@ def generate_launch_description():
             'stream_height': 480,
             'fec_percentage': 30,
             'udp_host': '192.168.1.1',
-            'udp_port': 42067
+            'udp_port': 42069
         }],
         respawn=True
     )
@@ -97,15 +98,16 @@ def generate_launch_description():
             'stream_height': 480,
             'fec_percentage': 30,
             'udp_host': '192.168.1.1',
-            'udp_port': 42068
+            'udp_port': 42068,
+            'mux_port': 20000
         }],
         respawn=True
     )
 
     return LaunchDescription([
         realsense_launch_nav,
-#        ir_camera_node,
-#        main_nav_node,
+        ir_camera_node,
+        main_nav_node,
 #        gripper_rgb_node
     ])
 

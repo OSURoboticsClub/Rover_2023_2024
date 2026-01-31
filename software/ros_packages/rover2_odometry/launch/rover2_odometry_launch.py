@@ -234,7 +234,7 @@ def generate_launch_description():
 
             # Manual datum (only used if wait_for_datum is true)
             'use_manual_datum': True,
-            'datum': [44.5671654, -123.274424, 0.0],  # [lat, lon, alt] - Automatically set to first GPS reading 
+            'datum': [44.56722222, -123.27388888, 0.0],  # [lat, lon, alt] - Automatically set to first GPS reading 
 
             # # Frame IDs
             # 'map_frame_id': 'map',
