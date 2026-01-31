@@ -15,12 +15,17 @@ uint16 ack
 uint16 CANCELED=0
 uint16 SUCCESS=1
 uint16 FAILED=2
+geometry_msgs/Point center
+geometry_msgs/Point top_left
+geometry_msgs/Point bottom_right
+
 
 ---
 # Feedback
 std_msgs/Header header
 
 float32 confidence
-float32 direction   # Relative radians
+uint16 frame_id
+#float32 direction   # Relative radians
 # TODO: Can we get something to tell us how far away? Object size?
 # float32 distance
