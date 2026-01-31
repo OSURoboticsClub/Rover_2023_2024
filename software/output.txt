@@ -1,1 +1,0 @@
-1768963949.987875 [0]       ros2: selected interface "lo" is not multicast-capable: disabling multicast

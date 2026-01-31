@@ -26,6 +26,7 @@ class CameraCaptureNode(Node):
         self.declare_parameter('fec_percentage', 30)
         self.declare_parameter('udp_host', '192.168.1.1')
         self.declare_parameter('udp_port', 42067)
+        self.declare_parameter('mux_port',20000)
 
         self.pipeline = None
         self.loop = None
@@ -55,12 +56,13 @@ class CameraCaptureNode(Node):
         fec_percentage = self.get_parameter('fec_percentage').value
         udp_host = self.get_parameter('udp_host').value
         udp_port = self.get_parameter('udp_port').value
+        mux_port = self.get_parameter('mux_port').value
 
         pipeline_str = (
             f'v4l2src do-timestamp=true device={device} ! '
             f'image/jpeg,width={cap_width},height={cap_height},framerate={cap_framerate}/1 ! '
-            f'nvv4l2decoder mjpeg=1 ! nvvidconv ! video/x-raw ! tee name=t '
-            f't. ! queue ! appsink name=infrared_sink '
+            f'nvv4l2decoder mjpeg=1 ! nvvidconv ! tee name=t '
+            f't. ! queue ! rtpvrawpay ! udpsink host=127.0.0.1 port={mux_port} sync=false async=false '
             f't. ! queue ! videoscale ! '
             f'video/x-raw,width={stream_width},height={stream_height},format=I420 ! '
             f'nvvidconv ! video/x-raw(memory:NVMM),format=NV12 ! '
