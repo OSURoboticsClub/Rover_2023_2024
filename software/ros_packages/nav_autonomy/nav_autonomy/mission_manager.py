@@ -159,7 +159,7 @@ class MissionManager(Node):
                     search_pattern = SearchPattern.LAWNMOWER
 
             self.search_fsm.start(
-                start_paths=waypoints,
+                start_path=waypoints,
                 search_points=waypoints[-1],
                 pattern=search_pattern,
                 success_threshold=0.9,
