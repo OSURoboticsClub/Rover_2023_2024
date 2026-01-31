@@ -83,6 +83,7 @@ class YoloServer(Node):
     def cancel_callback(self, goal_handle):
         """Accept or reject a client request to cancel an action."""
         self.get_logger().info("Received cancel request")
+        self.quit = True
         return CancelResponse.ACCEPT
 
     async def action_callback(self, goal_handle):
@@ -106,7 +107,7 @@ class YoloServer(Node):
                 model = YOLO("yolo_models/hammer.pt")
 
             results = model(source=0, stream=True)
-            camera_stacks = [[]] * self.num_cameras
+            camera_stacks = [[] for _ in range(self.num_cameras)]
             # Start searching in camera stream for object(s)
             current_cam = self.cam_queue.popleft()
             self.cam_queue.append(current_cam)
@@ -122,15 +123,9 @@ class YoloServer(Node):
                     current_conf = conf_scores[best_idx]
 
                     # Store obj conf from 50 frames from cam
-                    if len(camera_stacks[current_cam]) == self.max_frames:  # if full
-                        camera_stacks[current_cam].pop()  # remove end of stack
-                        camera_stacks[current_cam].append(
-                            current_conf
-                        )  # append newest to front
-                    else:  # if not full
-                        camera_stacks[current_cam].append(
-                            current_conf
-                        )  # append newest to front
+                    if len(camera_stacks[current_cam]) >= self.max_frames:
+                        camera_stacks[current_cam].pop(0)  # remove oldest
+                    camera_stacks[current_cam].append(current_conf)  # add newest
                     # Grab average of list and check against
                     total_mean = sum(camera_stacks[current_cam]) / len(
                         camera_stacks[current_cam]
@@ -159,33 +154,34 @@ class YoloServer(Node):
             # Complete action
             # ==============================
             # Bounding boxes - Center
-            center = Point()
-            center.x = self.xc
-            center.y = self.yc
-            center.z = 0.0
-            # Bounding boxes - Top left
-            x1, y1, x2, y2 = self.best_boxes
-            top_left = Point()
-            top_left.x = x1
-            top_left.y = y1
-            top_left.z = 0.0
+            if not self.quit:
+                center = Point()
+                center.x = self.xc
+                center.y = self.yc
+                center.z = 0.0
+                # Bounding boxes - Top left
+                x1, y1, x2, y2 = self.best_boxes
+                top_left = Point()
+                top_left.x = x1
+                top_left.y = y1
+                top_left.z = 0.0
 
-            # Bounding boxes - Top left
-            bottom_right = Point()
-            bottom_right.x = x2
-            bottom_right.y = y2
-            bottom_right.z = 0.0
+                # Bounding boxes - Top left
+                bottom_right = Point()
+                bottom_right.x = x2
+                bottom_right.y = y2
+                bottom_right.z = 0.0
 
-            self.get_logger().info("Yolo search Completed")
-            goal_handle.succeed()
-            result = YoloFind.Result()
-            result.header = Header()
-            result.ack = YoloFind.Result.SUCCESS
-            result.center = center
-            result.top_left = top_left
-            result.bottom_right = bottom_right
-            self.busy = False
-            return result
+                self.get_logger().info("Yolo search Completed")
+                goal_handle.succeed()
+                result = YoloFind.Result()
+                result.header = Header()
+                result.ack = YoloFind.Result.SUCCESS
+                result.center = center
+                result.top_left = top_left
+                result.bottom_right = bottom_right
+                self.busy = False
+                return result
         except ActionCanceled:
             # Handle cancellation
             self.get_logger().info("Yolo search canceled")
