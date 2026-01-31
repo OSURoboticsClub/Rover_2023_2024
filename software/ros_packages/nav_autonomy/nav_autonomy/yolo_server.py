@@ -9,6 +9,7 @@ from rclpy.executors import MultiThreadedExecutor
 from std_msgs.msg import Header
 
 from nav_autonomy_interface.action import YoloFind
+from nav_autonomy_interface.msg import YoloInfo
 
 
 class YoloServer(Node):
@@ -35,6 +36,12 @@ class YoloServer(Node):
         )
 
         self.get_logger().info('YoloServer action server ready.')
+
+        self.info_publisher = self.create_publisher(
+            YoloInfo,
+            'yolo_info',
+            10
+        )
 
     def goal_callback(self, goal_request):
         """Accept or reject a client request to begin an action."""
