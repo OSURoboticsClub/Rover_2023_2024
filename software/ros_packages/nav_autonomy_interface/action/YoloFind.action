@@ -24,7 +24,7 @@ geometry_msgs/Point bottom_right
 # Feedback
 std_msgs/Header header
 
-float32 confidence
+float32 confidence # 0-1 (ex. 0.95)
 uint16 frame_id
 #float32 direction   # Relative radians
 # TODO: Can we get something to tell us how far away? Object size?

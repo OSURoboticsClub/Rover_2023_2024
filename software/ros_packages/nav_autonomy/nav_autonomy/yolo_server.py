@@ -46,6 +46,7 @@ class YoloServer(Node):
 
         # YOLO PARAMETERS
         self.num_cameras = 1
+        self.source = "/dev/video64"
         self.quit = False
         self.cam_queue = deque()
         # Append camera carousel order
@@ -106,7 +107,7 @@ class YoloServer(Node):
             elif goal.search_object == "OG_HAMMER":
                 model = YOLO("yolo_models/hammer.pt")
 
-            results = model(source=0, stream=True)
+            results = model(source=self.source, stream=True)
             camera_stacks = [[] for _ in range(self.num_cameras)]
             # Start searching in camera stream for object(s)
             current_cam = self.cam_queue.popleft()
