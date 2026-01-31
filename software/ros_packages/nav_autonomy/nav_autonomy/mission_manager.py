@@ -130,8 +130,8 @@ class MissionManager(Node):
             # Convert waypoints
             waypoints: List[PoseStamped] = []
             for gps in req.nav_waypoints:
-                self.get_logger().info(f'Waypoint: lat={gps.latitude}, lon={gps.longitude}')
                 wp = await self.gps_to_map_pose(gps.latitude, gps.longitude)
+                self.get_logger().info(f'Waypoint: lat={gps.latitude}, lon={gps.longitude} -> map=({wp.pose.position.x}, {wp.pose.position.y})')
                 if wp is None:
                     self.get_logger().error(f'Failed to convert GPS ({gps.latitude}, {gps.longitude}) to map pose')
                     goal_handle.abort()
@@ -139,13 +139,18 @@ class MissionManager(Node):
                     result.ack = Mission.Result.CANCELLED
                     return result
                 waypoints.append(wp)
+                
 
-
+            # ==============================
             # Call Yolo Action Server
+            # ==============================
+            self.get_logger().info(f'Connecting to YOLO action server.')
+
 
             # ==============================
             # Execute search
             # ==============================
+            self.get_logger().info(f'Mapping search pattern and starting FSM.')
 
             search_pattern = SearchPattern.NONE
             match req.search_pattern:
@@ -158,9 +163,10 @@ class MissionManager(Node):
                     self.get_logger().error(f'Unknown search pattern: {req.search_pattern}. Falling back to lawnmower.')
                     search_pattern = SearchPattern.LAWNMOWER
 
+            self.get_logger().info(f'Starting search fsm with pattern: {search_pattern.name}')
             self.search_fsm.start(
                 start_path=waypoints,
-                search_points=waypoints[-1],
+                search_points=waypoints[-1:],
                 pattern=search_pattern,
                 success_threshold=0.9,
                 investigate_threshold=0.7

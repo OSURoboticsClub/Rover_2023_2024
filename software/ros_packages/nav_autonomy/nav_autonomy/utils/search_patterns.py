@@ -3,12 +3,7 @@ import math
 from geometry_msgs.msg import PoseStamped
 from typing import List
 
-def spiral(
-    center: PoseStamped,
-    max_radius: float,
-    spacing: float,
-    points_per_revolution: int = 12
-) -> List[PoseStamped]:
+def spiral(center: PoseStamped, max_radius: float, spacing: float, points_per_revolution: int = 12) -> List[PoseStamped]:
     """
     Generate an Archimedean spiral search pattern.
     

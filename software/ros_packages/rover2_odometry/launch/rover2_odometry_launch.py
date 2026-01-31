@@ -229,12 +229,11 @@ def generate_launch_description():
             # Use odometry heading instead of IMU
             'use_odometry_yaw': True,
 
-            # Let first GPS message set origin
-            #'wait_for_datum': False,
 
             # Manual datum (only used if wait_for_datum is true)
-            'use_manual_datum': True,
-            'datum': [44.56722222, -123.27388888, 0.0],  # [lat, lon, alt] - Automatically set to first GPS reading 
+            # 'wait_for_datum': False,
+            # 'use_manual_datum': True,
+            # 'datum': [44.56722222, -123.27388888, 0.0],  # [lat, lon, alt] - Automatically set to first GPS reading 
 
             # # Frame IDs
             # 'map_frame_id': 'map',
@@ -243,9 +242,9 @@ def generate_launch_description():
             'world_frame_id': 'map',  # Match the EKFs
          }],
          remappings=[
-            ('/imu/data', '/imu/data'),                  # Your IMU topic
-            ('/gps/fix', '/gps/fix'),                    # YOUR GPS INPUT TOPIC
-            # ('/gps/filtered', '/gps/filtered'),          # YOUR GPS INPUT TOPIC
+            ('/imu/data', '/imu/data'),                  # IMU topic
+            ('/gps/fix', '/gps/fix'),                    # GPS INPUT TOPIC
+            # ('/gps/filtered', '/gps/filtered'),          # GPS INPUT TOPIC
             ('/odometry/filtered', '/odometry/local'),  # Which EKF to use for heading
             ('/odometry/gps', '/odometry/gps'),          # GPS output topic
          ]
