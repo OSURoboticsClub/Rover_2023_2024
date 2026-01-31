@@ -243,9 +243,9 @@ def generate_launch_description():
             'world_frame_id': 'map',  # Match the EKFs
          }],
          remappings=[
-            ('/imu/data', '/imu/data'),                  # Your IMU topic
-            ('/gps/fix', '/gps/fix'),                    # YOUR GPS INPUT TOPIC
-            # ('/gps/filtered', '/gps/filtered'),          # YOUR GPS INPUT TOPIC
+            ('/imu/data', '/imu/data'),                  # IMU topic
+            ('/gps/fix', '/gps/fix'),                    # GPS INPUT TOPIC
+            # ('/gps/filtered', '/gps/filtered'),          # GPS INPUT TOPIC
             ('/odometry/filtered', '/odometry/local'),  # Which EKF to use for heading
             ('/odometry/gps', '/odometry/gps'),          # GPS output topic
          ]

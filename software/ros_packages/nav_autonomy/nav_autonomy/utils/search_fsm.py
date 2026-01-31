@@ -1,7 +1,12 @@
 from enum import Enum, auto
 from std_msgs.msg import Float32, String
+<<<<<<< HEAD
 from nav_autonomy.utils.search_patterns import spiral, lawnmower
 
+=======
+from search_patterns import spiral, lawnmower
+from geometry_msgs.msg import PoseStamped
+>>>>>>> b62ea7ac2107755616a2bd47fe5d66c87e964075
 
 class SearchPattern(Enum):
     NONE = auto()
@@ -43,20 +48,21 @@ class SearchFSM:
         self.status_pub = node.create_publisher(String, status_topic, 10)
         self.conf_sub = node.create_subscription(Float32, confidence_topic, self._confidence_cb, 10)
 
-
         self.timer = node.create_timer(0.2, self._tick)
 
 
-    def start(self, start_path, search_points, pattern, success_threshold, investigate_threshold):
+    def start(self, start_path: list[PoseStamped], search_points: list[PoseStamped], pattern: SearchPattern, success_threshold: float, investigate_threshold: float):
         self.start_point = search_points[0]
         self.success_threshold = success_threshold
         self.investigate_threshold = investigate_threshold
+        self.last_conf = 0.0
         self.best_conf = 0.0
         self.best_pose = None
         self.current_index = 0
 
         self.search_path = []
         self.pattern = pattern
+        self.node.get_logger().info(f'Creating search pattern: {self.pattern.name}')
         match self.pattern:
             case SearchPattern.SPIRAL:
                 self.search_path = spiral(center=self.start_point, max_radius=10.0, spacing=2.0, points_per_revolution=12)
@@ -69,6 +75,7 @@ class SearchFSM:
         self.path_to_start = start_path  #TODO: handle getting to search start_points
         self.state = SearchState.MOVING_TO_START
         self.active = True
+        self.node.get_logger().info(f'Search started with pattern: {self.pattern.name}')
         self._publish()
 
 
@@ -100,17 +107,19 @@ class SearchFSM:
     # --------------------------------------------------
 
     def _confidence_cb(self, msg):
+
         if not self.active:
             return
 
         conf = msg.data
+        self.last_conf = conf
 
         if conf > self.best_conf:
             self.best_conf = conf
             self.best_pose = self._current_pose()
 
         # Maybe want to adjust speed based on confidence??
-        if 0.7 < conf < self.success_threshold:
+        if conf >= .7:
             self.navigator.setSpeedLimit(0.3, is_percentage=True)
         else:
             self.navigator.setSpeedLimit(1.0, is_percentage=True)
@@ -128,6 +137,7 @@ class SearchFSM:
 
     def _tick(self):
 
+        self.node.get_logger().debug(f'Search FSM Tick: State={self.state.name}, Active={self.active}, Current Index={self.current_index}, Best Conf={self.best_conf:.2f}')
         if not self.active:
             return
 
@@ -153,7 +163,7 @@ class SearchFSM:
     # --------------------------------------------------
 
     def _state_move_to_start(self):
-
+        self.node.get_logger().debug('State: MOVING_TO_START')
         if not self.navigator.isTaskComplete():
             return
 
@@ -161,7 +171,7 @@ class SearchFSM:
 
 
     def _state_searching(self):
-
+        self.node.get_logger().debug('State: SEARCHING')
         if not self.navigator.isTaskComplete():
             return
 
@@ -175,7 +185,7 @@ class SearchFSM:
 
 
     def _state_investigating(self):
-
+        self.node.get_logger().debug('State: INVESTIGATING')
         if not self.navigator.isTaskComplete():
             return
 
@@ -207,7 +217,8 @@ class SearchFSM:
         feedback = self.navigator.getFeedback()
         if feedback:
             self.resume_index = feedback.current_waypoint_index
-        self.navigator.goToPose(self.best_pose)
+        # self.navigator.goToPose(self.best_pose)
+        # TODO: actual investigation behavior
         self.state = SearchState.INVESTIGATING
         self._publish()
 
