@@ -1,6 +1,6 @@
 from enum import Enum, auto
 from std_msgs.msg import Float32, String
-import search_patterns
+from nav_autonomy.utils.search_patterns import spiral, lawnmower
 
 
 class SearchPattern(Enum):
@@ -59,9 +59,9 @@ class SearchFSM:
         self.pattern = pattern
         match self.pattern:
             case SearchPattern.SPIRAL:
-                self.search_path = search_patterns.spiral(center=self.start_point, max_radius=10.0, spacing=2.0, points_per_revolution=12)
+                self.search_path = spiral(center=self.start_point, max_radius=10.0, spacing=2.0, points_per_revolution=12)
             case SearchPattern.LAWNMOWER:
-                self.search_path = search_patterns.lawnmower(corners=search_points, spacing=2.0, step_size=1.0)
+                self.search_path = lawnmower(corners=search_points, spacing=2.0, step_size=1.0)
             case _:
                 self.node.get_logger().error(f'Unknown search pattern: {self.pattern}. Cannot start search.')
                 return
@@ -157,7 +157,7 @@ class SearchFSM:
         if not self.navigator.isTaskComplete():
             return
 
-        # self.navigator.followWaypoints(self.path_to_start)
+        self.navigator.followWaypoints(self.path_to_start)
 
 
     def _state_searching(self):
