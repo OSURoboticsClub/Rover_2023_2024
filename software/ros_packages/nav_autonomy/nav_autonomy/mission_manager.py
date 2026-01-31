@@ -33,6 +33,7 @@ class MissionManager(Node):
 
         self.navigator = BasicNavigator("basic_navigator")
         self.fromLL_client = self.navigator.create_client(FromLL, '/fromLL')
+        self.waypoints: List[PoseStamped] = []  
 
         self._action_server = ActionServer(
             self,
@@ -54,30 +55,32 @@ class MissionManager(Node):
         self.get_logger().info('MissionManager action server ready.')
 
 
-    async def gps_to_map_pose(self, lat, lon, yaw=0.0):           # KRJ TODO: Need to test how nav2 behaves if yaw on each point is 0
+    def gps_to_map_pose(self, lat, lon, yaw=0.0):           # KRJ TODO: Need to test how nav2 behaves if yaw on each point is 0
         """Use robot_localization to convert GPS to map pose"""
-        
+
         request = FromLL.Request()
         request.ll_point.latitude = lat
         request.ll_point.longitude = lon
         request.ll_point.altitude = 0.0
-        
+
         # Wait for service
-        if not self.fromLL_client.wait_for_service(timeout_sec=5.0):
-            self.get_logger().error('Service /fromLL not available')
-            return None
-        
+        self.fromLL_client.wait_for_service()
+
         # Call service
-        response = await self.fromLL_client.call_async(request)
-        
+        future = self.fromLL_client.call_async(request)
+        rclpy.spin_until_future_complete(self.navigator, future)
+
+        response = future.result()
+
         # Create PoseStamped
         pose = PoseStamped()
         pose.header.frame_id = 'map'
-        pose.header.stamp = self.get_clock().now().to_msg()
+        pose.header.stamp = self.navigator.get_clock().now().to_msg()
         pose.pose.position.x = response.map_point.x
         pose.pose.position.y = response.map_point.y
         pose.pose.orientation.z = math.sin(yaw / 2.0)
         pose.pose.orientation.w = math.cos(yaw / 2.0)
+
         return pose
 
 
@@ -108,6 +111,8 @@ class MissionManager(Node):
         #         self.get_logger().warn('Rejecting goal - invalid or missing search object')
         #         return GoalResponse.REJECT
         
+        self.waypoints = [self.gps_to_map_pose(gps.latitude, gps.longitude) for gps in goal_request.nav_waypoints]          # KRJ TODO: Is converting all at once bad if gps corrects?
+
         self.get_logger().info('Accepting goal request')
         return GoalResponse.ACCEPT
 
@@ -128,17 +133,17 @@ class MissionManager(Node):
             req = goal_handle.request
 
             # Convert waypoints
-            waypoints: List[PoseStamped] = []
-            for gps in req.nav_waypoints:
-                wp = await self.gps_to_map_pose(gps.latitude, gps.longitude)
-                self.get_logger().info(f'Waypoint: lat={gps.latitude}, lon={gps.longitude} -> map=({wp.pose.position.x}, {wp.pose.position.y})')
-                if wp is None:
-                    self.get_logger().error(f'Failed to convert GPS ({gps.latitude}, {gps.longitude}) to map pose')
-                    goal_handle.abort()
-                    result = Mission.Result()
-                    result.ack = Mission.Result.CANCELLED
-                    return result
-                waypoints.append(wp)
+            waypoints = self.waypoints
+            #for gps in req.nav_waypoints:
+            #    wp = await self.gps_to_map_pose(gps.latitude, gps.longitude)
+            #    self.get_logger().info(f'Waypoint: lat={gps.latitude}, lon={gps.longitude} -> map=({wp.pose.position.x}, {wp.pose.position.y})')
+            #    if wp is None:
+            #        self.get_logger().error(f'Failed to convert GPS ({gps.latitude}, {gps.longitude}) to map pose')
+            #        goal_handle.abort()
+            #        result = Mission.Result()
+            #        result.ack = Mission.Result.CANCELLED
+            #        return result
+            #    waypoints.append(wp)
                 
 
             # ==============================
