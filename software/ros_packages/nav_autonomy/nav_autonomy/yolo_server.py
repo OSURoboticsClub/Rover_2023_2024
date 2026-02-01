@@ -10,13 +10,15 @@ from std_msgs.msg import Header
 
 from nav_autonomy_interface.action import YoloFind
 
+# YOLO specific
 from Ultralytics import YOLO
-
 from collections import deque
-
 import numpy as np
-
 from geometry_msgs.msg import Point
+
+# ARUCO
+import cv2
+import asyncio
 
 
 class YoloServer(Node):
@@ -106,83 +108,89 @@ class YoloServer(Node):
                 model = YOLO("yolo_models/mallet.pt")
             elif goal.search_object == "OG_HAMMER":
                 model = YOLO("yolo_models/hammer.pt")
-
-            results = model(source=self.source, stream=True)
-            camera_stacks = [[] for _ in range(self.num_cameras)]
-            # Start searching in camera stream for object(s)
-            current_cam = self.cam_queue.popleft()
-            self.cam_queue.append(current_cam)
-            frame_id = 0
-            for result in results:
-                if self.quit:
-                    break
-                boxes_xyxy = result.boxes.xyxy.tolist()
-                conf_scores = result.boxes.conf.tolist()
-                # Check if anything is detected
-                if conf_scores != []:
-                    best_idx = np.argmax(conf_scores)
-                    current_conf = conf_scores[best_idx]
-
-                    # Store obj conf from 50 frames from cam
-                    if len(camera_stacks[current_cam]) >= self.max_frames:
-                        camera_stacks[current_cam].pop(0)  # remove oldest
-                    camera_stacks[current_cam].append(current_conf)  # add newest
-                    # Grab average of list and check against
-                    total_mean = sum(camera_stacks[current_cam]) / len(
-                        camera_stacks[current_cam]
-                    )
-                    recent_mean = sum(
-                        camera_stacks[current_cam][: self.check_frames]
-                    ) / len(camera_stacks[current_cam][: self.check_frames])
-
-                    if total_mean >= self.stop_threshold:
-                        # send everything
-                        self.best_boxes = boxes_xyxy[best_idx]
-                        self.xc, self.yc, _, _ = result.boxes.xywh[best_idx].tolist()
+            if goal.search_object == "ARUCO":
+                self.do_aruco(goal_handle)
+            else:
+                results = model(source=self.source, stream=True)
+                camera_stacks = [[] for _ in range(self.num_cameras)]
+                # Start searching in camera stream for object(s)
+                current_cam = self.cam_queue.popleft()
+                self.cam_queue.append(current_cam)
+                frame_id = 0
+                for result in results:
+                    if self.quit:
                         break
-                    elif recent_mean >= self.check_threshold:
-                        pass
-                    # TODO: send message to nav to stop and gather frames
+                    boxes_xyxy = result.boxes.xyxy.tolist()
+                    conf_scores = result.boxes.conf.tolist()
+                    # Check if anything is detected
+                    if conf_scores != []:
+                        best_idx = np.argmax(conf_scores)
+                        current_conf = conf_scores[best_idx]
 
-                    feedback = YoloFind.Feedback()
-                    feedback.confidence = current_conf
-                    feedback.frame_id = frame_id
-                    goal_handle.publish_feedback(feedback)
-                frame_id += 1
-            # TODO: Intermittently send feedback
+                        # Store obj conf from 50 frames from cam
+                        if len(camera_stacks[current_cam]) >= self.max_frames:
+                            camera_stacks[current_cam].pop(0)  # remove oldest
+                        camera_stacks[current_cam].append(current_conf)  # add newest
+                        # Grab average of list and check against
+                        total_mean = sum(camera_stacks[current_cam]) / len(
+                            camera_stacks[current_cam]
+                        )
+                        recent_mean = sum(
+                            camera_stacks[current_cam][: self.check_frames]
+                        ) / len(camera_stacks[current_cam][: self.check_frames])
 
-            # ==============================
-            # Complete action
-            # ==============================
-            # Bounding boxes - Center
-            if not self.quit:
-                center = Point()
-                center.x = self.xc
-                center.y = self.yc
-                center.z = 0.0
-                # Bounding boxes - Top left
-                x1, y1, x2, y2 = self.best_boxes
-                top_left = Point()
-                top_left.x = x1
-                top_left.y = y1
-                top_left.z = 0.0
+                        if total_mean >= self.stop_threshold:
+                            # send everything
+                            self.best_boxes = boxes_xyxy[best_idx]
+                            self.xc, self.yc, _, _ = result.boxes.xywh[
+                                best_idx
+                            ].tolist()
+                            break
+                        elif recent_mean >= self.check_threshold:
+                            pass
+                        # TODO: send message to nav to stop and gather frames
 
-                # Bounding boxes - Top left
-                bottom_right = Point()
-                bottom_right.x = x2
-                bottom_right.y = y2
-                bottom_right.z = 0.0
+                        feedback = YoloFind.Feedback()
+                        feedback.confidence = current_conf
+                        feedback.frame_id = frame_id
+                        feedback.detected = False
+                        goal_handle.publish_feedback(feedback)
 
-                self.get_logger().info("Yolo search Completed")
-                goal_handle.succeed()
-                result = YoloFind.Result()
-                result.header = Header()
-                result.ack = YoloFind.Result.SUCCESS
-                result.center = center
-                result.top_left = top_left
-                result.bottom_right = bottom_right
-                self.busy = False
-                return result
+                    frame_id += 1
+                # TODO: Intermittently send feedback
+
+                # ==============================
+                # Complete action
+                # ==============================
+                # Bounding boxes - Center
+                if not self.quit:
+                    center = Point()
+                    center.x = self.xc
+                    center.y = self.yc
+                    center.z = 0.0
+                    # Bounding boxes - Top left
+                    x1, y1, x2, y2 = self.best_boxes
+                    top_left = Point()
+                    top_left.x = x1
+                    top_left.y = y1
+                    top_left.z = 0.0
+
+                    # Bounding boxes - Top left
+                    bottom_right = Point()
+                    bottom_right.x = x2
+                    bottom_right.y = y2
+                    bottom_right.z = 0.0
+
+                    self.get_logger().info("Yolo search Completed")
+                    goal_handle.succeed()
+                    result = YoloFind.Result()
+                    result.header = Header()
+                    result.ack = YoloFind.Result.SUCCESS
+                    result.center = center
+                    result.top_left = top_left
+                    result.bottom_right = bottom_right
+                    self.busy = False
+                    return result
         except ActionCanceled:
             # Handle cancellation
             self.get_logger().info("Yolo search canceled")
@@ -191,6 +199,55 @@ class YoloServer(Node):
             result.ack = YoloFind.Result.CANCELED
             self.busy = False
             return result
+
+    async def do_aruco(self, goal_handle):
+        print("[INFO] detecting '{}' tags...".format(self.ARUCO_size))
+        arucoDict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
+        arucoParams = cv2.aruco.DetectorParameters_create()
+        cap = cv2.VideoCapture(self.source)
+
+        camera_matrix = np.array(
+            [[600.0, 0.0, 320.0], [0.0, 600.0, 240.0], [0.0, 0.0, 1.0]]
+        )
+        dist_coeffs = np.zeros((5, 1))
+
+        marker_length = 0.2  # meters
+
+        while rclpy.ok() and not goal_handle.is_cancel_requested:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            (corners, ids, rejected) = cv2.aruco.detectMarkers(
+                frame, arucoDict, parameters=arucoParams
+            )
+
+            if ids is not None:
+                cv2.aruco.drawDetectorMarkers(frame, corners, ids)
+                rvecs, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(
+                    corners, marker_length, camera_matrix, dist_coeffs
+                )
+                tvec = tvecs[0][0]
+                # rvec = rvecs[0][0]
+
+                feedback = YoloFind.Feedback()
+                feedback.detected = True
+                feedback.pose.position.x = float(tvec[0])
+                feedback.pose.position.y = float(tvec[1])
+                feedback.pose.position.z = float(tvec[2])
+                goal_handle.publish_feedback(feedback)
+
+            else:
+                feedback = YoloFind.Feedback()
+                feedback.detected = False
+                goal_handle.publish_feedback(feedback)
+
+        await asyncio.sleep(0.01)
+
+        cap.release()
+        goal_handle.canceled()
+        result = YoloFind.Result()
+        result.ack = YoloFind.Result.CANCELED
+        return result
 
 
 def main(args=None):
