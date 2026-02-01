@@ -31,6 +31,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/RelativeMoveSrv.srv"
   "action/RelativeMove.action"
   "action/GripperControl.action"
+  "action/AutonTyping.action"
   DEPENDENCIES geometry_msgs
 )
 
