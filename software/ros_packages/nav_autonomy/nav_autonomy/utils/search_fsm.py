@@ -138,7 +138,7 @@ class SearchFSM:
 
         nav_feedback = self.navigator.getFeedback()
         if nav_feedback:
-            self.current_index = max(0, nav_feedback.current_waypoint_index - 1)
+            self.current_index = max(0, nav_feedback.current_waypoint - 1)
             #TODO: publish more nav feedback
 
         if self.state == SearchState.MOVING_TO_START:
@@ -211,7 +211,7 @@ class SearchFSM:
 
         feedback = self.navigator.getFeedback()
         if feedback:
-            self.resume_index = feedback.current_waypoint_index
+            self.resume_index = feedback.current_waypoint
         # self.navigator.goToPose(self.best_pose)
         # TODO: actual investigation behavior
         self.state = SearchState.INVESTIGATING

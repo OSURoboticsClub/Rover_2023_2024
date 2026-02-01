@@ -179,7 +179,7 @@ local_costmap:
         observation_sources: ground obstacles
         ground:
           topic: /cloud_ground
-          sensor_frame: /robot_base_frame
+          sensor_frame: rover_base_origin
           max_obstacle_height: 0.4
           clearing: True
           marking: False
@@ -190,7 +190,7 @@ local_costmap:
           obstacle_min_range: 0.0
         obstacles:
           topic: /cloud_obstacles
-          sensor_frame: /robot_base_frame
+          sensor_frame: rover_base_origin
           max_obstacle_height: 2.0
           clearing: True
           marking: True

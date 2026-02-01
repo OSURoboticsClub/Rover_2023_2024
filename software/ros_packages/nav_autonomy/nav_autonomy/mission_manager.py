@@ -3,7 +3,7 @@
 import asyncio
 from typing import List
 import math
-
+import time
 import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionServer, CancelResponse, GoalResponse
@@ -62,13 +62,20 @@ class MissionManager(Node):
         request.ll_point.latitude = lat
         request.ll_point.longitude = lon
         request.ll_point.altitude = 0.0
+        self.get_logger().info('Wait for service')
 
         # Wait for service
         self.fromLL_client.wait_for_service()
+        self.get_logger().info('After service')
 
         # Call service
+
+
         future = self.fromLL_client.call_async(request)
+        self.get_logger().info('Before spin')
+
         rclpy.spin_until_future_complete(self.navigator, future)
+        self.get_logger().info('After spin')
 
         response = future.result()
 
@@ -110,7 +117,8 @@ class MissionManager(Node):
         #     if goal_request.search_object not in [Mission.Goal.BOTTLE, Mission.Goal.OG_HAMMER, Mission.Goal.ORANGE_HAMMER]:
         #         self.get_logger().warn('Rejecting goal - invalid or missing search object')
         #         return GoalResponse.REJECT
-        
+        self.get_logger().info('Setting waypoints...')
+
         self.waypoints = [self.gps_to_map_pose(gps.latitude, gps.longitude) for gps in goal_request.nav_waypoints]          # KRJ TODO: Is converting all at once bad if gps corrects?
 
         self.get_logger().info('Accepting goal request')
@@ -187,7 +195,7 @@ class MissionManager(Node):
                     return Mission.Result(ack=Mission.Result.CANCELED)
 
                 goal_handle.publish_feedback(self._map_search_feedback())
-                await asyncio.sleep(0.4) #TODO: adjust polling rate
+                time.sleep(0.4) #TODO: adjust polling rate
 
 
             # ==============================
