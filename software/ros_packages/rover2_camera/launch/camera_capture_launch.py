@@ -106,8 +106,8 @@ def generate_launch_description():
 
     return LaunchDescription([
         realsense_launch_nav,
-        ir_camera_node,
-        main_nav_node,
+#        ir_camera_node,
+#        main_nav_node,
 #        gripper_rgb_node
     ])
 

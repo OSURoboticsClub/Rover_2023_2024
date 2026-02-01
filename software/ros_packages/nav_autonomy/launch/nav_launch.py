@@ -79,5 +79,5 @@ def generate_launch_description():
         # rtabmap_point_cloud,
         # rtabmap_obstacles,
         nav2,
-        mission_manager,
+#        mission_manager,
     ])

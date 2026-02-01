@@ -1,12 +1,7 @@
 from enum import Enum, auto
 from std_msgs.msg import Float32, String
-<<<<<<< HEAD
 from nav_autonomy.utils.search_patterns import spiral, lawnmower
-
-=======
-from search_patterns import spiral, lawnmower
 from geometry_msgs.msg import PoseStamped
->>>>>>> b62ea7ac2107755616a2bd47fe5d66c87e964075
 
 class SearchPattern(Enum):
     NONE = auto()
@@ -143,7 +138,7 @@ class SearchFSM:
 
         nav_feedback = self.navigator.getFeedback()
         if nav_feedback:
-            self.current_index = max(0, nav_feedback.current_waypoint_index - 1)
+            self.current_index = max(0, nav_feedback.current_waypoint - 1)
             #TODO: publish more nav feedback
 
         if self.state == SearchState.MOVING_TO_START:
@@ -216,7 +211,7 @@ class SearchFSM:
 
         feedback = self.navigator.getFeedback()
         if feedback:
-            self.resume_index = feedback.current_waypoint_index
+            self.resume_index = feedback.current_waypoint
         # self.navigator.goToPose(self.best_pose)
         # TODO: actual investigation behavior
         self.state = SearchState.INVESTIGATING
