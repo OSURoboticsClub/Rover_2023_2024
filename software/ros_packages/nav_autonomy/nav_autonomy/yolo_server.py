@@ -156,6 +156,20 @@ class YoloServer(Node):
                         feedback.detected = False
                         goal_handle.publish_feedback(feedback)
 
+                        # send message to YoloInfo topic
+                        info = YoloInfo()
+                        info.header.stamp = self.get_clock().now().to_msg()
+                        info.confidence = float(current_conf)
+                        info.frame_id = frame_id
+                        info.detected = False
+                        # send (x,y,z) of detection frame; center of detection at pixel (xc, yc)
+                        xc, yc, _, _ = result.boxes.xywh[best_idx].tolist()
+                        info.pose.position.x = float(xc)
+                        info.pose.position.y = float(yc)
+                        info.pose.position.z = 0.0
+                        info.pose.orientation.w = 1.0
+                        self.info_publisher.publish(info)
+
                     frame_id += 1
                 # TODO: Intermittently send feedback
 
