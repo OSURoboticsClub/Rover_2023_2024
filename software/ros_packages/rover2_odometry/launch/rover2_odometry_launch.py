@@ -65,13 +65,13 @@ def generate_launch_description():
                  'wait_imu_to_init':False,
 
                  # Internal Params (must be strings)
-                 #'Odom/Strategy':'4',        # 0=Frame-to-Map (F2M) 1=Frame-to-Frame (F2F) 2=Fovis 3=viso2 4=DVO-SLAM 5=ORB_SLAM 6=OKVIS 7=LOAM 8=MSCKF_VIO 9=VINS-Fusion 10=OpenVINS 11=FLOAM 12=Open3D 13=cuVSLAM
+                 'Odom/Strategy':'1',        # 0=Frame-to-Map (F2M) 1=Frame-to-Frame (F2F) 2=Fovis 3=viso2 4=DVO-SLAM 5=ORB_SLAM 6=OKVIS 7=LOAM 8=MSCKF_VIO 9=VINS-Fusion 10=OpenVINS 11=FLOAM 12=Open3D 13=cuVSLAM
                     # There are paramters to set for each strategy 
-                 'Odom/FilteringStrategy':'0',        # 0=No filtering (default), 1 = Kalman , 2 = particle filter. Just for smoothing, not combining
+                #  'Odom/FilteringStrategy':'0',        # 0=No filtering (default), 1 = Kalman , 2 = particle filter. Just for smoothing, not combining
                     # There are parameters to set for each filter too
-                 'Odom/ResetCountdown':'10',             # "Automatically reset odometry after X consecutive images where odometry cannot be computed (a value of 0 disables auto-reset). When a reset occurs, odometry resumes from the last successfully computed pose with large covariance to trigger a new map. If external odometry is used, it will also be reset based on the motion estimated relative to the last computed pose but no large covariance will be received, so that a new map won't be triggered.
-                 'Odom/Holonomic':'false',
-                 'Odom/GuessSmoothingDelay':'0',       # 0 Default. Estimated velocity is averaged based on last transforms up to this maximum delay. This can help to get smoother velocity prediction. If filtering is set or delay is below odometry rate, this is ignored
+                #  'Odom/ResetCountdown':'10',             # "Automatically reset odometry after X consecutive images where odometry cannot be computed (a value of 0 disables auto-reset). When a reset occurs, odometry resumes from the last successfully computed pose with large covariance to trigger a new map. If external odometry is used, it will also be reset based on the motion estimated relative to the last computed pose but no large covariance will be received, so that a new map won't be triggered.
+                #  'Odom/Holonomic':'false',
+                #  'Odom/GuessSmoothingDelay':'0',       # 0 Default. Estimated velocity is averaged based on last transforms up to this maximum delay. This can help to get smoother velocity prediction. If filtering is set or delay is below odometry rate, this is ignored
              }],
              remappings=[
                  ('rgb/image', '/camera/d455/color/image_raw'),
