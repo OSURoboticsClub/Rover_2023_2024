@@ -4,6 +4,8 @@ from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_xml.launch_description_sources import XMLLaunchDescriptionSource
+from launch.actions import SetEnvironmentVariable
+LOG_LEVEL = 'INFO' # DEBUG, INFO, WARN, ERROR, FATAL
 
 def generate_launch_description():
    drive_control = IncludeLaunchDescription(
@@ -42,6 +44,7 @@ def generate_launch_description():
          'launch'), '/nav_launch.py'])
       )
    return LaunchDescription([
+      SetEnvironmentVariable('RCUTILS_LOGGING_SEVERITY_THRESHOLD', LOG_LEVEL),
       drive_control,
       imu,
       arm,
@@ -49,5 +52,4 @@ def generate_launch_description():
       mapping,
       nav_autonomy,
       cameras,
-
    ])
