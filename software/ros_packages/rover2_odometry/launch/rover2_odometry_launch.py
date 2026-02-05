@@ -55,10 +55,10 @@ def generate_launch_description():
                  # config params
                  'publish_tf':False, 
                  'approx_sync':False,
-                 'wait_imu_to_init':True,
+                 'wait_imu_to_init':False,
 
                  # Internal Params (must be strings)
-                 'Odom/Strategy':'4',        # 0=Frame-to-Map (F2M) 1=Frame-to-Frame (F2F) 2=Fovis 3=viso2 4=DVO-SLAM 5=ORB_SLAM 6=OKVIS 7=LOAM 8=MSCKF_VIO 9=VINS-Fusion 10=OpenVINS 11=FLOAM 12=Open3D 13=cuVSLAM
+                 'Odom/Strategy':'1',        # 0=Frame-to-Map (F2M) 1=Frame-to-Frame (F2F) 2=Fovis 3=viso2 4=DVO-SLAM 5=ORB_SLAM 6=OKVIS 7=LOAM 8=MSCKF_VIO 9=VINS-Fusion 10=OpenVINS 11=FLOAM 12=Open3D 13=cuVSLAM
                     # There are paramters to set for each strategy 
                  'Odom/FilteringStrategy':'0',        # 0=No filtering (default), 1 = Kalman , 2 = particle filter. Just for smoothing, not combining
                     # There are parameters to set for each filter too
@@ -145,50 +145,50 @@ def generate_launch_description():
         ),
         
         # 5. NavSat Transform - converts GPS to map frame
-        Node(
-    package='robot_localization',
-    executable='navsat_transform_node',
-    name='navsat_transform',
-    output='screen',
-    parameters=[{
-        # Frequency and timing
-        'frequency': 3.0,
-        'delay': 3.0,
-        
-        # Magnetic declination at your location (radians)
-        # Find yours: https://www.ngdc.noaa.gov/geomag/calculators/magcalc.shtml
-        'magnetic_declination_radians': 0.0,
-        'yaw_offset': 0.0,
-        
-        # 2D navigation
-        'zero_altitude': True,
-        
-        # Publishing options
-        'publish_filtered_gps': True,
-        'broadcast_utm_transform': False,
-        'broadcast_utm_transform_as_parent_frame': False,
-        
-        # Use odometry heading instead of IMU
-        'use_odometry_yaw': True,
-        
-        # Let first GPS message set origin
-        'wait_for_datum': False,
-        
-        # Manual datum (only used if wait_for_datum is true)
-        'use_manual_datum': False,
-        'datum': [40.0, -105.0, 0.0],  # [lat, lon, alt] - adjust if needed
-        
-        # Frame IDs
-        'map_frame_id': 'map',
-        'odom_frame_id': 'odom',
-        'base_link_frame_id': 'rover_base_origin',
-        'world_frame_id': 'odom',  # Match the EKFs
-    }],
-    remappings=[
-        ('/gps/fix', '/gps/fix'),              # YOUR GPS INPUT TOPIC
-        ('/imu/data', '/imu/data'),            # Your IMU topic
-        ('/odometry/filtered', '/odometry/global'),  # Which EKF to use for heading
-        ('/odometry/gps', '/odometry/gps'),    # GPS output topic
-    ]
-),
-    ])
+      Node(
+         package='robot_localization',
+         executable='navsat_transform_node',
+         name='navsat_transform',
+         output='screen',
+         parameters=[{
+            # Frequency and timing
+            'frequency': 3.0,
+            'delay': 3.0,
+
+            # Magnetic declination at your location (radians)
+            # Find yours: https://www.ngdc.noaa.gov/geomag/calculators/magcalc.shtml
+            'magnetic_declination_radians': 0.0,
+            'yaw_offset': 0.0,
+
+            # 2D navigation
+            'zero_altitude': True,
+
+            # Publishing options
+            'publish_filtered_gps': True,
+            'broadcast_utm_transform': False,
+            'broadcast_utm_transform_as_parent_frame': False,
+
+            # Use odometry heading instead of IMU
+            'use_odometry_yaw': True,
+
+            # Let first GPS message set origin
+            'wait_for_datum': False,
+
+            # Manual datum (only used if wait_for_datum is true)
+            'use_manual_datum': False,
+            'datum': [40.0, -105.0, 0.0],  # [lat, lon, alt] - adjust if needed
+
+            # Frame IDs
+            'map_frame_id': 'map',
+            'odom_frame_id': 'odom',
+            'base_link_frame_id': 'rover_base_origin',
+            'world_frame_id': 'odom',  # Match the EKFs
+         }],
+         remappings=[
+            ('/gps/fix', '/gps/fix'),              # YOUR GPS INPUT TOPIC
+            ('/imu/data', '/imu/data'),            # Your IMU topic
+            ('/odometry/filtered', '/odometry/global'),  # Which EKF to use for heading
+            ('/odometry/gps', '/odometry/gps'),    # GPS output topic
+         ]
+      ),
+   ])
