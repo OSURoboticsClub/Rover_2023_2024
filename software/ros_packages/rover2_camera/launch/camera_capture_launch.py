@@ -31,11 +31,17 @@ def generate_launch_description():
 	parameters=[{
 	    "camera_name": "d455",
 	    "serial_no": "318122302525",
-	    "depth_module.depth_profile": "424x240x5",  
-	    "depth_module.infra_profile": "424x240x5", 
-	    "rgb_camera.color_profile": "424x240x5",
-	    "pointcloud.enable": True,
-	    "align_depth.enable": True,
+	    # "depth_module.depth_profile": "424x240x5",  
+	    # "depth_module.infra_profile": "424x240x5", 
+	    # "rgb_camera.color_profile": "424x240x5",
+        "depth_width": 1280,
+        "depth_height": 720,
+        "color_width": 1280,
+        "color_height": 720,
+        "pointcloud.enable": True,
+        "align_depth.enable": True,
+        "depth_fps": 10,
+        "rgb_fps": 10,
 	}],
         output='screen'
     ) 

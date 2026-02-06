@@ -62,9 +62,9 @@ def generate_launch_description():
                     # There are paramters to set for each strategy 
                  'Odom/FilteringStrategy':'0',        # 0=No filtering (default), 1 = Kalman , 2 = particle filter. Just for smoothing, not combining
                     # There are parameters to set for each filter too
-                 'Odom/ResetCountdown':'10',             # "Automatically reset odometry after X consecutive images where odometry cannot be computed (a value of 0 disables auto-reset). When a reset occurs, odometry resumes from the last successfully computed pose with large covariance to trigger a new map. If external odometry is used, it will also be reset based on the motion estimated relative to the last computed pose but no large covariance will be received, so that a new map won't be triggered.
-                 'Odom/Holonomic':'false',
-                 'Odom/GuessSmoothingDelay':'0',       # 0 Default. Estimated velocity is averaged based on last transforms up to this maximum delay. This can help to get smoother velocity prediction. If filtering is set or delay is below odometry rate, this is ignored
+                #  'Odom/ResetCountdown':'10',             # "Automatically reset odometry after X consecutive images where odometry cannot be computed (a value of 0 disables auto-reset). When a reset occurs, odometry resumes from the last successfully computed pose with large covariance to trigger a new map. If external odometry is used, it will also be reset based on the motion estimated relative to the last computed pose but no large covariance will be received, so that a new map won't be triggered.
+                #  'Odom/Holonomic':'false',
+                #  'Odom/GuessSmoothingDelay':'0',       # 0 Default. Estimated velocity is averaged based on last transforms up to this maximum delay. This can help to get smoother velocity prediction. If filtering is set or delay is below odometry rate, this is ignored
              }],
              remappings=[
                  ('rgb/image', '/camera/d455/color/image_raw'),
@@ -145,50 +145,50 @@ def generate_launch_description():
         ),
         
         # 5. NavSat Transform - converts GPS to map frame
-      Node(
-         package='robot_localization',
-         executable='navsat_transform_node',
-         name='navsat_transform',
-         output='screen',
-         parameters=[{
-            # Frequency and timing
-            'frequency': 3.0,
-            'delay': 3.0,
+    #   Node(
+    #      package='robot_localization',
+    #      executable='navsat_transform_node',
+    #      name='navsat_transform',
+    #      output='screen',
+    #      parameters=[{
+    #         # Frequency and timing
+    #         'frequency': 3.0,
+    #         'delay': 3.0,
 
-            # Magnetic declination at your location (radians)
-            # Find yours: https://www.ngdc.noaa.gov/geomag/calculators/magcalc.shtml
-            'magnetic_declination_radians': 0.0,
-            'yaw_offset': 0.0,
+    #         # Magnetic declination at your location (radians)
+    #         # Find yours: https://www.ngdc.noaa.gov/geomag/calculators/magcalc.shtml
+    #         'magnetic_declination_radians': 0.0,
+    #         'yaw_offset': 0.0,
 
-            # 2D navigation
-            'zero_altitude': True,
+    #         # 2D navigation
+    #         'zero_altitude': True,
 
-            # Publishing options
-            'publish_filtered_gps': True,
-            'broadcast_utm_transform': False,
-            'broadcast_utm_transform_as_parent_frame': False,
+    #         # Publishing options
+    #         'publish_filtered_gps': True,
+    #         'broadcast_utm_transform': False,
+    #         'broadcast_utm_transform_as_parent_frame': False,
 
-            # Use odometry heading instead of IMU
-            'use_odometry_yaw': True,
+    #         # Use odometry heading instead of IMU
+    #         'use_odometry_yaw': True,
 
-            # Let first GPS message set origin
-            'wait_for_datum': False,
+    #         # Let first GPS message set origin
+    #         'wait_for_datum': False,
 
-            # Manual datum (only used if wait_for_datum is true)
-            'use_manual_datum': False,
-            'datum': [40.0, -105.0, 0.0],  # [lat, lon, alt] - adjust if needed
+    #         # Manual datum (only used if wait_for_datum is true)
+    #         'use_manual_datum': False,
+    #         'datum': [40.0, -105.0, 0.0],  # [lat, lon, alt] - adjust if needed
 
-            # Frame IDs
-            'map_frame_id': 'map',
-            'odom_frame_id': 'odom',
-            'base_link_frame_id': 'rover_base_origin',
-            'world_frame_id': 'odom',  # Match the EKFs
-         }],
-         remappings=[
-            ('/gps/fix', '/gps/fix'),              # YOUR GPS INPUT TOPIC
-            ('/imu/data', '/imu/data'),            # Your IMU topic
-            ('/odometry/filtered', '/odometry/global'),  # Which EKF to use for heading
-            ('/odometry/gps', '/odometry/gps'),    # GPS output topic
-         ]
-      ),
+    #         # Frame IDs
+    #         'map_frame_id': 'map',
+    #         'odom_frame_id': 'odom',
+    #         'base_link_frame_id': 'rover_base_origin',
+    #         'world_frame_id': 'odom',  # Match the EKFs
+    #      }],
+    #      remappings=[
+    #         ('/gps/fix', '/gps/fix'),              # YOUR GPS INPUT TOPIC
+    #         ('/imu/data', '/imu/data'),            # Your IMU topic
+    #         ('/odometry/filtered', '/odometry/global'),  # Which EKF to use for heading
+    #         ('/odometry/gps', '/odometry/gps'),    # GPS output topic
+    #      ]
+    #   ),
    ])

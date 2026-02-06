@@ -28,16 +28,47 @@ rtabmap:
     # Grid/FromDepth: "true"             # KRJ TODO: IDK what this was for
     # Grid/MaxGroundHeight: "0.1"
     # Grid/MapFrameProjection: "true"
+
+    # optimizer
+    # Optimizer/Strategy: "1" # 0=TORO, 1=g2o, 2=GTSAM and 3=Ceres
+    # Optimizer/Iteration: "20"
+    # Optimizer/Epsilon: "0.0"    # Stop optimizing when the error improvement is less than this value.  
+    # Optimizer/Robust: "true"    # Required to remove bad loop closured from map in post. Robust graph optimization using Vertigo (only work for g2o and GTSAM optimization strategies)
+    # RGBD/OptimizeMaxError: "2"  # 3 by default
+
+    RGBD/NeighborLinkRefining: 'false'
+    RGBD/ProximityBySpace':     'false'  # Referred paper did only global loop closure detection
+    RGBD/OptimizeFromGraphEnd': 'true'
+    Reg/Strategy':              '1'
+    Icp/Iterations':            '30'
+    Icp/VoxelSize':             '0'
+    Vis/MinInliers':            '12'
+    Vis/MaxDepth':              '0'
+    RGBD/AngularUpdate':        '0.01'
+    RGBD/LinearUpdate':         '0.01'
+    Rtabmap/TimeThr':           '700'
+    Mem/RehearsalSimilarity':   '0.30'   # Referred paper used 0.45 with SURF, here with SIFT, we will use 0.3
+    Kp/TfIdfLikelihoodUsed':    'false'
+    Bayes/FullPredictionUpdate': 'true'
+    Kp/DetectorStrategy':       '1'      # Referred paper used SURF (0), here use SIFT as it is available with opencv binaries
+    Vis/FeatureType':           '1'      # Referred paper used SURF (0), here use SIFT as it is available with opencv binaries
+    Kp/MaxFeatures':            '400'
+    Reg/Force3DoF':             'true'
+    RGBD/OptimizeMaxError':     '10'
+    Optimizer/Strategy':        '2'       # Referred paper used TORO (0), latest version recommends GTSAM (2)
+    Optimizer/Iterations':      '100'
+    Kp/IncrementalFlann':       'false'   # Referred paper didn't use incremental FLANN
+    Icp/MaxTranslation':        '0.5'
     
     # Noise filtering
     # KRJ TODO: This could break it if it filters out too many
-    Grid/NoiseFilteringRadius: "0.1"     # Must have so many neighbors within radius to be considered. Done after segmentation
-    Grid/NoiseFilteringMinNeighbors: "5"
-    GridGlobal/Eroded: "true"            # Take off the outer edge of obstacles (grid square only included if all of its neighbors are obstacles)
+    # Grid/NoiseFilteringRadius: "0.1"     # Must have so many neighbors within radius to be considered. Done after segmentation
+    # Grid/NoiseFilteringMinNeighbors: "5"
+    # GridGlobal/Eroded: "true"            # Take off the outer edge of obstacles (grid square only included if all of its neighbors are obstacles)
     
     # Other stuff
-    Grid/MinClusterSize: "10"            # 10 default. Minimum cluster size to project the points. KRJ TODO: How is this different from noise filtering min neighbors. I don't think I understand what this does, so I'm not gonna mess with it. Its part of segmenting ground from objects by normals
-    GridGlobal/FootprintRadius: "0.2"    # Footprint radius (m) used to clear all obstacles under the graph.
+    # Grid/MinClusterSize: "10"            # 10 default. Minimum cluster size to project the points. KRJ TODO: How is this different from noise filtering min neighbors. I don't think I understand what this does, so I'm not gonna mess with it. Its part of segmenting ground from objects by normals
+    # GridGlobal/FootprintRadius: "0.2"    # Footprint radius (m) used to clear all obstacles under the graph.
     
     # /Optimizer
     # Optimizer/PriorsIgnored: "false"   # Fuse GPS as a prior
