@@ -58,21 +58,6 @@ def generate_launch_description():
             remappings=remappings,
             arguments=['-d']), # This will delete the previous database (~/.ros/rtabmap.db)
 
-        Node(
-            package='rtabmap_util',
-            executable='point_cloud_xyzrgb',   # or 'point_cloud_xyz' if you don't want RGB
-            name='point_cloud_xyzrgb',
-            remappings=remappings,
-            # parameters=[{
-            #     'approx_sync': True,
-            #     'decimation': 2,        # lower res → less CPU
-            #     'voxel_size': 0.02,     # downsample produced cloud (m)
-            #     'max_depth': 6.0,
-            #     'filter_nans': True,
-            #     'queue_size': 10
-            # }]
-        ),
-
         # Visualization:
         Node(
             package='rtabmap_viz', executable='rtabmap_viz', output='screen',
