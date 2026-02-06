@@ -217,8 +217,8 @@ def generate_launch_description():
             'magnetic_declination_radians': 0.253,
             'yaw_offset': 0.0, # yaw error correction of IMU absolute yaw measurement
 
-            # 2D navigation
-            'zero_altitude': True,
+    #         # 2D navigation
+    #         'zero_altitude': True,
 
             # Publishing options
             'broadcast_cartesian_transform': True,
@@ -226,8 +226,8 @@ def generate_launch_description():
             # 'broadcast_utm_transform': False,
             # 'broadcast_utm_transform_as_parent_frame': False,
 
-            # Use odometry heading instead of IMU
-            'use_odometry_yaw': True,
+    #         # Use odometry heading instead of IMU
+    #         'use_odometry_yaw': True,
 
             # Let first GPS message set origin
             'wait_for_datum': True,
