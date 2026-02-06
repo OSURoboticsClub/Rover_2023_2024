@@ -58,6 +58,22 @@ def generate_launch_description():
             remappings=remappings,
             arguments=['-d']), # This will delete the previous database (~/.ros/rtabmap.db)
 
+        Node(
+            package='rtabmap_util', executable='point_cloud_xyz', output='screen',
+            parameters=[{'decimation': 2,
+                'max_depth': 3.0,
+                'voxel_size': 0.02}],
+            remappings=[('depth/image', '/camera/d455/aligned_depth_to_color/image_raw'),
+                ('depth/camera_info', '/camera/d455/color/camera_info'),
+                ('cloud', '/camera/cloud')]),
+
+            Node(
+                package='rtabmap_util', executable='obstacles_detection', output='screen',
+                parameters=[parameters],
+                remappings=[('cloud', '/camera/cloud'),
+                    ('obstacles', '/camera/obstacles'),
+                    ('ground', '/camera/ground')]),
+
         # Visualization:
         Node(
             package='rtabmap_viz', executable='rtabmap_viz', output='screen',
