@@ -32,6 +32,34 @@
     </collision>
   </link>
 
+  <link name="imu_link">
+    <visual> 
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.005" length="0.01"/>
+      </geometry>
+    </visual>
+  </link>
+  <joint name="imu_joint" type="fixed">
+    <parent link="rover_base_origin"/>
+    <child link="imu_link"/>
+    <origin xyz=".3048 0 .1778"/>
+  </joint>
+
+  <link name="gps">
+    <visual> 
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.005" length="0.01"/>
+      </geometry>
+    </visual>
+  </link>
+  <joint name="gps_joint" type="fixed">
+    <parent link="rover_base_origin"/>
+    <child link="gps"/>
+    <origin xyz=".1524 0 0"/>
+  </joint>
+
   
   <link name="arm_link_0">
     <visual>
