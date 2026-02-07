@@ -14,7 +14,7 @@ rtabmap:
     subscribe_rgb: true
     subscribe_odom_info: false
     approx_sync: true                    # Odom is from external source, so best to approx sync?
-    publish_tf: false                    # KRJ TODO: Setting this to false for now, so that it does not interfere with gps map frame.
+    publish_tf: true                    # KRJ TODO: Setting this to false for now, so that it does not interfere with gps map frame.
     
     # Internal parameters (must be strings)
     # /Grid
