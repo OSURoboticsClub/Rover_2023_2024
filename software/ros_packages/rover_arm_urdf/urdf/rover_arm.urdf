@@ -57,7 +57,7 @@
   <joint name="gps_joint" type="fixed">
     <parent link="rover_base_origin"/>
     <child link="gps"/>
-    <origin xyz=".1524 0 0"/>
+    <origin xyz="-.1524 0 0"/>
   </joint>
 
   
