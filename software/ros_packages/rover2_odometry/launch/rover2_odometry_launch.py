@@ -103,10 +103,10 @@ def generate_launch_description():
                 
                 # Local odometry 
                 'odom0': '/wheel_odom',
-                'odom0_config': [True, True, False,
+                'odom0_config': [False, False, False,
                                 False, False, False,
                                 True,  False,  False,
-                                False, False, False,
+                                False, False, True,
                                 False, False, False],
                 'odom0_queue_size': 10,
                 'odom0_differential': False,
@@ -126,7 +126,7 @@ def generate_launch_description():
                 # IMU 
                 'imu0': '/imu/data',
                 'imu0_config': [False, False, False,
-                               False, False, True,
+                               False, False, False,
                                False, False, False,
                                False, False, True,
                                True,  False,  False],
