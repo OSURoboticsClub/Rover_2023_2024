@@ -42,9 +42,25 @@
     <!--END EFFECTOR: Purpose: Represent information about an end effector.-->
     <end_effector name="gripper" parent_link="rover_arm_tool0" group="gripper"/>
     <!--VIRTUAL JOINT: Purpose: this element defines a virtual joint between a robot link and an external frame of reference (considered fixed with respect to the robot)-->
-    <virtual_joint name="World_Joint" type="floating" parent_frame="world" child_link="rover_base_origin"/>
+    <virtual_joint name="World_Joint" type="Fixed" parent_frame="world" child_link="rover_base_origin"/>
     <!--PASSIVE JOINT: Purpose: this element is used to mark joints that are not actuated-->
     <passive_joint name="World_Joint"/>
+    <passive_joint name="rover_rear_bogie_joint"/>
+    <passive_joint name="rover_front_left_link_joint"/>
+    <passive_joint name="rover_back_left_link_joint"/>
+    <passive_joint name="rover_front_left_bogie_joint"/>
+    <!-- <passive_joint name="rover_back_left_bogie_joint"/> -->
+    <passive_joint name="rover_front_right_link_joint"/>
+    <passive_joint name="rover_back_right_link_joint"/>
+    <passive_joint name="rover_front_right_bogie_joint"/>
+    <!-- <passive_joint name="rover_back_right_bogie_joint"/> -->
+    <passive_joint name="rover_back_left_wheel_joint"/>
+    <passive_joint name="rover_front_left_wheel_joint"/>
+    <passive_joint name="rover_back_right_wheel_joint"/>
+    <passive_joint name="rover_middle_right_wheel_joint"/>
+    <passive_joint name="rover_middle_left_wheel_joint"/>
+    <passive_joint name="rover_front_right_wheel_joint"/>
+
     <!--DISABLE COLLISIONS: By default it is assumed that any link of the robot could potentially come into collision with any other link in the robot. This tag disables collision checking between a specified pair of links. -->
     <disable_collisions link1="rover_arm_base_link" link2="rover_arm_long_arm" reason="Never"/>
     <disable_collisions link1="rover_arm_base_link" link2="rover_arm_elbow_roll" reason="Never"/>

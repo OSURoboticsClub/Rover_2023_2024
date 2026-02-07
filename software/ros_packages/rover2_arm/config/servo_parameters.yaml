@@ -15,7 +15,7 @@ cartesian_command_in_topic: "~/delta_twist_cmds" #Cartesian command topic
 joint_command_in_topic: "~/delta_joint_cmds" #Joint command topic
 command_in_type: "unitless" # "unitless"> in the range [-1:1], as if from joystick. "speed_units"> cmds are in m/s and rad/s
 scale: #Since these are applied to each joint or total motion, they either should be set to the limiting joints speed or the opposite depending on how moveit handles what limits the joints and if the commands sent to moveit servo limits these already.
-  linear:  5.0  # "Max linear velocity in m/s if using speed units or tracking a pose, else a scaling factor on the unitless commanded velocity. Used for Cartesian and pose tracking commands."
+  linear:  10.0  # "Max linear velocity in m/s if using speed units or tracking a pose, else a scaling factor on the unitless commanded velocity. Used for Cartesian and pose tracking commands."
   rotational: 10.0  # "Max angular velocity in rad/s if using speed units or tracking a pose, else a scaling factor on the unitless commanded velocity. Used for Cartesian and pose tracking commands."
   joint: 10.0  # "Joint angular/linear velocity scale. Only used for unitless joint commands."
 incoming_command_timeout: 0.1 #discard commands older than timeout [sec]
@@ -25,8 +25,8 @@ apply_twist_commands_about_ee_frame: true #true twist applied to ee frame, false
 
 #Pose Tracking Settings
 pose_tracking: 
-  linear_tolerance: 0.005 #allowable linear error [m]
-  angular_tolerance: 0.001 #allowable angular error [rad]
+  linear_tolerance: 0.0005 #allowable linear error [m]
+  angular_tolerance: 0.0001 #allowable angular error [rad]
 
 #outgoing command settings
 status_topic: "~/status" #Status topic

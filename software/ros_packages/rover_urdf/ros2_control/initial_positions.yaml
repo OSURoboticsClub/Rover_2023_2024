@@ -1,0 +1,22 @@
+# Default initial positions for rover's ros2_control fake system
+
+initial_positions:
+  rover_front_left_link_joint: 0
+  rover_back_left_link_joint: 0
+  rover_front_left_bogie_joint: 0
+  rover_back_left_bogie_joint: 0
+
+  rover_front_right_link_joint: 0
+  rover_back_right_link_joint: 0
+  rover_front_right_bogie_joint: 0
+  rover_back_right_bogie_joint: 0
+
+  rover_rear_bogie_joint: 0
+
+  rover_front_left_wheel_joint: 0
+  rover_middle_left_wheel_joint: 0
+  rover_back_left_wheel_joint: 0
+  
+  rover_front_right_wheel_joint: 0
+  rover_middle_right_wheel_joint: 0
+  rover_back_right_wheel_joint: 0

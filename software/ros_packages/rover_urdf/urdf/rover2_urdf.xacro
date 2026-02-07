@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+
+<!--
+Urdf for the rover of the DAM Robotics Rover triple bogie system.
+-->
+
+<robot name="rover" xmlns:xacro="https://ros.org/wiki/xacro">
+    <xacro:macro name="rover" params="name attachment:=arm">
+        <!-- Includes (material libraries, etc) -->
+        <xacro:include filename="$(find rover_arm_urdf)/urdf/rover2_arm.urdf.xacro" />
+        <xacro:include filename="$(find rover_urdf)/urdf/rover2_body.urdf.xacro"/>
+        <xacro:include filename="$(find rover_urdf)/urdf/materials.xacro" />
+
+        <!-- Link Chasis with bogies and tower -->
+        <xacro:rover_body name="rover">
+        </xacro:rover_body>
+
+
+        <!-- Link Arm or Scimech-->
+        <xacro:if value="${attachment== 'arm'}">
+            <xacro:rover2_arm parent="rover_base_origin" >
+                <origin rpy= "0.0 0.0 0.0" xyz="0.173803 -0.020767 0.071924"/>
+            </xacro:rover2_arm>
+        </xacro:if>
+        
+        <xacro:if value="${attachment == 'science'}">
+
+        </xacro:if>
+
+            <!-- Arm option for gripper -->
+    </xacro:macro>
+
+    <xacro:rover name="rover" attachment="arm"/>
+
+</robot>

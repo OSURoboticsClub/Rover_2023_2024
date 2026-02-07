@@ -2,8 +2,6 @@
 
 <robot name="rover2_arm" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <xacro:macro name="rover2_arm" params="parent *origin name:=rover_arm" >
-
-    <xacro:include filename="$(find rover_arm_urdf)/urdf/materials.xacro" />
     <!-- <xacro:include filename="$(find rover_arm_description)/urdf/rover_arm.trans" /> -->
     <!-- <xacro:include filename="$(find rover_arm_description)/urdf/rover_arm.gazebo" /> -->
 
