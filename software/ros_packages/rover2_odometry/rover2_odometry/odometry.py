@@ -136,7 +136,7 @@ class OdrivePositionOdometry(Node):
         odom = Odometry()
         odom.header.stamp = current_time.to_msg()
         odom.header.frame_id = 'odom'
-        odom.child_frame_id = 'robot_base_origin'
+        odom.child_frame_id = 'rover_base_origin'
         
         # Position
         odom.pose.pose.position.x = self.x
