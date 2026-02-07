@@ -104,7 +104,7 @@ def generate_launch_description():
                 # Local odometry 
                 'odom0': '/wheel_odom',
                 'odom0_config': [True, True, False,
-                                False, False, True,
+                                False, False, False,
                                 True,  False,  False,
                                 False, False, False,
                                 False, False, False],
@@ -115,7 +115,7 @@ def generate_launch_description():
                 # Visual odometry
                  'odom1': '/odometry/visual',
                  'odom1_config': [True,  True,  False,   # x, y position
-                                 False, False, False,     # yaw orientation
+                                 False, False, True,     # yaw orientation
                                  True, False, False,
                                  False, False, False,
                                  False, False, False],
