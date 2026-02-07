@@ -141,64 +141,64 @@ def generate_launch_description():
         ),
         
         # Global EKF (map)
-        Node(
-            package='robot_localization',
-            executable='ekf_node',
-            name='ekf_node_map',
-            output='screen',
-            parameters=[{
-                'frequency': 20.0,
-                'two_d_mode': True,
-                # 'sensor_timeout': 0.1,
-                # 'transform_time_offset': 0.0,
-                # 'transform_timeout': 0.0,
-                'print_diagnostics': True,
-                'debug': False,
-                'publish_tf': True,
+        # Node(
+        #     package='robot_localization',
+        #     executable='ekf_node',
+        #     name='ekf_node_map',
+        #     output='screen',
+        #     parameters=[{
+        #         'frequency': 20.0,
+        #         'two_d_mode': True,
+        #         # 'sensor_timeout': 0.1,
+        #         # 'transform_time_offset': 0.0,
+        #         # 'transform_timeout': 0.0,
+        #         'print_diagnostics': True,
+        #         'debug': False,
+        #         'publish_tf': True,
                 
-                'odom_frame': 'odom',
-                'base_link_frame': 'rover_base_origin',
-                'world_frame': 'map',
-                'map_frame': 'map', # published map fram tf name
+        #         'odom_frame': 'odom',
+        #         'base_link_frame': 'rover_base_origin',
+        #         'world_frame': 'map',
+        #         'map_frame': 'map', # published map fram tf name
                 
-                # Local odometry 
-                'odom0': '/wheel_odom',
-                'odom0_config': [True, True, False,
-                                False, False, True,
-                                True,  False,  False,
-                                False, False, False,
-                                False, False, False],
-                'odom0_queue_size': 10,
-                'odom0_differential': False,
-                'odom0_relative': False,
+        #         # Local odometry 
+        #         'odom0': '/wheel_odom',
+        #         'odom0_config': [True, True, False,
+        #                         False, False, True,
+        #                         True,  False,  False,
+        #                         False, False, False,
+        #                         False, False, False],
+        #         'odom0_queue_size': 10,
+        #         'odom0_differential': False,
+        #         'odom0_relative': False,
 
-                # GPS odometry (from navsat_transform)
-                 'odom1': 'odometry/gps',
-                 'odom1_config': [True,  True,  False,   # x, y position
-                                 False, False, False,     # yaw orientation
-                                 True, False, False,
-                                 False, False, False,
-                                 False, False, False],
-                 'odom1_queue_size': 10,
-                 'odom1_differential': False,
-                 'odom1_relative': False,
+        #         # GPS odometry (from navsat_transform)
+        #          'odom1': 'odometry/gps',
+        #          'odom1_config': [True,  True,  False,   # x, y position
+        #                          False, False, False,     # yaw orientation
+        #                          True, False, False,
+        #                          False, False, False,
+        #                          False, False, False],
+        #          'odom1_queue_size': 10,
+        #          'odom1_differential': False,
+        #          'odom1_relative': False,
                 
-                # IMU (same as local)
-                'imu0': '/imu/data',
-                'imu0_config': [False, False, False,
-                               False, False, True,
-                               False, False, False,
-                               False, False, True,
-                               True,  False,  False],
-                'imu0_queue_size': 10,
-                'imu0_differential': False,
-                'imu0_relative': False,
-                'imu0_remove_gravitational_acceleration': True,
-            }],
-            remappings=[
-                ('/odometry/filtered', 'odometry/global'),
-            ]
-        ),
+        #         # IMU (same as local)
+        #         'imu0': '/imu/data',
+        #         'imu0_config': [False, False, False,
+        #                        False, False, True,
+        #                        False, False, False,
+        #                        False, False, True,
+        #                        True,  False,  False],
+        #         'imu0_queue_size': 10,
+        #         'imu0_differential': False,
+        #         'imu0_relative': False,
+        #         'imu0_remove_gravitational_acceleration': True,
+        #     }],
+        #     remappings=[
+        #         ('/odometry/filtered', 'odometry/global'),
+        #     ]
+        # ),
 
 
       # 5. NavSat Transform - converts GPS to map frame
