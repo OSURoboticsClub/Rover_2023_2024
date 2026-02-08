@@ -211,17 +211,17 @@ def generate_launch_description():
             # Magnetic declination at your location (radians)
             # Find yours: https://www.ngdc.noaa.gov/geomag/calculators/magcalc.shtml
             'magnetic_declination_radians': 0.253,
-            'yaw_offset': 0.0, # yaw correction of IMU absolute yaw measurement (must point east)
+            'yaw_offset': 1.570796326, # yaw correction of IMU absolute yaw measurement (must point east)
 
             # 2D navigation
             'zero_altitude': True,
 
             # Publishing options
-            # 'broadcast_cartesian_transform': True,
+            'broadcast_cartesian_transform': False,
             'publish_filtered_gps': True,
 
             # Use odometry heading instead of IMU
-            'use_odometry_yaw': True,
+            'use_odometry_yaw': False,
 
             # Let first GPS message set origin
             'wait_for_datum': False,
@@ -230,10 +230,11 @@ def generate_launch_description():
             'world_frame_id': 'map',  # Match the EKFs
          }],
          remappings=[
-            ('/imu/data', '/imu/data'),                 # IMU topic
-            ('/gps/fix', '/gps/fix'),                   # GPS INPUT TOPIC
-            ('/odometry/filtered', '/odometry/local'),  # Which EKF to use for heading
-            ('/odometry/gps', '/odometry/gps'),         # GPS output topic
+            ('/imu/data', '/imu/data'),                  # IMU topic
+            ('/gps/fix', '/gps/fix'),                    # GPS INPUT TOPIC
+            # ('/gps/filtered', '/gps/filtered'),          # GPS INPUT TOPIC
+            ('/odometry/filtered', '/odometry/global'),  # Which EKF to use for heading
+            ('/odometry/gps', '/odometry/gps'),          # GPS output topic
          ]
       ),
     ])
