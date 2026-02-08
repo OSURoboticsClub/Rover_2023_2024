@@ -85,13 +85,17 @@ class GPSNode(Node):
                     # Set position covariance based on GPS fix quality  
                     fix_msg.position_covariance_type = NavSatFix.COVARIANCE_TYPE_DIAGONAL_KNOWN
                     fix_msg.position_covariance = [
-                        0.05, 0.0, 0.0,  # x or north position
-                        0.0, 0.05, 0.0,  # y or east position
-                        0.0, 0.0, 0.1     # z or up position (altitude)
+                        1.0, 0.0, 0.0,  # x or north position
+                        0.0, 1.0, 0.0,  # y or east position
+                        0.0, 0.0, 4.0   # z or up position (altitude)
                     ]
-                    
-                    self.fix_pub.publish(fix_msg)
-                    self.get_logger().debug(f"Published GPS fix: lat={lat}, lon={lon}, alt={altitude}, sats={num_sats}")
+                    if fix_quality > 0:
+                        self.fix_pub.publish(fix_msg)
+                        self.get_logger().debug(f"Published GPS fix: lat={lat}, lon={lon}, alt={altitude}, sats={num_sats}")
+                    else:
+                        self.get_logger().debug(f"GPS fix: NO FIX STATUS")
+
+
 
             except (ValueError, IndexError):
                 self.get_logger().warn(f"Failed to parse NMEA line: {line}")

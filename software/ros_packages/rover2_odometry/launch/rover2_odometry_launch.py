@@ -129,7 +129,7 @@ def generate_launch_description():
                 'imu0_queue_size': 10,
                 'imu0_differential': False,
                 'imu0_relative': False,
-                'imu0_remove_gravitational_acceleration': True,
+                'imu0_remove_gravitational_acceleration': False,
             }],
             remappings=[
                 ('/odometry/filtered', '/odometry/local'),
@@ -171,7 +171,7 @@ def generate_launch_description():
                 # GPS odometry (from navsat_transform) (pose x, y)
                 'odom1': 'odometry/gps',
                 'odom1_config': [True,  True,  False,   # x, y position
-                                False, False, False,
+                                False, False, True,
                                 False, False, False,
                                 False, False, False,
                                 False, False, False],
@@ -189,7 +189,7 @@ def generate_launch_description():
                 'imu0_queue_size': 10,
                 'imu0_differential': False,
                 'imu0_relative': False,
-                'imu0_remove_gravitational_acceleration': True,
+                'imu0_remove_gravitational_acceleration': False,
             }],
             remappings=[
                 ('/odometry/filtered', 'odometry/global'),
@@ -206,25 +206,27 @@ def generate_launch_description():
          parameters=[{
             # Frequency and timing
             'frequency': 3.0,
-            'delay': 3.0,
+            'delay': 30.0,
 
             # Magnetic declination at your location (radians)
             # Find yours: https://www.ngdc.noaa.gov/geomag/calculators/magcalc.shtml
             'magnetic_declination_radians': 0.253,
+
+            # Use odometry heading instead of IMU
+            'use_odometry_yaw': False,
             'yaw_offset': 1.570796326, # yaw correction of IMU absolute yaw measurement (must point east)
 
             # 2D navigation
             'zero_altitude': True,
 
             # Publishing options
-            'broadcast_cartesian_transform': False,
+            'broadcast_cartesian_transform': True,
             'publish_filtered_gps': True,
-
-            # Use odometry heading instead of IMU
-            'use_odometry_yaw': False,
 
             # Let first GPS message set origin
             'wait_for_datum': False,
+            #'use_manual_datum': True,
+            #'datum': [44.56722346625757, -123.27433385957002, 0.0, 'map', 'rover_base_origin'],
 
             'base_link_frame_id': 'rover_base_origin',
             'world_frame_id': 'map',  # Match the EKFs
