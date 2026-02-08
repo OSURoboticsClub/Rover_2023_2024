@@ -108,8 +108,8 @@ def generate_launch_description():
 
                 # Visual odometry
                  'odom1': '/odometry/visual',
-                 'odom1_config': [True,  True,  False,   # x, y position
-                                 False, False, True,     # yaw orientation
+                 'odom1_config': [True,  True,  False, # x, y position
+                                 False, False, True,   # yaw orientation
                                  True, False, False,
                                  False, False, False,
                                  False, False, False],
@@ -169,23 +169,23 @@ def generate_launch_description():
                 'odom0_relative': False,
 
                 # GPS odometry (from navsat_transform) (pose x, y)
-                 'odom1': 'odometry/gps',
-                 'odom1_config': [True,  True,  False,   # x, y position
-                                 False, False, False,
-                                 False, False, False,
-                                 False, False, False,
-                                 False, False, False],
-                 'odom1_queue_size': 10,
-                 'odom1_differential': False,
-                 'odom1_relative': False,
+                'odom1': 'odometry/gps',
+                'odom1_config': [True,  True,  False,   # x, y position
+                                False, False, False,
+                                False, False, False,
+                                False, False, False,
+                                False, False, False],
+                'odom1_queue_size': 10,
+                'odom1_differential': False,
+                'odom1_relative': False,
                 
                 # IMU (accel x, vel yaw)
                 'imu0': '/imu/data',
                 'imu0_config': [False, False, False,
-                               False, False, False,
-                               False, False, False,
                                False, False, True,
-                               True,  False,  False],
+                               False, False, False,
+                               False, False, False,
+                               False,  False,  False],
                 'imu0_queue_size': 10,
                 'imu0_differential': False,
                 'imu0_relative': False,
@@ -217,10 +217,8 @@ def generate_launch_description():
             'zero_altitude': True,
 
             # Publishing options
-            'broadcast_cartesian_transform': True,
+            # 'broadcast_cartesian_transform': True,
             'publish_filtered_gps': True,
-            # 'broadcast_utm_transform': False,
-            # 'broadcast_utm_transform_as_parent_frame': False,
 
             # Use odometry heading instead of IMU
             'use_odometry_yaw': True,
@@ -228,22 +226,14 @@ def generate_launch_description():
             # Let first GPS message set origin
             'wait_for_datum': False,
 
-            # Manual datum (only used if wait_for_datum is true)
-            # 'use_manual_datum': True,
-            # 'datum': [44.56722222, -123.27388888, 0.0],  # [lat, lon, alt] - Automatically set to first GPS reading 
-
-            # # Frame IDs
-            # 'map_frame_id': 'map',
-            # 'odom_frame_id': 'odom',
             'base_link_frame_id': 'rover_base_origin',
             'world_frame_id': 'map',  # Match the EKFs
          }],
          remappings=[
-            ('/imu/data', '/imu/data'),                  # IMU topic
-            ('/gps/fix', '/gps/fix'),                    # GPS INPUT TOPIC
-            # ('/gps/filtered', '/gps/filtered'),          # GPS INPUT TOPIC
+            ('/imu/data', '/imu/data'),                 # IMU topic
+            ('/gps/fix', '/gps/fix'),                   # GPS INPUT TOPIC
             ('/odometry/filtered', '/odometry/local'),  # Which EKF to use for heading
-            ('/odometry/gps', '/odometry/gps'),          # GPS output topic
+            ('/odometry/gps', '/odometry/gps'),         # GPS output topic
          ]
       ),
     ])
