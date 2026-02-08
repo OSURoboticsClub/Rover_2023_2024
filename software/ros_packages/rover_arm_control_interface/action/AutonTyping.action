@@ -1,0 +1,6 @@
+string phrase
+---
+bool success
+string message
+---
+string feedback

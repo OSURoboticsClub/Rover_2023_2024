@@ -33,6 +33,8 @@ setup(
             'absolute_move = rover_arm_control.absolute_move:main',
             'gripper_control = rover_arm_control.gripper_control:main',
             'aruco_detector = rover_arm_control.aruco_detector:main',
+            'auton_typing = rover_arm_control.auton_typing:main',
+            'test_auton_typing = rover_arm_control.test_auton_typing:main',
         ],
     },
 )

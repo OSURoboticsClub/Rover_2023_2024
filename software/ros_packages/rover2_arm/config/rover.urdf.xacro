@@ -2,12 +2,15 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="rover">
     <xacro:arg name="initial_positions_file" default="initial_positions.yaml" />
     <xacro:arg name="ros2_control_hardware_type" default="main" />
+    <xacro:arg name="drive_initial_positions_file" default="$(find rover_urdf)/ros2_control/initial_positions.yaml" />
 
     <!-- Import rover urdf file -->
-    <xacro:include filename="$(find rover_urdf)/urdf/rover_urdf.xacro" />
+    <xacro:include filename="$(find rover_urdf)/urdf/rover2_urdf.xacro" />
 
     <!-- Import control_xacro -->
     <xacro:include filename="rover.ros2_control.xacro" />
+
+    <xacro:include filename="$(find rover_urdf)/ros2_control/rover_body.ros2_control.xacro" />
 
     <!-- Include sensors and other links -->
     <xacro:include filename="$(find realsense2_description)/urdf/_d405.urdf.xacro"/>
@@ -18,7 +21,8 @@
         <origin xyz="-0.001611 -0.040711 0.099525" rpy="0.0 -1.3963635 1.5707963"/> 
     </xacro:sensor_d405>
 
-
-    <xacro:rover_ros2_control name="FakeSystem" initial_positions_file="$(arg initial_positions_file)" ros2_control_hardware_type="$(arg ros2_control_hardware_type)"/>
-
+    <!-- Include rover arm ros2_control -->
+    <xacro:rover_ros2_control name="rover_arm" initial_positions_file="$(arg initial_positions_file)" ros2_control_hardware_type="$(arg ros2_control_hardware_type)"/>
+    <!-- Include rover drive ros2_control -->
+    <xacro:rover_body_ros2_control name="rover_drive" initial_positions_file="$(arg drive_initial_positions_file)" ros2_control_hardware_type="sim"/>
 </robot>
