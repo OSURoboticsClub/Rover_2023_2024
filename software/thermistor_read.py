@@ -3,7 +3,6 @@
 import struct
 import can
 import cv2
-import matplotlib.pyplot as plt
 from rich.live import Live
 from rich.table import Table
 import math

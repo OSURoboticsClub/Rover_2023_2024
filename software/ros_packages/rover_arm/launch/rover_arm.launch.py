@@ -141,7 +141,7 @@ def generate_launch_description():
         remappings=[
             ("/controller_manager/robot_description", "/robot_description"),
         ],
-        output="screen",
+        output="screen"
     )
 
     joint_state_broadcaster_spawner = Node(
@@ -159,10 +159,8 @@ def generate_launch_description():
     rover_arm_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["rover_arm_controller", 
-                   "-c", "/controller_manager",
+        arguments=["rover_arm_controller", "-c", "/controller_manager"],
 
-        ],
     )
 
     moveit_arm_controller_spawner = Node(
@@ -225,11 +223,11 @@ def generate_launch_description():
                 name="robot_state_publisher",
                 parameters=[moveit_config.robot_description],
             ),
-            ComposableNode(
-                package="joy",
-                plugin="joy::Joy",
-                name="joy_node",
-            ),
+            #ComposableNode(
+            #    package="joy",
+            #    plugin="joy::Joy",
+            #    name="joy_node",
+            #),
         ],
         output="screen",
     )
@@ -286,7 +284,7 @@ def generate_launch_description():
             "pointcloud.stream_filter": 2,
             # "enable_color": True,
             # "enable_depth": True,
-            #"serial_no":"_218622273613",
+            "serial_no":"218622273613",
             "depth_fps": 5,
             "rgb_fps": 5,
         }],
@@ -320,14 +318,14 @@ def generate_launch_description():
             rviz_node,
             container,
             move_group_node,
-            ros2_control_node,
+            ros2_control_node, # ThIS IS THE EVIL OEN
             joint_state_broadcaster_spawner,
             rover_arm_controller_spawner,
-            moveit_arm_controller_spawner,
             joy_to_servo_node,
             controller_switcher_node,
             servo_node,
             d405_node,
+            moveit_arm_controller_spawner,
             #d455_node,
 
         ]

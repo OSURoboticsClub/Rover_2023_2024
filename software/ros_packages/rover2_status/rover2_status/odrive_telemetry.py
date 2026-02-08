@@ -48,7 +48,7 @@ class OdriveTelemetry(Node):
 	
 		#Create timers for reading and republishing can data
 		self.pub_timer = self.create_timer(0.05, self.pub_callback)
-		self.can_timer = self.create_timer(0.005, self.read_can)
+		self.can_timer = self.create_timer(0.05, self.read_can)
 
 		#Create ros2 publisher
 		self.pub = self.create_publisher(ODriveStatus, 'odrive_telem', 10)

@@ -1,8 +1,9 @@
-import rclpy
+\import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float64MultiArray
 from geometry_msgs.msg import Twist
 from rover2_control_interface.msg import DriveCommandMessage
+from geometry_msgs.msg import Twist
 from time import time, sleep
 import math
 import can
@@ -42,8 +43,8 @@ class DriveCanControlNode(Node):
         #Groundstation Subscription
         #TODO: Just make these the Default Twist Message types?? :skull:
         self.groundstation_sub = self.create_subscription(
-            DriveCommandMessage,
-            '/command_control/ground_station_drive',  # Topic where twist messages are published
+            Twist,
+            '/cmd_vel',  # Topic where twist messages are published
             self.groundstation_drive_command_callback,
             10
         )
@@ -67,25 +68,28 @@ class DriveCanControlNode(Node):
     #Iterates over each node and sets the axis state, control mode (velocity), and velocity ramp Limit
     def setup_controller(self):
         for node_id in NODES:
-            BUS.send(can.Message(
-            arbitration_id=(node_id << 5 | 0x07), # 0x07: Set_Axis_State
-            data=struct.pack('<I', 8), # 8: AxisState.CLOSED_LOOP_CONTROL
-            is_extended_id=False
-            ))
+            try:
+                BUS.send(can.Message(
+                arbitration_id=(node_id << 5 | 0x07), # 0x07: Set_Axis_State
+                data=struct.pack('<I', 8), # 8: AxisState.CLOSED_LOOP_CONTROL
+                is_extended_id=False
+                ))
           
-            #Set velocity ramp control mode
-            BUS.send(can.Message(
-            arbitration_id=(node_id << 5 | 0x0b), 
-            data=struct.pack('<II', 2,2),
-            is_extended_id=False
-            ))
+                #Set velocity ramp control mode
+                BUS.send(can.Message(
+                arbitration_id=(node_id << 5 | 0x0b), 
+                data=struct.pack('<II', 2,2),
+                is_extended_id=False
+                ))
 
-            BUS.send(can.Message(
-            arbitration_id=(node_id << 5 | 0x04), 
-            data=struct.pack('<BHBf', 1,403,0,VEL_RAMP),
-            is_extended_id=False
-            ))
-
+                BUS.send(can.Message(
+                arbitration_id=(node_id << 5 | 0x04), 
+                data=struct.pack('<BHBf', 1,403,0,VEL_RAMP),
+                is_extended_id=False
+                ))
+            except Exception as e:
+                self.get_logger().info(f"Drive Can error: {e}")
+                
 
     #This callback is called as a 50hz loop, as configured on node init.
     def timer_callback(self):
@@ -106,13 +110,12 @@ class DriveCanControlNode(Node):
     def groundstation_drive_command_callback(self, msg):
         # Map joystick axes to wheel velocities
         # Assume left stick y-axis for forward/backward and right stick x-axis for turning
-        self.get_logger().info(f"Recieved: Lin Vel: {msg.drive_twist.linear.x}, ang vel: {msg.drive_twist.angular.z}")
-        if msg.controller_present:
-            #Update the desired velocities
-            self.linear_velocity = msg.drive_twist.linear.x  # Left joystick vertical axis (forward/backward)
-            self.angular_velocity = msg.drive_twist.angular.z  # Right joystick horizontal axis (turning)         self.send_drive_commands() 
+        #Update the desired velocities
+        self.linear_velocity = msg.linear.x  # Left joystick vertical axis (forward/backward)
+        self.angular_velocity = msg.angular.z  # Right joystick horizontal axis (turning)         
+        self.send_drive_commands() 
             
-            self.last_message_time = time() #Only update the watchdog timer if we recieve a message and a controller is present
+        self.last_message_time = time() #Only update the watchdog timer if we recieve a message and a controller is present
 
 
     #Callback Function for Drive commands from Iris, which recieves commands over SBUS from Taranis   
@@ -121,8 +124,8 @@ class DriveCanControlNode(Node):
         # Assume left stick y-axis for forward/backward and right stick x-axis for turning
         if msg.controller_present:
 
-            self.linear_velocity = msg.drive_twist.linear.x  # Left joystick vertical axis (forward/backward)
-            self.angular_velocity = msg.drive_twist.angular.z  # Right joystick horizontal axis (turning)
+            self.linear_velocity = msg.drive_twist.linear.x * RPS_FACTOR  # Left joystick vertical axis (forward/backward)
+            self.angular_velocity = msg.drive_twist.angular.z  * RPS_FACTOR # Right joystick horizontal axis (turning)
             self.send_drive_commands()
             # You may want to scale these velocities to suit your needs (e.g., make them faster/slower)
             self.last_message_time = time()
@@ -133,22 +136,23 @@ class DriveCanControlNode(Node):
         
         #Get the left, right command velocities
         left_velocity, right_velocity = self.compute_drive_sides()
-
+        try:
         #Logic for sending velocity through can HERE
-        for node_id in LEFT_NODES:
-            BUS.send(can.Message(
-            arbitration_id=(node_id << 5 | 0x0d), # 0x0d: Set_Input_Vel
-            data=struct.pack('<ff', left_velocity, 0.0), # 1.0: velocity, 0.0: torque feedforward
-            is_extended_id=False
-            ))
+            for node_id in LEFT_NODES:
+                BUS.send(can.Message(
+                arbitration_id=(node_id << 5 | 0x0d), # 0x0d: Set_Input_Vel
+                data=struct.pack('<ff', left_velocity, 0.0), # 1.0: velocity, 0.0: torque feedforward
+                is_extended_id=False
+                ))
 
-        for node_id in RIGHT_NODES:
-            BUS.send(can.Message(
-            arbitration_id=(node_id << 5 | 0x0d), # 0x0d: Set_Input_Vel
-            data=struct.pack('<ff', right_velocity, 0.0), # 1.0: velocity, 0.0: torque feedforward
-            is_extended_id=False
-            ))
-
+            for node_id in RIGHT_NODES:
+                BUS.send(can.Message(
+                arbitration_id=(node_id << 5 | 0x0d), # 0x0d: Set_Input_Vel
+                data=struct.pack('<ff', right_velocity, 0.0), # 1.0: velocity, 0.0: torque feedforward
+                is_extended_id=False
+                ))
+        except Exception as e:
+            self.get_logger().info(f"Drive Can error: {e}")
 
     #Function to compute the actual Differential drive commanded speeds from the forward/angular velocity intput
     def compute_drive_sides(self):
@@ -173,8 +177,8 @@ class DriveCanControlNode(Node):
 
 
         #Scale the Drive speeds from unity accordingly
-        left_velocity = RPS_FACTOR * GEAR_RATIO * left_norm
-        right_velocity = RPS_FACTOR * GEAR_RATIO * right_norm
+        left_velocity = GEAR_RATIO * left_norm
+        right_velocity = GEAR_RATIO * right_norm
 
         return left_velocity, right_velocity
 
