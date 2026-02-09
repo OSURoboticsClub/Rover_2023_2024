@@ -210,11 +210,11 @@ def generate_launch_description():
 
             # Magnetic declination at your location (radians)
             # Find yours: https://www.ngdc.noaa.gov/geomag/calculators/magcalc.shtml
-            'magnetic_declination_radians': 0.253,
+#            'magnetic_declination_radians': 0.253,
 
             # Use odometry heading instead of IMU
             'use_odometry_yaw': False,
-            'yaw_offset': 1.570796326, # yaw correction of IMU absolute yaw measurement (must point east)
+#            'yaw_offset': 1.570796326, # yaw correction of IMU absolute yaw measurement (must point east)
 
             # 2D navigation
             'zero_altitude': True,
