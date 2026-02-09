@@ -105,7 +105,7 @@ class GPSNode(Node):
         try:
             data = bytes(msg.data)
             self.ser.write(data)
-            self.get_logger().debug(f"Wrote {len(data)} RTCM bytes to GPS")
+            self.get_logger().info(f"Wrote {len(data)} RTCM bytes to GPS")
         except serial.SerialException as e:
             self.get_logger().error(f"Failed to write RTCM data: {e}")
 

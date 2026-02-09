@@ -13,7 +13,8 @@ from geometry_msgs.msg import Vector3
 from std_msgs.msg import Float32
 import rclpy
 from rclpy.node import Node
-
+import numpy as np
+from scipy.spatial.transform import Rotation as R
 #####################################
 # Global Variables
 #####################################
@@ -70,7 +71,8 @@ class IMUNode(Node):
         
         # Magnetic declination (adjust for your location)
         self.magnetic_declination = 0
-        
+        self.yaw_allignment = np.pi / 2 #rads
+        self.total_yaw_correction = 0
         # Calibration offsets
         self.calibration_offsets = {
             'acc_offset_x': -37,
@@ -127,6 +129,7 @@ class IMUNode(Node):
             with open('/home/makemorerobot/Rover_2023_2024/software/ros_packages/rover2_odometry/rover2_odometry/magnetic_declination.txt', 'r') as file:
                 line = file.readline()
                 self.magnetic_declination = float(line)
+                self.total_yaw_correction = self.magnetic_declination + self.yaw_allignment
             self.get_logger().info(f'Magnetic declination set to {self.magnetic_declination}°')
         except Exception as e:
             self.get_logger().warn(f'Could not load magnetic declination: {e}')
@@ -176,10 +179,15 @@ class IMUNode(Node):
             quat = self.imu.quaternion
             if quat and None not in quat:
                 # BNO055 returns (w, x, y, z), ROS expects (x, y, z, w)
-                imu_msg.orientation.x = float(quat[1])
-                imu_msg.orientation.y = float(quat[2])
-                imu_msg.orientation.z = float(quat[3])
-                imu_msg.orientation.w = float(quat[0])
+                quat_bno = [quat[1], quat[2], quat[3], quat[0]]  # (x, y, z, w)
+                rot_imu = R.from_quat(quat_bno)
+                rot_correction = R.from_euler('z', self.total_yaw_correction)
+                rot_corrected = rot_correction * rot_imu
+                quat_corrected = rot_corrected.as_quat()  # Returns (x, y, z, w)
+                imu_msg.orientation.x = float(quat_corrected[0])
+                imu_msg.orientation.y = float(quat_corrected[1])
+                imu_msg.orientation.z = float(quat_corrected[2])
+                imu_msg.orientation.w = float(quat_corrected[3])
                 
                 # Orientation covariance (adjust based on your sensor accuracy)
                 imu_msg.orientation_covariance[0] = 0.01
