@@ -11,6 +11,7 @@ import serial.rs485
 import minimalmodbus
 
 from std_msgs.msg import UInt8, UInt16
+from sensor_msgs.msg import NavSatFix, NavSatStatus
 
 # Custom Imports
 from rover2_control_interface.msg import TowerPanTiltControlMessage, LightControlMessage, GPSStatusMessage
@@ -26,6 +27,7 @@ DEFAULT_BAUD = 115200
 DEFAULT_TOWER_LIGHT_CONTROL_TOPIC = "tower/light/control"
 DEFAULT_TOWER_GPS_STATUS_TOPIC = "tower/status/gps"
 DEFAULT_PAN_TILT_CONTROL_TOPIC = "tower/pan_tilt/control"
+DEFAULT_GPS_NAVSATFIX_TOPIC = "gps/fix"
 
 TOWER_NODE_ID = 1
 PAN_TILT_NODE_ID = 2
@@ -116,6 +118,9 @@ class TowerPanTiltControl(Node):
 
         self.tower_gps_publisher_topic = self.declare_parameter("~tower_gps_status_topic",
                                                          DEFAULT_TOWER_GPS_STATUS_TOPIC).value
+        
+        self.gps_navsatfix_topic = self.declare_parameter("~gps_navsatfix_topic",
+                                                   DEFAULT_GPS_NAVSATFIX_TOPIC).value
 
         self.wait_time = 1.0 / self.declare_parameter("~hertz", DEFAULT_HERTZ).value
 
@@ -132,6 +137,9 @@ class TowerPanTiltControl(Node):
                                                                 self.tower_light_control_callback, 1)
 
         self.tower_gps_publisher = self.create_publisher(GPSStatusMessage, self.tower_gps_publisher_topic, 1)
+        
+        # Add NavSatFix publisher for robot_localization
+        self.gps_navsatfix_publisher = self.create_publisher(NavSatFix, self.gps_navsatfix_topic, 1)
 
         self.pan_tilt_control_message = None
         self.tower_light_control_message = None
@@ -222,8 +230,46 @@ class TowerPanTiltControl(Node):
         gps_status.rover_longitude = gps_coords[GPS_COORDINATES["rover_longitude"]]
         gps_status.astronaut_latitude = gps_coords[GPS_COORDINATES["astronaut_latitude"]]
         gps_status.astronaut_longitude = gps_coords[GPS_COORDINATES["astronaut_longitude"]]
-        #print(gps_status)
+        
+        # Publish custom GPS status message
         self.tower_gps_publisher.publish(gps_status)
+        
+        # Publish NavSatFix message for robot_localization
+        self.publish_navsatfix(gps_status.rover_latitude, gps_status.rover_longitude)
+
+    def publish_navsatfix(self, latitude, longitude):
+        """
+        Publish GPS data as NavSatFix message for robot_localization
+        """
+        nav_msg = NavSatFix()
+        
+        # Header
+        nav_msg.header.stamp = self.get_clock().now().to_msg()
+        nav_msg.header.frame_id = "gps"
+        
+        # GPS Status
+        nav_msg.status.status = NavSatStatus.STATUS_FIX  # Assume we have a fix
+        nav_msg.status.service = NavSatStatus.SERVICE_GPS
+        
+        # Position
+        nav_msg.latitude = latitude
+        nav_msg.longitude = longitude
+        nav_msg.altitude = 0.0  # No altitude data available
+        
+        # Covariance (diagonal matrix)
+        # Set reasonable GPS accuracy - adjust based on your GPS unit specs
+        # Typical consumer GPS: ~3-5 meters accuracy
+        gps_accuracy = 5.0  # meters
+        nav_msg.position_covariance[0] = gps_accuracy ** 2  # East variance
+        nav_msg.position_covariance[4] = gps_accuracy ** 2  # North variance
+        nav_msg.position_covariance[8] = gps_accuracy ** 2  # Up variance
+        nav_msg.position_covariance_type = NavSatFix.COVARIANCE_TYPE_APPROXIMATED
+        
+        # Check for valid GPS data (not zero)
+        if latitude == 0.0 and longitude == 0.0:
+            nav_msg.status.status = NavSatStatus.STATUS_NO_FIX
+        
+        self.gps_navsatfix_publisher.publish(nav_msg)
 
     def send_tower_control_message(self):
         if self.new_tower_light_control_message:
@@ -246,4 +292,4 @@ def main(args=None):
     rclpy.shutdown()
 
 if __name__ == "__main__":
-    TowerPanTiltControl()
+    main()

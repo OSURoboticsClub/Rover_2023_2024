@@ -21,4 +21,4 @@ KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", ATTRS{idVendor}=="32e4", ATTRS{
 KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", ATTRS{idVendor}=="05a3", ATTRS{idProduct}=="9422", ATTRS{serial}=="SN0001", ATTR{index}=="0", SYMLINK+="rover/camera_main_navigation_backup"
 
 # lights/gps infrared camera
-KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="6369", SYMLINK+="rover/camera_infrared"
+KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="6369", ENV{ID_V4L_CAPABILITIES}==":capture:", SYMLINK+="rover/camera_infrared"

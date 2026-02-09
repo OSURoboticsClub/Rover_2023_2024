@@ -1,0 +1,62 @@
+# RTABMap ROS2 Parameters Configuration
+
+rtabmap:
+  ros__parameters:
+    # use_sim_time: true
+    
+    # Frames
+    frame_id: "rover_base_origin"        # base link frame
+    odom_frame_id: "odom"                # set this to get odom from the tf instead of a topic sub
+    map_frame_id: "map"                  # set tf head to "world" instead of "map" to avoid tf conflicts
+    
+    # Rtab params
+    subscribe_depth: true
+    subscribe_rgb: true
+    subscribe_odom_info: false
+    approx_sync: true                    # Odom is from external source, so best to approx sync?
+    publish_tf: true
+    
+    # Internal parameters (must be strings)
+    # /Grid
+    # Configure generation of obstacle map
+    Grid/3D: "false"                     # We do not want octomap. Saves memory and time. Allows raytracing?
+    Grid/CellSize: "0.05"
+    Grid/RangeMin: "0.0"                 # 0 default
+    Grid/RangeMax: "5"                   # 5 default
+    Grid/MaxGroundAngle: "60"
+    Grid/RayTracing: "true"              # Fill empty space
+    # Grid/FromDepth: "true"             # KRJ TODO: IDK what this was for
+    # Grid/MaxGroundHeight: "0.1"
+    # Grid/MapFrameProjection: "true"
+    
+    # Noise filtering
+    # KRJ TODO: This could break it if it filters out too many
+    Grid/NoiseFilteringRadius: "0.1"     # Must have so many neighbors within radius to be considered. Done after segmentation
+    Grid/NoiseFilteringMinNeighbors: "5"
+    GridGlobal/Eroded: "true"            # Take off the outer edge of obstacles (grid square only included if all of its neighbors are obstacles)
+    
+    # Other stuff
+    Grid/MinClusterSize: "10"            # 10 default. Minimum cluster size to project the points. KRJ TODO: How is this different from noise filtering min neighbors. I don't think I understand what this does, so I'm not gonna mess with it. Its part of segmenting ground from objects by normals
+    GridGlobal/FootprintRadius: "0.2"    # Footprint radius (m) used to clear all obstacles under the graph.
+    
+    # /Optimizer
+    # Optimizer/PriorsIgnored: "false"   # Fuse GPS as a prior
+    
+    # Note from the docs: "Currently only g2o and gtsam optimization supports this."
+    # It is ambiguous whether this is referring to supporting priors or supporting ignoring priors
+    # By default the optimization method is neither of these, should be TORO (double check this)
+    
+    # /Rtabmap
+    # Some general params for loop closure thresholds
+    # Rtabmap/LoopGPS: "true"
+    
+    # Internal parameters (must be strings)
+    # /Reg and /Vis
+    # Configure point cloud registration (first step in sticking frames together)
+    
+    # /RGBD
+    # Configure loop closure and graph optimization for RGBD
+    
+    # Reduce computation?
+    # Grid/DepthDecimation: "8"          # 4 by default
+    # Grid/NormalK: "10"                 # 20 by default

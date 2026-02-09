@@ -21,7 +21,7 @@
     <xacro:include filename="$(find realsense2_description)/urdf/_d455.urdf.xacro"/>
 
     <xacro:sensor_d455 parent="base_link" name="d455" use_nominal_extrinsics="true">
-        <origin xyz="0.1 -0.2 0" rpy="0 0 0"/>
+        <origin xyz="0.03 -0.075 -0.01" rpy="3.1415926536 0 0"/>
     </xacro:sensor_d455>
 
     <xacro:rover_arm_ros2_control name="RealSystem" initial_positions_file="$(arg initial_positions_file)" ros2_control_hardware_type="$(arg ros2_control_hardware_type)"/>

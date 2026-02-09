@@ -42,21 +42,6 @@ def generate_launch_description():
         'respawn': True
     }
     
-    joy_node = Node(
-        package="joy",
-        executable="joy_node",
-        name="joy_node",
-        remappings=[('/joy', 'joy_can_drive')]
-    )
-
-    # Joy Node to convert joystick input to velocities
-    joy_to_drive_node = Node(
-        package='rover2_control',  # Replace with your package name
-        executable='joy_to_drive',  # This is the node you created above
-        name='joy_to_drive',
-        output='screen'
-    )
-
     # Load joint_state_broadcaster after ros2_control_node is up
     joint_state_broadcaster_node = Node(
         package='controller_manager',
@@ -77,6 +62,7 @@ def generate_launch_description():
         name="auton_controller",
         **config
     )
+
     gripper_can_control_node = Node(
         package='rover2_control',
         executable='gripper_control',
@@ -91,7 +77,6 @@ def generate_launch_description():
 
     return LaunchDescription([
         # Robot State Publisher
-        
         
         # Joy Node to convert joystick input to velocities
 
@@ -120,52 +105,24 @@ def generate_launch_description():
             name='chassis_pan_tilt',
             **config
         ),
-        Node(
-            package='rover2_control',
-            executable='monitor_aruco',
-            name='monitor_aruco',
-            **config
-        ),
-       # Node(
-       #     package='rover2_control',
-       #     executable='drill_control',
-       #     name='drill_control',
-       #     **config
-       # ),
+#        Node(
+#            package='rover2_control',
+#            executable='monitor_aruco',
+#            name='monitor_aruco',
+#            **config
+#        ),
         Node(
             package='rover2_control',
             executable='tower_pan_tilt_control',
             name='tower_pan_tilt',
             **config
         ),
-       # Node(
-       #     package='rover2_control',
-       #     executable='effectors_control',
-       #     name='effectors',
-       #     **config
-       # ),
         Node(
             package='rover2_control',
             executable='joint_position_control',
             name='joint_position',
             **config
         ),
-        #Node(
-        #    package='rover2_control',
-        #    executable='drive_control',
-        #    name='rear_bogie',
-        #    parameters=[{
-        #        '~port': '/dev/rover/ttyEffectors',
-        #        '~scimech_control_topic_main_actuator': 'scimech_control/main_actuator',
-        #        '~scimech_control_topic_flexinol': 'scimech_control/flexinol',
-        #        '~scimech_control_topic_secondary_actuator': 'scimech_control/secondary_actuator',
-        #        '~drive_control_status_topic': 'drive_status/rear',
-        #        '~first_motor_id': 1,
-        #        '~second_motor_id':2,
-        #        '~third_motor_id':3,
-        #    }],
-        #    **config
-        #),
         gripper_can_control_node,
-        auton_controller
+#        auton_controller
     ])

@@ -32,10 +32,11 @@ DEFAULT_ARM_POSE_COMMAND_TOPIC = "set_joint_angles"
 DEFAULT_MOVEIT_CONTROLLER_JOY_BUTTON = 8
 
 
-DEFAULT_HERTZ = 10
+DEFAULT_HERTZ = 100
 COMMUNICATIONS_TIMEOUT = 0.15  # Seconds
 
 MODBUS_ID = 1
+RPS_FACTOR = 4
 
 STICK_DEADZONE = 0.01
 
@@ -262,8 +263,8 @@ class IrisController(Node):
                 difference = SBUS_VALUES["SBUS_MID"]-SBUS_VALUES["SBUS_MIN"]
                 for i in range(len(axes)):
                     if axes[i] != 0.0:
-                        axes[i] = (axes[i]-SBUS_VALUES["SBUS_MID"])/difference
-                        
+                        axes[i] = ((axes[i]-SBUS_VALUES["SBUS_MID"])/difference) * RPS_FACTOR
+                        self.get_logger().info(f"Axis {i}: {axes[i]}")       
                         if abs(axes[i]) < STICK_DEADZONE:
                             axes[i] = 0.0
                 if sum(axes) != 0.0 or buttons[1] == 1 or buttons[2] == 1:

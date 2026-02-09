@@ -1,0 +1,44 @@
+name: Build ROS Packages
+
+on:
+  push:
+    branches:
+      - nav_dev
+  pull_request:
+    branches:
+      - nav_dev
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    container:
+      image: ros:humble-ros-core
+      
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Cache apt packages
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: ${{ runner.os }}-rosdep
+      
+      - name: Install rosdep
+        run: |
+          apt-get update
+          apt-get install -y python3-rosdep
+          rosdep init
+          rosdep update 
+          
+      - name: Install build tools
+        run: |
+          apt-get update
+          apt-get install -y python3-colcon-common-extensions build-essential cmake
+
+      - name: Build package
+        run: |
+          cd $GITHUB_WORKSPACE/software
+          rosdep install --from-paths ros_packages/nav_autonomy --ignore-src -r -y
+          . /opt/ros/humble/setup.sh
+          colcon build --packages-select nav_autonomy --cmake-args -DCMAKE_BUILD_TYPE=Release
+          . install/setup.sh
