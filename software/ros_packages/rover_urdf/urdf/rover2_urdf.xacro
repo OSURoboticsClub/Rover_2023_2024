@@ -30,6 +30,4 @@ Urdf for the rover of the DAM Robotics Rover triple bogie system.
             <!-- Arm option for gripper -->
     </xacro:macro>
 
-    <xacro:rover name="rover" attachment="arm"/>
-
 </robot>

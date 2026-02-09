@@ -1,0 +1,53 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 100
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    drive_controller:
+      type: diff_drive_controller/DiffDriveController
+
+
+
+drive_controller:
+  ros__parameters:
+    publish_rate: 100.0
+    left_wheel_names:
+      - rover_front_left_wheel_joint
+      - rover_middle_left_wheel_joint
+      - rover_back_left_wheel_joint
+    right_wheel_names:
+      - rover_front_right_wheel_joint
+      - rover_middle_right_wheel_joint
+      - rover_back_right_wheel_joint
+    
+    wheel_radius: 0.146
+    wheel_separation: 0.85
+
+    #odometry covariance values, Untuned 2/8/2025
+    pose_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]
+    twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]
+
+    #topmost frame of the robot
+    odom_frame_id: odom
+    base_frame_id: rover_base_origin
+
+    use_stamped_velocities: true
+
+    # Velocity and acceleration limits for the robot
+    linear:
+      x:
+        has_velocity_limits: true
+        max_velocity: 1.1684              # m/s
+        min_velocity: -1.1684             # m/s
+        has_acceleration_limits: true
+        max_acceleration: 4.0          # m/s^2
+    angular:
+      z:
+        has_velocity_limits: true
+        max_velocity: 11.684              # rad/s
+        min_velocity: -11.684             # rad/s
+        has_acceleration_limits: true
+        max_acceleration: 40.0          # rad/s^2
+        min_acceleration: -40.0
