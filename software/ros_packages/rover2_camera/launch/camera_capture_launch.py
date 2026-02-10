@@ -110,10 +110,19 @@ def generate_launch_description():
         respawn=True
     )
 
+    muxing_node = Node(
+    package='rover2_camera',
+    namespace='rover2_camera',
+    executable='camera_muxing',
+    name='muxing_node',
+    respawn=True
+    )
+
     return LaunchDescription([
         realsense_launch_nav,
-#        ir_camera_node,
+        ir_camera_node,
 #        main_nav_node,
-#        gripper_rgb_node
+#        gripper_rgb_node,
+#        muxing_node
     ])
 

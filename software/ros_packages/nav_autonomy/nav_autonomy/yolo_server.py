@@ -11,7 +11,7 @@ from std_msgs.msg import Header
 from nav_autonomy_interface.action import YoloFind
 
 # YOLO specific
-from Ultralytics import YOLO
+from ultralytics import YOLO
 from collections import deque
 import numpy as np
 from geometry_msgs.msg import Point
@@ -48,7 +48,7 @@ class YoloServer(Node):
 
         # YOLO PARAMETERS
         self.num_cameras = 1
-        self.source = "/dev/video64"
+        self.source = "/dev/rover/camera_infrared"
         self.quit = False
         self.cam_queue = deque()
         # Append camera carousel order
@@ -100,7 +100,7 @@ class YoloServer(Node):
             # Look for object
             # ==============================
             goal = goal_handle.request
-            model = None
+            model = YOLO("yolo_models/mallet.pt")
             # Define models from action request
             if goal.search_object == "BOTTLE":
                 model = YOLO("yolo_models/bottle.pt")
@@ -117,6 +117,7 @@ class YoloServer(Node):
                 current_cam = self.cam_queue.popleft()
                 self.cam_queue.append(current_cam)
                 frame_id = 0
+                print(results)
                 for result in results:
                     if self.quit:
                         break
