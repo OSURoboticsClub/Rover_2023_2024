@@ -6,7 +6,7 @@ import math
 import time
 import rclpy
 from rclpy.node import Node
-from rclpy.action import ActionServer, CancelResponse, GoalResponse
+from rclpy.action import ActionServer, CancelResponse, GoalResponse, ActionClient
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
 from nav2_simple_commander.robot_navigator import BasicNavigator
@@ -15,8 +15,8 @@ from robot_localization.srv import FromLL
 from std_msgs.msg import Header
 from geometry_msgs.msg import PoseStamped
 
-# Custom action and message
-from nav_autonomy_interface.action import Mission
+#Custom action and message
+from nav_autonomy_interface.action import Mission, YoloFind
 
 from nav_autonomy.utils.search_fsm import SearchFSM, SearchState, SearchPattern
 
@@ -51,6 +51,13 @@ class MissionManager(Node):
             confidence_topic="yolo/confidence", 
             status_topic="search/status"
         )
+
+        self._yolo_client = ActionClient(
+            self,
+            YoloFind,
+            'YoloFind',
+            callback_group=self.callback_group
+        )
         
         self.get_logger().info('MissionManager action server ready.')
 
@@ -65,6 +72,7 @@ class MissionManager(Node):
         self.get_logger().info('Wait for service')
 
         # Wait for service
+        """ 
         self.fromLL_client.wait_for_service()
         self.get_logger().info('After service')
 
@@ -87,7 +95,8 @@ class MissionManager(Node):
         pose.pose.position.y = response.map_point.y
         pose.pose.orientation.z = math.sin(yaw / 2.0)
         pose.pose.orientation.w = math.cos(yaw / 2.0)
-
+        """
+        pose = PoseStamped()
         return pose
 
 
@@ -158,6 +167,35 @@ class MissionManager(Node):
             # Call Yolo Action Server
             # ==============================
             self.get_logger().info(f'Connecting to YOLO action server.')
+            
+            if not self._yolo_client.wait_for_server(timeout_sec=5.0):
+                self.get_logger().error('YOLO action server not available')
+                goal_handle.abort()
+                return Mission.Result(ack=Mission.Result.FAILED)
+        
+        # Create and send YOLO goal
+            yolo_goal = YoloFind.Goal()
+            yolo_goal.search_object = 3  # or req.search_object if passed in Mission.Goal
+        
+            self.get_logger().info(f'Sending YOLO goal: {yolo_goal.search_object}')
+            yolo_goal_future = await self._yolo_client.send_goal_async(yolo_goal)
+        
+            if not yolo_goal_future.accepted:
+                self.get_logger().error('YOLO goal rejected')
+                goal_handle.abort()
+                return Mission.Result(ack=Mission.Result.FAILED)
+        
+            self.get_logger().info('YOLO goal accepted, waiting for result...')
+            yolo_result = await yolo_goal_future.get_result_async()
+        
+            if yolo_result.result.ack != YoloFind.Result.SUCCESS:
+                self.get_logger().warn(f'YOLO search failed or canceled: {yolo_result.result.ack}')
+                goal_handle.abort()
+                return Mission.Result(ack=Mission.Result.FAILED)
+        
+            self.get_logger().info(
+                f'YOLO found object at: ({yolo_result.result.center.x:.2f}, {yolo_result.result.center.y:.2f})'
+            )
 
 
             # ==============================
