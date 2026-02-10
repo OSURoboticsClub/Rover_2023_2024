@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import String
+from std_msgs.msg import Int32
 import gi, time
 gi.require_version("Gst","1.0")
 from gi.repository import Gst
@@ -10,7 +10,7 @@ class CameraMuxing(Node):
 
     def __init__(self):
         super().__init__('camera_muxing')
-        self.publisher_ = self.create_publisher(String, 'topic', 10)
+        self.publisher_ = self.create_publisher(Int32, 'selected_cam_mux', 10)
         timer_period = .5  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
         self.num_cams = 2
@@ -39,11 +39,17 @@ class CameraMuxing(Node):
 
     def timer_callback(self):
         src_pad = self.sel.get_static_pad(f"sink_{self.current_cam}")
-
         self.sel.set_property("active-pad", src_pad)
+        
+        msg = Int32()
+        msg.data = self.current_cam
+        self.publisher_.publish(msg)
+
         self.current_cam += 1
         if self.current_cam >= self.num_cams:
             self.current_cam = 0
+
+        
 
 def main(args=None):
     rclpy.init(args=args)
