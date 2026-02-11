@@ -41,13 +41,18 @@ def generate_launch_description():
          get_package_share_directory('nav_autonomy'),
          'launch'), '/nav_launch.py'])
       )
+   state_publisher = IncludeLaunchDescription(
+      PythonLaunchDescriptionSource([os.path.join(
+         get_package_share_directory('nav_autonomy'),
+         'launch'), '/state_publisher_launch.py'])
+      )
    return LaunchDescription([
       drive_control,
       imu,
-      arm,
+      # arm,
       status,
       mapping,
       nav_autonomy,
       cameras,
-
+      state_publisher,
    ])
