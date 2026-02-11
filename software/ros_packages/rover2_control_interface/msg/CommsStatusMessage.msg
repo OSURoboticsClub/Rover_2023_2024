@@ -1,0 +1,11 @@
+int32 signal_level
+int32 noise_level
+int32 frequency
+int32 channel
+string rxmcs
+string txmcs
+float32 rxbitrate
+float32 txbitrate
+float32 txpower
+int32 channel_width
+bool connected_to_target
