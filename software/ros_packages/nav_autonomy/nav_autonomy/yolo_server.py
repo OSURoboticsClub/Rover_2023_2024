@@ -15,6 +15,8 @@ from ultralytics import YOLO
 from collections import deque
 import numpy as np
 from geometry_msgs.msg import Point
+import cv2
+
 
 # ARUCO
 import cv2
@@ -111,7 +113,7 @@ class YoloServer(Node):
             if goal.search_object == "ARUCO":
                 self.do_aruco(goal_handle)
             else:
-                results = model(source=self.source, stream=True)
+                results = model(source=self.source, stream=True, _backend=cv2.CAP_V4L2)
                 camera_stacks = [[] for _ in range(self.num_cameras)]
                 # Start searching in camera stream for object(s)
                 current_cam = self.cam_queue.popleft()
