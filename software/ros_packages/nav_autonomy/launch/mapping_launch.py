@@ -65,7 +65,22 @@ def generate_launch_description():
             condition=IfCondition(LaunchConfiguration("viz")),
             parameters=parameters,
             remappings=remappings),
-            
+
+        Node(
+            package='rtabmap_util', executable='point_cloud_xyz', output='screen',
+            parameters=[{'decimation': 2,
+                         'max_depth': 3.0,
+                         'voxel_size': 0.02}],
+            remappings=[('depth/image', '/camera/d455/aligned_depth_to_color/image_raw'),
+                        ('depth/camera_info', '/camera/d455/color/camera_info'),
+                        ('cloud', '/camera/cloud')]),
+        Node(
+            package='rtabmap_util', executable='obstacles_detection', output='screen',
+            parameters=[parameters],
+            remappings=[('cloud', '/camera/cloud'),
+                        ('obstacles', '/camera/obstacles'),
+                        ('ground', '/camera/ground')]),
+
         Node(
             package='rviz2', executable='rviz2', name="rviz2", output='screen',
             condition=IfCondition(LaunchConfiguration("viz")),
