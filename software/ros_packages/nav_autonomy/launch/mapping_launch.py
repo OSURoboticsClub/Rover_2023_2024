@@ -27,6 +27,7 @@ def generate_launch_description():
         ('rgb/image', '/camera/d455/color/image_raw'),
         ('rgb/camera_info', '/camera/d455/color/camera_info'),
         ('depth/image', '/camera/d455/aligned_depth_to_color/image_raw'),
+        ('gps/fix', '/gps/filtered')
         ]
         
     config_rviz = os.path.join(
