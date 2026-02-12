@@ -71,7 +71,7 @@ class IMUNode(Node):
         
         # Magnetic declination (adjust for your location)
         self.magnetic_declination = 0
-        self.yaw_allignment = np.pi / 2 #rads
+        self.yaw_allignment = -np.pi / 2 #rads
         self.total_yaw_correction = 0
         # Calibration offsets
         self.calibration_offsets = {
