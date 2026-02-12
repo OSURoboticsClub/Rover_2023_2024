@@ -152,7 +152,6 @@ local_costmap:
       publish_frequency: 2.0
       global_frame: odom
       robot_base_frame: rover_base_origin
-      use_sim_time: False
       width: 4
       height: 4
       resolution: 0.05
@@ -175,12 +174,15 @@ local_costmap:
         origin_z: 0.0
         z_resolution: 0.05
         z_voxels: 16
+        footprint_clearing_enabled: True
         max_obstacle_height: 2.0
         mark_threshold: 0
+        #combination_method: 1
+
         observation_sources: ground obstacles
         ground:
-          topic: /cloud_ground
-          sensor_frame: rover_base_origin
+          topic: /camera/ground
+          #sensor_frame: rover_base_origin
           max_obstacle_height: 0.4
           clearing: True
           marking: False
@@ -189,9 +191,10 @@ local_costmap:
           raytrace_min_range: 0.0
           obstacle_max_range: 3.0
           obstacle_min_range: 0.0
+
         obstacles:
-          topic: /cloud_obstacles
-          sensor_frame: rover_base_origin
+          topic: /camera/obstacles
+          #sensor_frame: rover_base_origin
           max_obstacle_height: 2.0
           clearing: True
           marking: True
@@ -200,7 +203,10 @@ local_costmap:
           raytrace_min_range: 0.0
           obstacle_max_range: 3.0
           obstacle_min_range: 0.0
-        
+
+        static_layer:
+          plugin: "nav2_costmap_2d::StaticLayer"
+          map_subscribe_transient_local: True
 
 global_costmap:
   global_costmap:
@@ -211,13 +217,13 @@ global_costmap:
       global_frame: map
       robot_base_frame: rover_base_origin
       robot_radius: 0.35
-      resolution: 0.1
-      track_unknown_space: true
+      resolution: 0.05
+      track_unknown_space: True
       always_send_full_costmap: True
       
       rolling_window: False
-      width: 20
-      height: 20
+      width: 30
+      height: 30
       #if using static map layer
       # origin_x: 0.0
       # origin_y: 0.0
@@ -234,7 +240,7 @@ global_costmap:
 
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 10.0
+        cost_scaling_factor: 3.0
         inflation_radius: 0.55
       
 # map_server:
