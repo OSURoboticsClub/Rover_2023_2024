@@ -71,7 +71,7 @@ rtabmap:
     # GridGlobal/FootprintRadius: "0.2"    # Footprint radius (m) used to clear all obstacles under the graph.
     
     # /Optimizer
-    # Optimizer/PriorsIgnored: "false"   # Fuse GPS as a prior
+    Optimizer/PriorsIgnored: "false"   # Fuse GPS as a prior
     
     # Note from the docs: "Currently only g2o and gtsam optimization supports this."
     # It is ambiguous whether this is referring to supporting priors or supporting ignoring priors
