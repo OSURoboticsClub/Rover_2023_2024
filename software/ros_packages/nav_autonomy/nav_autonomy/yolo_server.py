@@ -120,7 +120,7 @@ class YoloServer(Node):
                 current_cam = self.cam_queue.popleft()
                 self.cam_queue.append(current_cam)
                 frame_id = 0
-
+                found = False
                 while cap.isOpened():
                     if goal_handle.is_cancel_requested:
                         goal_handle.canceled()
@@ -157,6 +157,7 @@ class YoloServer(Node):
                             self.xc, self.yc, _, _ = result.boxes.xywh[
                                 best_idx
                             ].tolist()
+                            found = True
                             break
                         elif recent_mean >= self.check_threshold:
                             pass
@@ -175,7 +176,7 @@ class YoloServer(Node):
                 # Complete action
                 # ==============================
                 # Bounding boxes - Center
-                if not self.quit:
+                if not self.quit and found:
                     center = Point()
                     center.x = self.xc
                     center.y = self.yc
