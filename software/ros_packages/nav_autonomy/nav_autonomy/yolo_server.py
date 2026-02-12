@@ -104,29 +104,43 @@ class YoloServer(Node):
             goal = goal_handle.request
             model = YOLO("yolo_models/mallet.pt")
             # Define models from action request
-            if goal.search_object == "BOTTLE":
+            if goal.search_object == YoloFind.Goal.BOTTLE:
                 model = YOLO("yolo_models/bottle.pt")
-            elif goal.search_object == "ORANGE_HAMMER":
+            elif goal.search_object == YoloFind.Goal.ORANGE_HAMMER:
                 model = YOLO("yolo_models/mallet.pt")
-            elif goal.search_object == "OG_HAMMER":
+            elif goal.search_object == YoloFind.Goal.OG_HAMMER:
                 model = YOLO("yolo_models/hammer.pt")
             if goal.search_object == "ARUCO":
-                self.do_aruco(goal_handle)
+                await self.do_aruco(goal_handle)
+                return
             else:
-                results = model(source=self.source, stream=True, _backend=cv2.CAP_V4L2)
+                #results = model(source=self.source, stream=True, _backend=cv2.CAP_V4L2)
+                cap = cv2.VideoCapture(self.source, cv2.CAP_V4L2)
+
+
                 camera_stacks = [[] for _ in range(self.num_cameras)]
                 # Start searching in camera stream for object(s)
                 current_cam = self.cam_queue.popleft()
                 self.cam_queue.append(current_cam)
                 frame_id = 0
-                print(results)
-                for result in results:
-                    if self.quit:
+                
+                while cap.isOpened():
+
+                    if goal_handle.is_cancel_requested:
+                        goal_handle.canceled()
+                        self.busy = False
+                        return YoloFind.Result()
+                    
+                    ret, frame = cap.read()
+                    if not ret:
+                        self.get_logger().warn("Failed to read frame")
                         break
-                    boxes_xyxy = result.boxes.xyxy.tolist()
-                    conf_scores = result.boxes.conf.tolist()
-                    # Check if anything is detected
-                    if conf_scores != []:
+
+                    # Run YOLO on frame
+                    result = model(frame)[0]
+                    if result.boxes is not None and len(result.boxes) > 0:
+                        boxes_xyxy = result.boxes.xyxy.tolist()
+                        conf_scores = result.boxes.conf.tolist()
                         best_idx = np.argmax(conf_scores)
                         current_conf = conf_scores[best_idx]
 
@@ -138,9 +152,9 @@ class YoloServer(Node):
                         total_mean = sum(camera_stacks[current_cam]) / len(
                             camera_stacks[current_cam]
                         )
-                        recent_mean = sum(
-                            camera_stacks[current_cam][: self.check_frames]
-                        ) / len(camera_stacks[current_cam][: self.check_frames])
+                        recent_stack = camera_stacks[current_cam][-self.check_frames:]
+                        recent_mean = sum(recent_stack) / len(recent_stack)
+
 
                         if total_mean >= self.stop_threshold:
                             # send everything
@@ -161,7 +175,7 @@ class YoloServer(Node):
 
                     frame_id += 1
                 # TODO: Intermittently send feedback
-
+                cap.release()
                 # ==============================
                 # Complete action
                 # ==============================
