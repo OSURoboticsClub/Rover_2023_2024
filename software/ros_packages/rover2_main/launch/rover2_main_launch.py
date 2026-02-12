@@ -16,7 +16,7 @@ def generate_launch_description():
          get_package_share_directory('rover2_camera'),
          'launch'), '/camera_capture_launch.py'])
       )
-   imu = IncludeLaunchDescription(
+   odometry = IncludeLaunchDescription(
       PythonLaunchDescriptionSource([os.path.join(
          get_package_share_directory('rover2_odometry')),
          '/rover2_odometry_launch.py'])
@@ -48,8 +48,8 @@ def generate_launch_description():
       )
    return LaunchDescription([
       drive_control,
-      imu,
-      # arm,
+      odometry,
+#      arm,
       status,
       mapping,
       nav_autonomy,

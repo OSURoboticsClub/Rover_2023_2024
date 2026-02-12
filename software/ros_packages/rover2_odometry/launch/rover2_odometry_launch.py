@@ -72,6 +72,7 @@ def generate_launch_description():
                  ('rgb/camera_info', '/camera/d455/color/camera_info'),
                  ('depth/image', '/camera/d455/aligned_depth_to_color/image_raw'),
                  ('odom', '/odometry/visual'),
+                 ('imu/data', 'd455/imu'),
              ]),
 
         # Local EKF (odom)
@@ -99,7 +100,7 @@ def generate_launch_description():
                 'odom0': '/wheel_odom',
                 'odom0_config': [False, False, False,
                                 False, False, False,
-                                True,  True,  False,
+                                True,  False,  False,
                                 False, False, True,
                                 False, False, False],
                 'odom0_queue_size': 10,
@@ -107,19 +108,19 @@ def generate_launch_description():
                 'odom0_relative': False,
 
                 # Visual odometry
-                # 'odom1': '/odometry/visual',
-                # 'odom1_config': [False,  False,  False, # x, y position
-                #                 False, False, False,   # yaw orientation
-                #                 True, False, False,
-                #                 False, False, False,
-                #                 False, False, False],
-                # 'odom1_queue_size': 10,
-                # 'odom1_differential': False,
-                # 'odom1_relative': False,
+                'odom1': '/odometry/visual',
+                'odom1_config': [True,  True,  False, # x, y position
+                                 False, False, True,   # yaw orientation
+                                 False, False, False,
+                                 False, False, False,
+                                 False, False, False],
+                 'odom1_queue_size': 10,
+                 'odom1_differential': False,
+                 'odom1_relative': False,
                 
                 # IMU 
                 # (See nav2 gps docs REP 105 odom frame should use only heading from IMU)
-                # [false, false, false, false,  false,  true, false, false, false, false,  false,  false, false,  false,  false]
+                # [false, false, false, false, false, true, false, false, false, false, false, false, false, false, false]
                 'imu0': '/imu/data',
                 'imu0_config': [False, False, False,
                                False, False, False,
@@ -152,10 +153,10 @@ def generate_launch_description():
                 # 'transform_time_offset': 0.0,
                 # 'transform_timeout': 0.0,
                 
-                'odom_frame': 'odom',
+                'odom_frame': 'map',
                 'base_link_frame': 'rover_base_origin',
-                'world_frame': 'map',
-                'map_frame': 'map', # published map frame tf name
+                'world_frame': 'world',
+                'map_frame': 'world', # published map frame tf name
                 
                 # Local odometry 
                 'odom0': '/wheel_odom',
@@ -182,12 +183,12 @@ def generate_launch_description():
                 # IMU (accel x, vel yaw)
                 'imu0': '/imu/data',
                 'imu0_config': [False, False, False,
+                               False, False, False,
+                               False, False, False,
                                False, False, True,
-                               False, False, False,
-                               False, False, False,
                                False,  False,  False],
                 'imu0_queue_size': 10,
-                'imu0_differential': True,
+                'imu0_differential': False,
                 'imu0_relative': False,
                 'imu0_remove_gravitational_acceleration': False,
             }],
@@ -213,7 +214,7 @@ def generate_launch_description():
 #            'magnetic_declination_radians': 0.253,
 
             # Use odometry heading instead of IMU
-            'use_odometry_yaw': False,
+            'use_odometry_yaw': True,
 #            'yaw_offset': 1.570796326, # yaw correction of IMU absolute yaw measurement (must point east)
 
             # 2D navigation
@@ -229,13 +230,13 @@ def generate_launch_description():
 #            'datum': [44.56722346625757, -123.27433385957002, 0.0],
 
             'base_link_frame_id': 'rover_base_origin',
-            'world_frame_id': 'map',  # Match the EKFs
+            'world_frame_id': 'world',  # Match the EKFs
          }],
          remappings=[
             ('/imu', '/imu/data'),                  # IMU topic
             ('/gps/fix', '/gps/fix'),                    # GPS INPUT TOPIC
             ('/gps/filtered', '/gps/filtered'),          # GPS INPUT TOPIC
-            ('/odometry/filtered', '/odometry/global'),  # Which EKF to use for heading
+            ('/odometry/filtered', '/odometry/local'),   # Which EKF to use for heading
             ('/odometry/gps', '/odometry/gps'),          # GPS output topic
          ]
       ),
