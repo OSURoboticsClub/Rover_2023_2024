@@ -165,7 +165,7 @@ class OdrivePositionOdometry(Node):
         
         # Velocity covariance
         odom.twist.covariance[0] = 0.001   # vx variance
-        odom.twist.covariance[7] = 1e6     # vy (not used)
+        odom.twist.covariance[7] = 0.001   # vy (not used)
         odom.twist.covariance[14] = 1e6    # vz (not used)
         odom.twist.covariance[21] = 1e6    # vroll (not used)
         odom.twist.covariance[28] = 1e6    # vpitch (not used)

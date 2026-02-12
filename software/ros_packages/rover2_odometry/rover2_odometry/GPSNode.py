@@ -104,9 +104,9 @@ class GPSNode(Node):
                     # Set position covariance based on GPS fix quality  
                     fix_msg.position_covariance_type = NavSatFix.COVARIANCE_TYPE_DIAGONAL_KNOWN
                     fix_msg.position_covariance = [
-                        1.0, 0.0, 0.0,  # x or north position
-                        0.0, 1.0, 0.0,  # y or east position
-                        0.0, 0.0, 4.0   # z or up position (altitude)
+                        500.0, 0.0, 0.0,  # x or north position
+                        0.0, 500.0, 0.0,  # y or east position
+                        0.0, 0.0, 100.0   # z or up position (altitude)
                     ]
                     
                     if fix_quality > 0:

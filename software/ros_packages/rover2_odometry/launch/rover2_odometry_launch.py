@@ -99,7 +99,7 @@ def generate_launch_description():
                 'odom0': '/wheel_odom',
                 'odom0_config': [False, False, False,
                                 False, False, False,
-                                True,  False,  False,
+                                True,  True,  False,
                                 False, False, True,
                                 False, False, False],
                 'odom0_queue_size': 10,
@@ -107,15 +107,15 @@ def generate_launch_description():
                 'odom0_relative': False,
 
                 # Visual odometry
-                 'odom1': '/odometry/visual',
-                 'odom1_config': [True,  True,  False, # x, y position
-                                 False, False, True,   # yaw orientation
-                                 True, False, False,
-                                 False, False, False,
-                                 False, False, False],
-                 'odom1_queue_size': 10,
-                 'odom1_differential': False,
-                 'odom1_relative': False,
+                # 'odom1': '/odometry/visual',
+                # 'odom1_config': [False,  False,  False, # x, y position
+                #                 False, False, False,   # yaw orientation
+                #                 True, False, False,
+                #                 False, False, False,
+                #                 False, False, False],
+                # 'odom1_queue_size': 10,
+                # 'odom1_differential': False,
+                # 'odom1_relative': False,
                 
                 # IMU 
                 # (See nav2 gps docs REP 105 odom frame should use only heading from IMU)
@@ -146,7 +146,7 @@ def generate_launch_description():
                 'print_diagnostics': True,
                 'debug': False,
                 'publish_tf': True,
-                'frequency': 20.0,
+                'frequency': 10.0,
                 'two_d_mode': True,
                 # 'sensor_timeout': 0.1,
                 # 'transform_time_offset': 0.0,
@@ -161,7 +161,7 @@ def generate_launch_description():
                 'odom0': '/wheel_odom',
                 'odom0_config': [False, False, False,
                                 False, False, False,
-                                True,  False,  False,
+                                True,  True,  False,
                                 False, False, True,
                                 False, False, False],
                 'odom0_queue_size': 10,
@@ -171,7 +171,7 @@ def generate_launch_description():
                 # GPS odometry (from navsat_transform) (pose x, y)
                 'odom1': 'odometry/gps',
                 'odom1_config': [True,  True,  False,   # x, y position
-                                False, False, True,
+                                False, False, False,
                                 False, False, False,
                                 False, False, False,
                                 False, False, False],
@@ -187,7 +187,7 @@ def generate_launch_description():
                                False, False, False,
                                False,  False,  False],
                 'imu0_queue_size': 10,
-                'imu0_differential': False,
+                'imu0_differential': True,
                 'imu0_relative': False,
                 'imu0_remove_gravitational_acceleration': False,
             }],
@@ -205,7 +205,7 @@ def generate_launch_description():
          output='screen',
          parameters=[{
             # Frequency and timing
-            'frequency': 3.0,
+            'frequency': 30.0,
             'delay': 30.0,
 
             # Magnetic declination at your location (radians)
@@ -224,17 +224,17 @@ def generate_launch_description():
             'publish_filtered_gps': True,
 
             # Let first GPS message set origin
-            'wait_for_datum': False,
-            #'use_manual_datum': True,
-            #'datum': [44.56722346625757, -123.27433385957002, 0.0, 'map', 'rover_base_origin'],
+            'wait_for_datum': True,
+#            'use_manual_datum': True,
+#            'datum': [44.56722346625757, -123.27433385957002, 0.0],
 
             'base_link_frame_id': 'rover_base_origin',
             'world_frame_id': 'map',  # Match the EKFs
          }],
          remappings=[
-            ('/imu/data', '/imu/data'),                  # IMU topic
+            ('/imu', '/imu/data'),                  # IMU topic
             ('/gps/fix', '/gps/fix'),                    # GPS INPUT TOPIC
-            # ('/gps/filtered', '/gps/filtered'),          # GPS INPUT TOPIC
+            ('/gps/filtered', '/gps/filtered'),          # GPS INPUT TOPIC
             ('/odometry/filtered', '/odometry/global'),  # Which EKF to use for heading
             ('/odometry/gps', '/odometry/gps'),          # GPS output topic
          ]
