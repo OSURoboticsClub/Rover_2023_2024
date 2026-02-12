@@ -422,7 +422,7 @@ class GripperCanControl(Node):
             ))
             self.get_logger().info(f"sent torque: {torq}")
         except:
-            self.get_logger().info("CAN Buffer full")
+            self.get_logger().debug("CAN Buffer full")
 
     def send_velocity(self, vel, torq_ff = 0.0):
         """Send a velocity set point through can.
@@ -442,7 +442,7 @@ class GripperCanControl(Node):
                 is_extended_id=False
             ))
         except:
-            self.get_logger().info("CAN Buffer full")
+            self.get_logger().debug("CAN Buffer full")
         
         #self.get_logger().info(f"Sending Velocity: {vel}")  
         
@@ -467,7 +467,7 @@ class GripperCanControl(Node):
         #self.get_logger().info(f"sent position: {pos}")
             self.pos_setpoint = pos
         except:
-            self.get_logger().info("CAN Buffer full")
+            self.get_logger().debug("CAN Buffer full")
     
     def send_gpio(self, pin, state):
         """Sends a can message to change a gpio pins state
@@ -503,7 +503,7 @@ class GripperCanControl(Node):
                 trajectory, CL filtered position}
         """
         if self.mode != mode:
-            self.get_logger().info(f"mode: {mode}")
+            self.get_logger().debug(f"mode: {mode}")
             try:
                 match mode:
                     case 0:
@@ -623,7 +623,7 @@ class GripperCanControl(Node):
                         ))
                         self.mode = 4
             except: 
-                self.get_logger().info("failed to change mode: Can buffer full?")
+                self.get_logger().debug("failed to change mode: Can buffer full?")
 
     #Define a callback for watching can messages:
     def read_can(self):
