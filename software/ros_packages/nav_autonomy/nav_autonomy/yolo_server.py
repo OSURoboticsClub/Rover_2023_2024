@@ -15,8 +15,6 @@ from ultralytics import YOLO
 from collections import deque
 import numpy as np
 from geometry_msgs.msg import Point
-import cv2
-
 
 # ARUCO
 import cv2
@@ -114,30 +112,28 @@ class YoloServer(Node):
                 await self.do_aruco(goal_handle)
                 return
             else:
-                #results = model(source=self.source, stream=True, _backend=cv2.CAP_V4L2)
+                # results = model(source=self.source, stream=True, _backend=cv2.CAP_V4L2)
                 cap = cv2.VideoCapture(self.source, cv2.CAP_V4L2)
-
 
                 camera_stacks = [[] for _ in range(self.num_cameras)]
                 # Start searching in camera stream for object(s)
                 current_cam = self.cam_queue.popleft()
                 self.cam_queue.append(current_cam)
                 frame_id = 0
-                
-                while cap.isOpened():
 
+                while cap.isOpened():
                     if goal_handle.is_cancel_requested:
                         goal_handle.canceled()
                         self.busy = False
                         return YoloFind.Result()
-                    
+
                     ret, frame = cap.read()
                     if not ret:
                         self.get_logger().warn("Failed to read frame")
                         break
 
                     # Run YOLO on frame
-                    result = model(frame)[0]
+                    result = model.predict(source=frame, device=0)[0]
                     if result.boxes is not None and len(result.boxes) > 0:
                         boxes_xyxy = result.boxes.xyxy.tolist()
                         conf_scores = result.boxes.conf.tolist()
@@ -152,9 +148,8 @@ class YoloServer(Node):
                         total_mean = sum(camera_stacks[current_cam]) / len(
                             camera_stacks[current_cam]
                         )
-                        recent_stack = camera_stacks[current_cam][-self.check_frames:]
+                        recent_stack = camera_stacks[current_cam][-self.check_frames :]
                         recent_mean = sum(recent_stack) / len(recent_stack)
-
 
                         if total_mean >= self.stop_threshold:
                             # send everything
