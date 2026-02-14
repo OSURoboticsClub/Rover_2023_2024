@@ -33,6 +33,7 @@ setup(
             'gps_nav2_tester = nav_autonomy.gps_nav2_tester:main',
             'mission_manager_test_client = nav_autonomy.mission_manager_test_client:main',
             'yolo_server = nav_autonomy.yolo_server:main',
+            'map_pose_publisher = nav_autonomy.map_pose_publisher:main',
         ],
     },
 )
