@@ -6,6 +6,7 @@ uint16 NO_OBJECT=0
 uint16 BOTTLE=1
 uint16 OG_HAMMER=2
 uint16 ORANGE_HAMMER=3
+uint16 ARUCO=4
 
 uint16 search_pattern
 uint16 NO_PATTERN=0
