@@ -103,11 +103,7 @@ class GPSNode(Node):
 
                     # Set position covariance based on GPS fix quality  
                     fix_msg.position_covariance_type = NavSatFix.COVARIANCE_TYPE_DIAGONAL_KNOWN
-                    fix_msg.position_covariance = [
-                        500.0, 0.0, 0.0,  # x or north position
-                        0.0, 500.0, 0.0,  # y or east position
-                        0.0, 0.0, 100.0   # z or up position (altitude)
-                    ]
+                    fix_msg.position_covariance = self.get_gps_covariance(fix_quality)
                     
                     if fix_quality > 0:
                         self.fix_pub.publish(fix_msg)
@@ -121,6 +117,38 @@ class GPSNode(Node):
 
             except (ValueError, IndexError) as e:
                 self.get_logger().warn(f"Failed to parse NMEA line: {line}, error: {e}")
+
+    def get_gps_covariance(self, fix_quality):
+        """Get position covariance based on GPS fix quality"""
+        if fix_quality in [4, 5]:
+            # RTK 0.01-0.5m
+            return [
+                0.01, 0.0, 0.0, 
+                0.0, 0.01, 0.0, 
+                0.0, 0.0, 0.04
+            ]
+        elif fix_quality == 2:
+            # DGPS 0.5-2m
+            return [
+                1.0, 0.0, 0.0, 
+                0.0, 1.0, 0.0, 
+                0.0, 0.0, 4.0
+            ]
+        elif fix_quality == 1:
+            # Standard GPS 2-5m 
+            return [
+                5.0, 0.0, 0.0, 
+                0.0, 5.0, 0.0, 
+                0.0, 0.0, 10.0
+            ]
+        else:
+            # No Fix 
+            return [
+                1e6, 0.0, 0.0, 
+                0.0, 1e6, 0.0, 
+                0.0, 0.0, 1e6
+            ]
+        
 
     def call_set_datum(self, lat, lon, alt):
         """Call SetDatum service to set the datum origin"""
