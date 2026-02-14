@@ -123,6 +123,6 @@ def generate_launch_description():
             name='joint_position',
             **config
         ),
-        gripper_can_control_node,
+#        gripper_can_control_node,
 #        auton_controller
     ])
