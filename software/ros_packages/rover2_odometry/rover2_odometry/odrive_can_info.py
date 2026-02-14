@@ -51,7 +51,7 @@ class OdriveCanInfo(Node):
             raise
         
         # Start CAN processing timer
-        self.create_timer(0.001, self.process_can_messages)  # 1000 Hz
+        self.create_timer(0.01, self.process_can_messages)  # 100 Hz
         
     def round_value(self, value, sigfig):
         """Round value to significant figures"""
