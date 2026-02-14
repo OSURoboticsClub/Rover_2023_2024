@@ -16,7 +16,7 @@ class MissionTestClient(Node):
         
         self.get_logger().info('Mission test client initialized')
     
-    def send_goal(self, waypoints, search_object=Mission.Goal.NO_OBJECT, 
+    def send_goal(self, waypoints, search_object=Mission.Goal.ARUCO, 
                   search_pattern=Mission.Goal.NO_PATTERN):
         """Send a goal to the mission action server"""
         
