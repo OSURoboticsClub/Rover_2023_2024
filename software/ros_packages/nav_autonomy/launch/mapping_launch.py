@@ -27,7 +27,8 @@ def generate_launch_description():
         ('rgb/image', '/camera/d455/color/image_raw'),
         ('rgb/camera_info', '/camera/d455/color/camera_info'),
         ('depth/image', '/camera/d455/aligned_depth_to_color/image_raw'),
-        ('gps/fix', '/gps/filtered')
+        ('gps/fix', 'gps/ignored'),
+        ('global_pose', 'global_pose'),
         ]
         
     config_rviz = os.path.join(
@@ -50,7 +51,6 @@ def generate_launch_description():
             condition=IfCondition(LaunchConfiguration("vo")),
             parameters=parameters,
             remappings=remappings),
-
  
         # Core SLAM node
         Node(
@@ -59,6 +59,11 @@ def generate_launch_description():
             remappings=remappings,
             arguments=['-d']), # This will delete the previous database (~/.ros/rtabmap.db)
 
+        # Converted global pose publisher
+        Node(
+            package='nav_autonomy', 
+            executable='map_pose_publisher'),
+
         # Visualization:
         Node(
             package='rtabmap_viz', executable='rtabmap_viz', output='screen',
@@ -66,6 +71,7 @@ def generate_launch_description():
             parameters=parameters,
             remappings=remappings),
 
+        # Custom point cloud publishing for local map
         Node(
             package='rtabmap_util', executable='point_cloud_xyz', output='screen',
             parameters=[{'decimation': 2,
