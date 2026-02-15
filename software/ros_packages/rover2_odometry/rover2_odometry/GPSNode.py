@@ -1,10 +1,10 @@
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import UInt8MultiArray
-from sensor_msgs.msg import NavSatFix, NavSatStatus
+from sensor_msgs.msg import NavSatFix, NavSatStatus, Imu
 from robot_localization.srv import SetDatum
 from geographic_msgs.msg import GeoPoint
-
+from geometry_msgs.msg import PoseStamped, Pose, Quaternion
 import serial
 
 class GPSNode(Node):
@@ -18,10 +18,10 @@ class GPSNode(Node):
         self.set_datum_srv = self.create_client(SetDatum, 'datum')
         
         self.rtcm_sub = self.create_subscription(UInt8MultiArray, 'rtcm', self.rtcm_callback, 10)
-
+        self.imu_sub = self.create_subscription(Imu, 'imu/data', self.imu_callback, 10)
         self.buffer = bytearray()
         self.timer = self.create_timer(0.01, self.read_serial)
-        
+        self.imu_quat = Quaternion()
         self.datum_set = False  # Track if we've already set the datum
 
     def read_serial(self):
@@ -45,6 +45,9 @@ class GPSNode(Node):
 
         except serial.SerialException as e:
             self.get_logger().error(f"Serial error: {e}")
+
+    def imu_callback(self, msg):
+        self.imu_quat = msg.orientation
 
     def parse_nmea(self, line):
         parts = line.split(',')
@@ -160,7 +163,9 @@ class GPSNode(Node):
         req.geo_pose.position.latitude = lat
         req.geo_pose.position.longitude = lon
         req.geo_pose.position.altitude = alt
-        
+        req.geo_pose.orientation = self.imu_quat
+	        
+
         future = self.set_datum_srv.call_async(req)
         future.add_done_callback(self.datum_response_callback)
         
