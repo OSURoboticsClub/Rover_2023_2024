@@ -71,7 +71,7 @@ class IMUNode(Node):
         
         # Magnetic declination (adjust for your location)
         self.magnetic_declination = 0
-        self.yaw_allignment = -np.pi / 2 #rads
+        self.yaw_allignment = 0
         self.total_yaw_correction = 0
         # Calibration offsets
         self.calibration_offsets = {
@@ -97,7 +97,7 @@ class IMUNode(Node):
         # Set to NDOF mode for full 9-DOF fusion
         self.imu.mode = Mode.NDOF_MODE
         self.get_logger().info('BNO055 configured in NDOF mode (full 9-DOF fusion)')
-        
+        sleep(5.0)
         # Start timer
         self.timer = self.create_timer(self.wait_time, self.main_loop)
 
