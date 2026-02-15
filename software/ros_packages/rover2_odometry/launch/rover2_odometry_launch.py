@@ -122,13 +122,13 @@ def generate_launch_description():
                 # [false, false, false, false,  false,  true, false, false, false, false,  false,  false, false,  false,  false]
                 'imu0': '/imu/data',
                 'imu0_config': [False, False, False,
-                               False, False, False,
-                               False, False, False,
                                False, False, True,
-                               True,  False,  False],
+                               False, False, False,
+                               False, False, False,
+                               False,  False,  False],
                 'imu0_queue_size': 10,
                 'imu0_differential': False,
-                'imu0_relative': False,
+                'imu0_relative': True,
                 'imu0_remove_gravitational_acceleration': False,
             }],
             remappings=[
@@ -206,7 +206,7 @@ def generate_launch_description():
          parameters=[{
             # Frequency and timing
             'frequency': 30.0,
-            'delay': 30.0,
+            'delay': 3.0,
 
             # Magnetic declination at your location (radians)
             # Find yours: https://www.ngdc.noaa.gov/geomag/calculators/magcalc.shtml
