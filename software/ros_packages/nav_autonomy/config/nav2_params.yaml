@@ -222,8 +222,8 @@ global_costmap:
       always_send_full_costmap: True
       
       rolling_window: False
-      width: 30
-      height: 30
+      #width: 50
+      #height: 0
       #if using static map layer
       # origin_x: 0.0
       # origin_y: 0.0
