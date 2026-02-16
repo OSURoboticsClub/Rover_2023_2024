@@ -36,6 +36,7 @@ rtabmap:
     # Optimizer/Robust: "true"    # Required to remove bad loop closured from map in post. Robust graph optimization using Vertigo (only work for g2o and GTSAM optimization strategies)
     # RGBD/OptimizeMaxError: "2"  # 3 by default
 
+    RGBD/LinearUpdate:          '0.0'
     RGBD/NeighborLinkRefining: 'false'
     RGBD/ProximityBySpace':     'false'  # Referred paper did only global loop closure detection
     RGBD/OptimizeFromGraphEnd': 'true'   # more compute, but if set to false, could have more jumpy map
@@ -45,7 +46,7 @@ rtabmap:
     Vis/MinInliers':            '12'
     Vis/MaxDepth':              '0'
     RGBD/AngularUpdate':        '0.05'  # KRJ changed: .01 - .05 to reduce compute
-    RGBD/LinearUpdate':         '0.05'  # KRJ changed: .01 - .05 to reduce compute
+    # RGBD/LinearUpdate':         '0.05'  # KRJ changed: .01 - .05 to reduce compute
     Rtabmap/TimeThr':           '700'
     Mem/RehearsalSimilarity':   '0.30'   
     Kp/TfIdfLikelihoodUsed':    'false'
