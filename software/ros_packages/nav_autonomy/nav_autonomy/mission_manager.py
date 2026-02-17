@@ -62,42 +62,38 @@ class MissionManager(Node):
         self.get_logger().info('MissionManager action server ready.')
 
 
-    def gps_to_map_pose(self, lat, lon, yaw=0.0):           # KRJ TODO: Need to test how nav2 behaves if yaw on each point is 0
-        """Use robot_localization to convert GPS to map pose"""
+    def gps_to_map_pose(self, lat, lon, yaw=0.0):    # KRJ TODO: Need to test how nav2 behaves if yaw on each point is 0
+       """Use robot_localization to convert GPS to map pose"""
 
-        request = FromLL.Request()
-        request.ll_point.latitude = lat
-        request.ll_point.longitude = lon
-        request.ll_point.altitude = 0.0
-        self.get_logger().info('Wait for service')
+       request = FromLL.Request()
+       request.ll_point.latitude = lat
+       request.ll_point.longitude = lon
+       request.ll_point.altitude = 0.0
+       self.get_logger().info(f'Converting GPS to map pose: lat={lat}, lon={lon}')
 
-        # Wait for service
-        """ 
-        self.fromLL_client.wait_for_service()
-        self.get_logger().info('After service')
+       # Wait for service
+       self.get_logger().info('Wait for service')
+       self.fromLL_client.wait_for_service()
+       self.get_logger().info('After service')
 
-        # Call service
+       # Call service
+       future = self.fromLL_client.call_async(request)
+       self.get_logger().info('Before spin')
 
+       rclpy.spin_until_future_complete(self.navigator, future)
+       self.get_logger().info('After spin')
 
-        future = self.fromLL_client.call_async(request)
-        self.get_logger().info('Before spin')
+       response = future.result()
 
-        rclpy.spin_until_future_complete(self.navigator, future)
-        self.get_logger().info('After spin')
-
-        response = future.result()
-
-        # Create PoseStamped
-        pose = PoseStamped()
-        pose.header.frame_id = 'map'
-        pose.header.stamp = self.navigator.get_clock().now().to_msg()
-        pose.pose.position.x = response.map_point.x
-        pose.pose.position.y = response.map_point.y
-        pose.pose.orientation.z = math.sin(yaw / 2.0)
-        pose.pose.orientation.w = math.cos(yaw / 2.0)
-        """
-        pose = PoseStamped()
-        return pose
+       # Create PoseStamped
+       pose = PoseStamped()
+       pose.header.frame_id = 'map'
+       pose.header.stamp = self.navigator.get_clock().now().to_msg()
+       pose.pose.position.x = response.map_point.x
+       pose.pose.position.y = response.map_point.y
+       pose.pose.orientation.z = math.sin(yaw / 2.0)
+       pose.pose.orientation.w = math.cos(yaw / 2.0)
+       return pose
 
 
     # -------------------------
@@ -128,7 +124,7 @@ class MissionManager(Node):
         #         return GoalResponse.REJECT
         self.get_logger().info('Setting waypoints...')
 
-        self.waypoints = [self.gps_to_map_pose(gps.latitude, gps.longitude) for gps in goal_request.nav_waypoints]          # KRJ TODO: Is converting all at once bad if gps corrects?
+        self.waypoints = [self.gps_to_map_pose(gps.latitude, gps.longitude) for gps in goal_request.nav_waypoints]
 
         self.get_logger().info('Accepting goal request')
         return GoalResponse.ACCEPT
@@ -151,52 +147,22 @@ class MissionManager(Node):
 
             # Convert waypoints
             waypoints = self.waypoints
-            #for gps in req.nav_waypoints:
-            #    wp = await self.gps_to_map_pose(gps.latitude, gps.longitude)
-            #    self.get_logger().info(f'Waypoint: lat={gps.latitude}, lon={gps.longitude} -> map=({wp.pose.position.x}, {wp.pose.position.y})')
-            #    if wp is None:
-            #        self.get_logger().error(f'Failed to convert GPS ({gps.latitude}, {gps.longitude}) to map pose')
-            #        goal_handle.abort()
-            #        result = Mission.Result()
-            #        result.ack = Mission.Result.CANCELLED
-            #        return result
-            #    waypoints.append(wp)
+            for gps in req.nav_waypoints:
+                wp = await self.gps_to_map_pose(gps.latitude, gps.longitude)
+                self.get_logger().info(f'Waypoint: lat={gps.latitude}, lon={gps.longitude} -> map=({wp.pose.position.x}, {wp.pose.position.y})')
+                if wp is None:
+                    self.get_logger().error(f'Failed to convert GPS ({gps.latitude}, {gps.longitude}) to map pose')
+                    goal_handle.abort()
+                    result = Mission.Result()
+                    result.ack = Mission.Result.CANCELLED
+                    return result
+                waypoints.append(wp)
                 
 
             # ==============================
             # Call Yolo Action Server
             # ==============================
-            self.get_logger().info(f'Connecting to YOLO action server.')
-            
-            if not self._yolo_client.wait_for_server(timeout_sec=5.0):
-                self.get_logger().error('YOLO action server not available')
-                goal_handle.abort()
-                return Mission.Result(ack=Mission.Result.FAILED)
-        
-        # Create and send YOLO goal
-            yolo_goal = YoloFind.Goal()
-            yolo_goal.search_object = 3  # or req.search_object if passed in Mission.Goal
-        
-            self.get_logger().info(f'Sending YOLO goal: {yolo_goal.search_object}')
-            yolo_goal_future = await self._yolo_client.send_goal_async(yolo_goal)
-        
-            if not yolo_goal_future.accepted:
-                self.get_logger().error('YOLO goal rejected')
-                goal_handle.abort()
-                return Mission.Result(ack=Mission.Result.FAILED)
-        
-            self.get_logger().info('YOLO goal accepted, waiting for result...')
-            yolo_result = await yolo_goal_future.get_result_async()
-        
-            if yolo_result.result.ack != YoloFind.Result.SUCCESS:
-                self.get_logger().warn(f'YOLO search failed or canceled: {yolo_result.result.ack}')
-                goal_handle.abort()
-                return Mission.Result(ack=Mission.Result.FAILED)
-        
-            self.get_logger().info(
-                f'YOLO found object at: ({yolo_result.result.center.x:.2f}, {yolo_result.result.center.y:.2f})'
-            )
-
+            # self._send_yolo_action(goal_handle)
 
             # ==============================
             # Execute search
@@ -256,6 +222,38 @@ class MissionManager(Node):
 
         finally:
             self.search_fsm.stop()
+
+    async def _send_yolo_action(self, goal_handle):
+        self.get_logger().info(f'Connecting to YOLO action server.')
+
+        if not self._yolo_client.wait_for_server(timeout_sec=5.0):
+            self.get_logger().error('YOLO action server not available')
+            goal_handle.abort()
+            return Mission.Result(ack=Mission.Result.CANCELED)
+
+        # Create and send YOLO goal
+        yolo_goal = YoloFind.Goal()
+        yolo_goal.search_object = 3  # or req.search_object if passed in Mission.Goal
+
+        self.get_logger().info(f'Sending YOLO goal: {yolo_goal.search_object}')
+        yolo_goal_future = await self._yolo_client.send_goal_async(yolo_goal)
+
+        if not yolo_goal_future.accepted:
+            self.get_logger().error('YOLO goal rejected')
+            goal_handle.abort()
+            return Mission.Result(ack=Mission.Result.FAILED)
+
+        self.get_logger().info('YOLO goal accepted, waiting for result...')
+        yolo_result = await yolo_goal_future.get_result_async()
+
+        if yolo_result.result.ack != YoloFind.Result.SUCCESS:
+            self.get_logger().warn(f'YOLO search failed or canceled: {yolo_result.result.ack}')
+            goal_handle.abort()
+            return Mission.Result(ack=Mission.Result.FAILED)
+
+        self.get_logger().info(
+            f'YOLO found object at: ({yolo_result.result.center.x:.2f}, {yolo_result.result.center.y:.2f})'
+        )
 
 
     def _map_search_feedback(self):
