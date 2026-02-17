@@ -74,15 +74,10 @@ class MissionManager(Node):
        # Wait for service
        self.get_logger().info('Wait for service')
        self.fromLL_client.wait_for_service()
-       self.get_logger().info('After service')
 
        # Call service
        future = self.fromLL_client.call_async(request)
-       self.get_logger().info('Before spin')
-
        rclpy.spin_until_future_complete(self.navigator, future)
-       self.get_logger().info('After spin')
-
        response = future.result()
 
        # Create PoseStamped
@@ -148,7 +143,7 @@ class MissionManager(Node):
             # Convert waypoints
             waypoints = self.waypoints
             for gps in req.nav_waypoints:
-                wp = await self.gps_to_map_pose(gps.latitude, gps.longitude)
+                wp = self.gps_to_map_pose(gps.latitude, gps.longitude)
                 self.get_logger().info(f'Waypoint: lat={gps.latitude}, lon={gps.longitude} -> map=({wp.pose.position.x}, {wp.pose.position.y})')
                 if wp is None:
                     self.get_logger().error(f'Failed to convert GPS ({gps.latitude}, {gps.longitude}) to map pose')
