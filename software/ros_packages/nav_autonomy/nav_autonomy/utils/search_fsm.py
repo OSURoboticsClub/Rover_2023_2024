@@ -161,8 +161,9 @@ class SearchFSM:
         self.node.get_logger().debug('State: MOVING_TO_START')
         if not self.navigator.isTaskComplete():
             return
+        self.node.get_logger().info(f'Would be moving to start {self.path_to_start}')
 
-        self.navigator.followWaypoints(self.path_to_start)
+        # self.navigator.followWaypoints(self.path_to_start)
 
 
     def _state_searching(self):
