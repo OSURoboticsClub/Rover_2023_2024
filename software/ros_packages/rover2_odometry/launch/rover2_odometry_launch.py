@@ -185,7 +185,7 @@ def generate_launch_description():
                                False, False, False,
                                False,  False,  False],
                 'imu0_queue_size': 10,
-                'imu0_differential': True,
+                'imu0_differential': False,
                 'imu0_relative': False,
                 'imu0_remove_gravitational_acceleration': False,
             }],
