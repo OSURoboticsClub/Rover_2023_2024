@@ -53,11 +53,11 @@ def generate_launch_description():
             remappings=remappings),
  
         # Core SLAM node
-        Node(
-            package='rtabmap_slam', executable='rtabmap', output='screen',
-            parameters=parameters,
-            remappings=remappings,
-            arguments=['-d']), # This will delete the previous database (~/.ros/rtabmap.db)
+        # Node(
+        #     package='rtabmap_slam', executable='rtabmap', output='screen',
+        #     parameters=parameters,
+        #     remappings=remappings,
+        #     arguments=['-d']), # This will delete the previous database (~/.ros/rtabmap.db)
 
         # Converted global pose publisher
         Node(
