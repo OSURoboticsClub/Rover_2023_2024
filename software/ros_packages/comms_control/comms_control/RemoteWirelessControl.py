@@ -2,6 +2,7 @@ import typing
 import subprocess
 from enum import Enum
 
+
 #web packages, used for AIR_OS
 import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
@@ -206,7 +207,8 @@ class WirelessInterface:
                     #This seems unecessary but things breaks when it's removed...
                     s.get(
                         url = self.airOS_login_url.format(self.remoteAddr),
-                        verify=False
+                        verify=False,
+                        timeout=self.syncTimeoutSec #Verified: timeouts are actually in seconds: https://requests.readthedocs.io/en/latest/user/advanced/#timeouts
                     )
                 
                     # conduct the login
@@ -311,10 +313,12 @@ class WirelessInterface:
                 except (requests.exceptions.HTTPError):
                     result.connected = True
                     result.syncing = False
+                    self.airOSSession = None #assume issue was becuase session is bad. Try to login next time.
                     return result
                 except (requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout, requests.exceptions.RequestException):
                     result.connected = False
                     result.syncing = False
+                    self.airOSSession = None #assume session is now bad. Try to login next time.
                     return result
                 
                 result.channel     =   int(airOSdata.get("wireless_channel"))

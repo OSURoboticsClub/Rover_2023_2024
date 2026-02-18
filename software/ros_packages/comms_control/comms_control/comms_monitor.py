@@ -1,6 +1,7 @@
 from typing import List
 from copy import deepcopy
 import datetime
+import time
 
 import rclpy
 from rclpy.executors import ExternalShutdownException
@@ -10,13 +11,14 @@ from rclpy.node import Node
 from comms_control.RemoteWirelessControl import WirelessInterface
 from comms_control.RemoteWirelessControl import InterfaceStatus
 
-from rover2_control_interface.msg import GPSStatusMessage
+from sensor_msgs.msg import NavSatFix
 from rover2_control_interface.msg import CommsStatusMessage
 from std_msgs.msg import Float32
-
 from os import getcwd
 
 MONITOR_NODE_PREFIX = 'comms_monitor_'
+GPS_MAX_CALLBACK_SEC = 10
+IMU_MAX_CALLBACK_SEC = 10
 
 class WirelessInterfaceMonitor(Node):
 
@@ -28,6 +30,8 @@ class WirelessInterfaceMonitor(Node):
     logFilename = ""
     name = ""
     status = InterfaceStatus(connected=False, syncing=False)
+    _gpsCallbackTimestamp = time.time()
+    _imuCallbackTimestamp = time.time()
 
     def __init__(self, name: str, interface: WirelessInterface, logging: bool = False, logPeriod: float = 5.0, updatePeriod = 5.0, logDirectory: str = ""): 
         self.logDirectory = logDirectory
@@ -38,8 +42,8 @@ class WirelessInterfaceMonitor(Node):
         
         if (logging): #Create gps and imu subscriptions and logging timer if logging is enabled #TODO dynamically start and stop logging (ROS Service?)
             self.gpsSubscription = self.create_subscription(
-                GPSStatusMessage,
-                'tower/status/gps',
+                NavSatFix,
+                '/gps/fix',
                 self.gpsCallback,
                 10
             )
@@ -68,6 +72,7 @@ class WirelessInterfaceMonitor(Node):
         )
 
     def statusPublisherCallback(self):
+
         def noneToZero(x: object):
             if x is None:
                 return 0
@@ -88,7 +93,7 @@ class WirelessInterfaceMonitor(Node):
         msg.frequency = noneToZero(self.status.frequency)
         msg.channel = noneToZero(self.status.channel)
         msg.rxmcs = str(self.status.rxmcs)
-        msg.txmcs = str(self.status.txbitrate)
+        msg.txmcs = str(self.status.txmcs)
         msg.rxbitrate = noneToFloatZero(self.status.rxbitrate)
         msg.txbitrate = noneToFloatZero(self.status.txbitrate)
         msg.txpower = noneToFloatZero(self.status.txpower)
@@ -98,21 +103,36 @@ class WirelessInterfaceMonitor(Node):
             msg
         )
 
+        #print connection warnings
         if self.status.connected == False:
             self.get_logger().warning(f"Failed to connect to target {self.name} at {self.interface.remoteAddr}")
         elif self.status.syncing == False:
             self.get_logger().warning(f"Failed to run commands on target {self.name} at {self.interface.remoteAddr}")
         self.get_logger().info(f"Published status for node {self.name}.", )
+
+        #print gps/imu data warnings
+        currentTime = time.time()
+        if currentTime - self._imuCallbackTimestamp > IMU_MAX_CALLBACK_SEC:
+            self.get_logger().warn(f"Not recieving heading data: max callback interval ({IMU_MAX_CALLBACK_SEC} sec) exceeded.")
+        if currentTime - self._gpsCallbackTimestamp > GPS_MAX_CALLBACK_SEC:
+            self.get_logger().warn(f"Not recieving GPS data: max callback interval ({GPS_MAX_CALLBACK_SEC} sec) exceeded.")
+
         
-    def gpsCallback(self, msg: GPSStatusMessage):
-        if (type(msg.rover_latitude) is float) and (type(msg.rover_longitude) is float):
-            self.lat = msg.rover_latitude
-            self.long = msg.rover_longitude
+    def gpsCallback(self, msg: NavSatFix):
+
+        self._gpsCallbackTimestamp = time.time()
+
+        if (type(msg.latitude) is float) and (type(msg.longitude) is float):
+            self.lat = msg.latitude
+            self.long = msg.longitude
         else:
             self.lat = 0
             self.long = 0
     
     def imuCallback(self, msg: Float32):
+
+        self._imuCallbackTimestamp = time.time()
+
         if (type(msg.data) is float):
             self.heading = msg.data
         else:
@@ -126,7 +146,7 @@ class WirelessInterfaceMonitor(Node):
                 with open(self.logDirectory+self.logFilename, "w") as f:
                     f.write(f"datetime,latitude,longitude,heading,signalLevel,noiseLevel,frequency,channel,rxbitrate,txbitrate,txpower,channelWidth,connected,syncing\n")
             except(OSError, NotADirectoryError) as e:
-                self.get_logger().error(f"Error attempting to write to {self.logDirectory+self.logFilename} + {e.strerror}")
+                self.get_logger().error(f"Error attempting to write to {self.logDirectory+self.logFilename}: {e.strerror}")
         try:
             with open(self.logDirectory+self.logFilename, "a") as f:
                 f.write(
@@ -147,7 +167,7 @@ class WirelessInterfaceMonitor(Node):
                 )
 
         except(OSError, NotADirectoryError) as e:
-            self.get_logger().error(f"Error attempting to write to {self.logDirectory+self.logFilename}: + {e.strerror}")
+            self.get_logger().error(f"Error attempting to write to {self.logDirectory+self.logFilename}: {e.strerror}")
             
 
 # Read the config file and generate nodes to monitor each device.
