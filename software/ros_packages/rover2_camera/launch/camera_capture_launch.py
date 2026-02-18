@@ -61,29 +61,9 @@ def generate_launch_description():
             'stream_width': 640,
             'stream_height': 480,
             'fec_percentage': 30,
-            'udp_host': '192.168.1.1',
+            'udp_host': '192.168.1.104',
             'udp_port': 42067,
             'mux_port': 20001
-        }],
-        respawn=True
-    )
-    gripper_rgb_node = Node(
-        package='rover2_camera',
-        namespace='rover2_camera',
-        executable='camera_capture',
-        name='gripper_rgb',
-        parameters=[{
-            'device': '/dev/rover/gripper-rgb',
-            'cap_width': 640,
-            'cap_height': 480,
-            'cap_framerate': 30,
-            'preset_level': 1,
-            'bitrate': 4000000,
-            'stream_width': 640,
-            'stream_height': 480,
-            'fec_percentage': 30,
-            'udp_host': '192.168.1.1',
-            'udp_port': 42069
         }],
         respawn=True
     )
@@ -95,16 +75,58 @@ def generate_launch_description():
         name='main_navigation',
         parameters=[{
             'device': '/dev/rover/camera_main_navigation',
-            'cap_width': 1920,
-            'cap_height': 1080,
+            'cap_width': 640,
+            'cap_height': 480,
             'cap_framerate': 30,
             'preset_level': 1,
             'bitrate': 4000000,
             'stream_width': 640,
             'stream_height': 480,
             'fec_percentage': 30,
-            'udp_host': '192.168.1.1',
+            'udp_host': '192.168.1.104',
             'udp_port': 42068,
+            'mux_port': 20000
+        }],
+        respawn=True
+    )
+    chassis_left_cam_node = Node(
+        package='rover2_camera',
+        namespace='rover2_camera',
+        executable='camera_capture',
+        name='chassis_left_cam',
+        parameters=[{
+            'device': '/dev/rover/camera_left_chassis',
+            'cap_width': 640,
+            'cap_height': 480,
+            'cap_framerate': 25,
+            'preset_level': 1,
+            'bitrate': 4000000,
+            'stream_width': 640,
+            'stream_height': 480,
+            'fec_percentage': 30,
+            'udp_host': '192.168.1.104',
+            'udp_port': 42069,
+            'mux_port': 20000
+        }],
+        respawn=True
+    )
+    chassis_right_cam_node = Node(
+        package='rover2_camera',
+        namespace='rover2_camera',
+        executable='camera_capture',
+        name='chassis_right_cam',
+        parameters=[{
+            'device': '/dev/rover/camera_right_chassis',
+            'cap_width': 640,
+            'cap_height': 480,
+            'cap_framerate': 25,
+            'preset_level': 1,
+            'bitrate': 4000000,
+            'stream_width': 640,
+            'stream_height': 480,
+            'fec_percentage': 100,
+            'udp_host': '192.168.1.104',
+            'udp_port': 42070,
             'mux_port': 20000
         }],
         respawn=True
@@ -120,9 +142,11 @@ def generate_launch_description():
 
     return LaunchDescription([
         realsense_launch_nav,
-        ir_camera_node,
-        main_nav_node,
+#        ir_camera_node,
+#        main_nav_node,
 #        gripper_rgb_node,
+        chassis_right_cam_node,
+        chassis_left_cam_node,
         muxing_node
     ])
 
