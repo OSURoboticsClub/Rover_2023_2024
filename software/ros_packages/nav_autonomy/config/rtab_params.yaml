@@ -36,14 +36,22 @@ rtabmap:
     # Optimizer/Strategy: "1" # 0=TORO, 1=g2o, 2=GTSAM and 3=Ceres
     # Optimizer/Iteration: "20"
     # Optimizer/Epsilon: "0.000001"    # Stop optimizing when the error improvement is less than this value.  
-    # Optimizer/Robust: "true"    # Required to remove bad loop closured from map in post. Robust graph optimization using Vertigo (only work for g2o and GTSAM optimization strategies)
-    # RGBD/OptimizeMaxError: "2"  # 3 by default
+    Optimizer/Robust: "true"    # Required to remove bad loop closured from map in post. Robust graph optimization using Vertigo (only work for g2o and GTSAM optimization strategies)
+    # Optimizer/VarianceIgnored: 'true'           # This might be what I want to ignore varaince and trust? No this just smears it without moving graph
 
     RGBD/LinearUpdate:          '0.0'
     RGBD/NeighborLinkRefining: 'false'
-    RGBD/ProximityBySpace':     'false'  # Referred paper did only global loop closure detection
-    RGBD/OptimizeFromGraphEnd': 'true'   # more compute, but if set to false, could have more jumpy map
-    Reg/Strategy':              '1'
+    RGBD/ProximityBySpace:     'false'  # Referred paper did only global loop closure detection
+    RGBD/OptimizeFromGraphEnd: 'true'   # more compute, but if set to false, could have more jumpy map
+    RGBD/OptimizeMaxError:     '10000'       # KRJ changed: from 10 to default 3, only accept good closures
+    RGBD/LoopCovLimited:        'false'
+    RGBD/LocalBundleOnLoopClosure: 'true'
+
+    # These might not even apply because not in localization mode?
+    # RGBD/LocalizationSmoothing: 'false'   # True by default, turn off to stop odometry from limiting our jumps
+    # RGBD/LocalizationPriorError: '0.0'    # .0001 default, does this hard set prior cov to small?
+
+    Reg/Strategy:              '2'
     Icp/Iterations':            '30'
     Icp/VoxelSize':             '0'
     Vis/MinInliers':            '12'
@@ -58,7 +66,6 @@ rtabmap:
     Vis/FeatureType':           '1'      
     Kp/MaxFeatures':            '400'
     Reg/Force3DoF':             'false'   # KRJ changed: we will be moving on 3D terrain
-    RGBD/OptimizeMaxError':     '3'       # KRJ changed: from 10 to default 3, only accept good closures
     Optimizer/Strategy':        '2'       # This is default
     Optimizer/Iterations':      '30'      # KRJ changed: reduced from 100 to save processing
     Kp/IncrementalFlann':       'true'    # KRJ changed: save processing
