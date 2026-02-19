@@ -15,6 +15,7 @@ from ultralytics import YOLO
 from collections import deque
 import numpy as np
 from geometry_msgs.msg import Point
+import time
 
 # ARUCO
 import cv2
@@ -132,50 +133,67 @@ class YoloServer(Node):
                         self.get_logger().warn("Failed to read frame")
                         break
 
+                    # Start time recording
+                    start_time = time.perf_counter()
+
                     # Run YOLO on frame
-                    result = model.predict(source=frame, device=0)[0]
-                    if result.boxes is not None and len(result.boxes) > 0:
-                        boxes_xyxy = result.boxes.xyxy.tolist()
-                        conf_scores = result.boxes.conf.tolist()
+                    result = model.predict(source=frame, device=0)[
+                        0
+                    ]  # Process frame through YOLO
+                    if (
+                        result.boxes is not None and len(result.boxes) > 0
+                    ):  # If any object is detected
+                        # Grab data from detection
+                        boxes_xyxy = (
+                            result.boxes.xyxy.tolist()
+                        )  # Points from drawn boxes
+                        conf_scores = (
+                            result.boxes.conf.tolist()
+                        )  # All confidence scores from any detected objects
                         best_idx = np.argmax(conf_scores)
-                        current_conf = conf_scores[best_idx]
+                        current_conf = conf_scores[
+                            best_idx
+                        ]  # Currently detected object
 
                         # Store obj conf from 50 frames from cam
                         if len(camera_stacks[current_cam]) >= self.max_frames:
                             camera_stacks[current_cam].pop(0)  # remove oldest
                         camera_stacks[current_cam].append(current_conf)  # add newest
                         # Grab average of list and check against
-                        total_mean = sum(camera_stacks[current_cam]) / len(
+                        self.total_mean = sum(camera_stacks[current_cam]) / len(
                             camera_stacks[current_cam]
                         )
                         recent_stack = camera_stacks[current_cam][-self.check_frames :]
-                        recent_mean = sum(recent_stack) / len(recent_stack)
+                        self.recent_mean = (
+                            sum(recent_stack) / len(recent_stack)
+                        )  # Grab the most recent self.check_frames number of frames and average conf
 
-                        self.best_boxes = boxes_xyxy[best_idx]
-                        self.xc, self.yc, _, _ = result.boxes.xywh[best_idx].tolist()
+                        self.best_boxes = boxes_xyxy[
+                            best_idx
+                        ]  # Get box data from detection
+                        self.xc, self.yc, _, _ = result.boxes.xywh[
+                            best_idx
+                        ].tolist()  # Grab points from box data
 
-                        if total_mean >= self.stop_threshold:
-                            # send everything
-                            found = True
-                            break
-                        elif recent_mean >= self.check_threshold:
-                            pass
-
-                        # TODO: send message to nav to stop and gather frames
-
-                        center, top_left, bottom_right = self.plot_point(
+                        self.center, self.top_left, self.bottom_right = self.plot_point(
                             self.xc, self.yc, self.best_boxes
-                        )
+                        )  # Grab the location of the points
 
-                        feedback = YoloFind.Feedback()
+                        feedback = YoloFind.Feedback()  # Send feedback
                         feedback.confidence = current_conf
                         feedback.frame_id = frame_id
                         feedback.detected = False
-                        feedback.center = center
-                        feedback.top_left = top_left
-                        feedback.bottom_right = bottom_right
+                        feedback.total_conf = self.total_mean
+                        feedback.recent_conf = self.recent_mean
+                        feedback.center = self.center
+                        feedback.top_left = self.top_left
+                        feedback.bottom_right = self.bottom_right
                         goal_handle.publish_feedback(feedback)
 
+                    stop_time = time.perf_counter()
+                    elapsed = stop_time - start_time
+                    with open("yolo_time_logs.txt", "a") as f:
+                        f.write(f"Frame ID: {frame_id} | Time taken: {elapsed}")
                     frame_id += 1
                 # TODO: Intermittently send feedback
                 cap.release()
@@ -184,7 +202,7 @@ class YoloServer(Node):
                 # ==============================
                 # Bounding boxes - Center
                 if not self.quit and found:
-                    center, top_left, bottom_right = self.plot_point(
+                    self.center, self.top_left, self.bottom_right = self.plot_point(
                         self.xc, self.yc, self.best_boxes
                     )
 
@@ -193,9 +211,9 @@ class YoloServer(Node):
                     result = YoloFind.Result()
                     result.header = Header()
                     result.ack = YoloFind.Result.SUCCESS
-                    result.center = center
-                    result.top_left = top_left
-                    result.bottom_right = bottom_right
+                    result.center = self.center
+                    result.top_left = self.top_left
+                    result.bottom_right = self.bottom_right
                     self.busy = False
                     return result
         except ActionCanceled:
