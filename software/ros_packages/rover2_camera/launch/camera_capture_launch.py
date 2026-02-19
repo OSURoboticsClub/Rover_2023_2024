@@ -34,6 +34,15 @@ def generate_launch_description():
 	    # "depth_module.depth_profile": "424x240x5",  
 	    # "depth_module.infra_profile": "424x240x5", 
 	    # "rgb_camera.color_profile": "424x240x5",
+        
+        # Test for better costmap clearing
+        #"depth_module.profile": "848x480x15",
+        #"rgb_camera.profile": "848x480x15",
+        # "depth_module.emitter_enabled": True, 
+        # "depth_module.laser_power": 360,
+        # "depth_module.enable_auto_exposure": True,
+        # "pointcloud.enable": False,
+
         "depth_width": 1280,
         "depth_height": 720,
         "color_width": 1280,
