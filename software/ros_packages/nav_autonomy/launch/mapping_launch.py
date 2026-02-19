@@ -75,8 +75,9 @@ def generate_launch_description():
         Node(
             package='rtabmap_util', executable='point_cloud_xyz', output='screen',
             parameters=[{'decimation': 2,
-                         'max_depth': 3.0,
-                         'voxel_size': 0.02}],
+                         'max_depth': 6.0, #3.0,
+                         'voxel_size': 0.05 # match nav2 local_costmap resolution
+                        }],
             remappings=[('depth/image', '/camera/d455/aligned_depth_to_color/image_raw'),
                         ('depth/camera_info', '/camera/d455/color/camera_info'),
                         ('cloud', '/camera/cloud')]),
