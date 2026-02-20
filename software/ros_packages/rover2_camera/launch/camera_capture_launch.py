@@ -62,8 +62,8 @@ def generate_launch_description():
         name='ir',
         parameters=[{
             'device': '/dev/rover/camera_infrared',
-            'cap_width': 1920,
-            'cap_height': 1080,
+            'cap_width': 640,
+            'cap_height': 480,
             'cap_framerate': 30,
             'preset_level': 1,
             'bitrate': 4000000,
