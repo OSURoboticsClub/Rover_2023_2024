@@ -17,7 +17,7 @@ def generate_launch_description():
     pkg_share = get_package_share_directory(package_name)
 
     twist_mux_params = os.path.join(pkg_share, 'config', 'twist_mux.yaml')
-    nav2_params = os.path.join(pkg_share, 'config', 'nav2_params.yaml')
+    nav2_params = os.path.join(pkg_share, 'config', 'nav2_params_obstacles.yaml')
 
 
     rviz_config = os.path.join(pkg_share, 'rviz', 'depth_nav.rviz')
