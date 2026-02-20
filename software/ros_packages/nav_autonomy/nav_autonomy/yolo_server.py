@@ -16,6 +16,11 @@ from collections import deque
 import numpy as np
 from geometry_msgs.msg import Point
 import time
+import psutil
+import os
+import jtop
+# sudo pip3 install -U jetson-stats
+
 
 # ARUCO
 import cv2
@@ -60,6 +65,11 @@ class YoloServer(Node):
         # Frame Storage
         self.max_frames = 25
         self.check_frames = 10
+        # Logging Params
+        self.pid = os.getpid()
+        self.process = psutil.Process(self.pid)
+        self.time_logging_path = "yolo_time_logs.txt"
+        self.hardware_logging_path = "yolo_hardware_logs.txt"
 
     def goal_callback(self, goal_request):
         """Accept or reject a client request to begin an action."""
@@ -192,15 +202,10 @@ class YoloServer(Node):
 
                     stop_time = time.perf_counter()
                     elapsed = stop_time - start_time
-                    with open("yolo_time_logs.txt", "a") as f:
-                        f.write(f"Frame ID: {frame_id} | Time taken: {elapsed}")
+                    self.log(stop_time, elapsed, frame_id)
                     frame_id += 1
-                # TODO: Intermittently send feedback
                 cap.release()
-                # ==============================
-                # Complete action
-                # ==============================
-                # Bounding boxes - Center
+
                 if not self.quit and found:
                     self.center, self.top_left, self.bottom_right = self.plot_point(
                         self.xc, self.yc, self.best_boxes
@@ -293,6 +298,19 @@ class YoloServer(Node):
         result = YoloFind.Result()
         result.ack = YoloFind.Result.CANCELED
         return result
+
+    async def log(self, current_time, elapsed, frame_id):
+        cpu_use = self.process.cpu_percent(interval=None)
+        mem_use = self.process.memory_info().rss / (1024 * 1024)
+        with jtop() as jetson:
+            gpu_use = jetson.gpu["GPU0"]["status"]["load"]
+            vram_use = f"{jetson.memory['RAM']['used']}/{jetson.memory['RAM']['total']}"
+        with open(self.time_logging_path, "a") as f:
+            f.write(f"Frame ID: {frame_id} | Time taken: {elapsed}")
+        with open(self.hardware_logging_path, "a") as f:
+            f.write(
+                f"Frame ID: {frame_id} | Time: {current_time} | CPU {cpu_use} | RAM {mem_use} | GPU Util {gpu_use} | GPU MEM Util {vram_use}"
+            )
 
 
 def main(args=None):
