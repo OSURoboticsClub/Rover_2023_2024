@@ -113,7 +113,7 @@ def generate_launch_description():
             'stream_width': 640,
             'stream_height': 480,
             'fec_percentage': 30,
-            'udp_host': '192.168.1.104',
+            'udp_host': '10.42.0.100',
             'udp_port': 42069,
             'mux_port': 20000
         }],
@@ -134,7 +134,7 @@ def generate_launch_description():
             'stream_width': 640,
             'stream_height': 480,
             'fec_percentage': 100,
-            'udp_host': '192.168.1.104',
+            'udp_host': '10.42.0.100',
             'udp_port': 42070,
             'mux_port': 20000
         }],

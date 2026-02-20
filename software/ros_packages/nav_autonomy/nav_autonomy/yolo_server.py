@@ -19,7 +19,14 @@ import time
 import psutil
 import os
 import jtop
+import torch
+import numpy as np
+
+
+torch.backends.cudnn.benchmark = True
+                    
 # sudo pip3 install -U jetson-stats
+
 
 
 # ARUCO
@@ -36,8 +43,16 @@ class YoloServer(Node):
         super().__init__("yolo_server")
 
         self.callback_group = ReentrantCallbackGroup()
-
+        
         self.busy = False  # Is a search already being executed?
+
+        #Cuda stuff
+        os.environ["CUDNN_V8_API_ENABLED"] = "0"
+        torch.backends.cudnn.enabled = True
+        torch.backends.cudnn.benchmark = False
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cuda.matmul.allow_tf32 = False
+
 
         # Action Server
         self._action_server = ActionServer(
@@ -54,7 +69,7 @@ class YoloServer(Node):
 
         # YOLO PARAMETERS
         self.num_cameras = 1
-        self.source = "/dev/rover/camera_infrared"
+        self.source = "/dev/rover/camera_left_chassis"
         self.quit = False
         self.cam_queue = deque()
         # Append camera carousel order
@@ -123,6 +138,7 @@ class YoloServer(Node):
                 await self.do_aruco(goal_handle)
                 return
             else:
+                model.model.float() #Force FP32
                 # results = model(source=self.source, stream=True, _backend=cv2.CAP_V4L2)
                 cap = cv2.VideoCapture(self.source, cv2.CAP_V4L2)
 
@@ -147,7 +163,7 @@ class YoloServer(Node):
                     start_time = time.perf_counter()
 
                     # Run YOLO on frame
-                    result = model.predict(source=frame, device=0)[
+                    result = model.predict(source=frame, half=False, device='cuda')[
                         0
                     ]  # Process frame through YOLO
                     if (
