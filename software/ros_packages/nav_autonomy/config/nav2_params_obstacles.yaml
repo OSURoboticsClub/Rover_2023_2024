@@ -3,7 +3,7 @@ bt_navigator:
     use_sim_time: False
     global_frame: map
     robot_base_frame: rover_base_origin
-    odom_topic: /odom
+    odom_topic: /odometry/local
     bt_loop_duration: 10
     default_server_timeout: 20
     wait_for_service_timeout: 1000
@@ -71,7 +71,7 @@ bt_navigator_navigate_to_pose_rclcpp_node:
 controller_server:
   ros__parameters:
     use_sim_time: False
-    odom_topic: "odom"
+    odom_topic: /odometry/local
     controller_frequency: 20.0
     min_x_velocity_threshold: 0.01
     min_y_velocity_threshold: 0.0  # Rover cannot strafe
@@ -113,7 +113,7 @@ controller_server:
       min_vel_theta: -1.0
       max_vel_theta: 1.0
       min_speed_xy: 0.0
-      #max_speed_xy: 0.8
+      max_speed_xy: 0.8
       min_speed_theta: 0.5
 
       # Acceleration
@@ -131,9 +131,9 @@ controller_server:
       sim_time: 1.5
       linear_granularity: 0.05
       angular_granularity: 0.01
-      #transform_tolerance: 0.25
-      #trans_stopped_velocity: 0.1
-      #short_circuit_trajectory_evaluation: True
+      transform_tolerance: 0.25
+      trans_stopped_velocity: 0.1
+      short_circuit_trajectory_evaluation: True
       stateful: True
 
       critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
@@ -145,7 +145,7 @@ controller_server:
 
       RotateToGoal.scale: 25.0
       RotateToGoal.slowing_factor: 5.0
-      #RotateToGoal.lookahead_time: -1.0
+      RotateToGoal.lookahead_time: -1.0
 
       PathDist.scale: 32.0
       GoalDist.scale: 24.0
@@ -351,7 +351,7 @@ velocity_smoother:
    max_velocity: [0.5, 0.0, 0.8]  # forward, strafe, rotation
    max_decel: [-0.5, 0.0, -1.0]
    max_accel: [0.5, 0.0, 1.0]
-   odom_topic: "odom"
+   odom_topic: /odometry/local
    odom_duration: 0.1
    deadband_velocity: [0.0, 0.0, 0.0]
    velocity_timeout: 1.0

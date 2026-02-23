@@ -75,6 +75,7 @@ def generate_launch_description():
         Node(
             package='rtabmap_util', executable='point_cloud_xyz', output='screen',
             parameters=[{'decimation': 2,
+                         'min_depth': 0.5,
                          'max_depth': 6.0, #3.0,
                          'voxel_size': 0.05 # match nav2 local_costmap resolution
                         }],
