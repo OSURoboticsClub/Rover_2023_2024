@@ -16,8 +16,8 @@ class CameraMuxing(Node):
         self.num_cams = 2
         self.current_cam = 0
         self.srcPorts = {
-            0:20000,
-            1:20001
+            0:20002,
+            1:20003
         }
 
 
