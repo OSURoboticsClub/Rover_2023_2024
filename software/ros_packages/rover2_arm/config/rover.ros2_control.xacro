@@ -13,7 +13,7 @@
                 <plugin>mock_components/GenericSystem</plugin>
               </xacro:if>
               <xacro:if value="${ros2_control_hardware_type == 'gazebo'}">
-                <plugin>fake_components/GenericSystem</plugin>
+                <plugin>ign_ros2_control/GazeboSystem</plugin>
               </xacro:if>
             </hardware>
             <joint name="rover_arm_base_joint">

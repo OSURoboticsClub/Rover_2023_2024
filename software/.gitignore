@@ -12,3 +12,6 @@ __pycache__
 origin/SAM4S_firmware
 
 react_groundstation/node_modules
+
+ros_packages/rover_gazebo/worlds/materials/*
+ros_packages/rover_gazebo/worlds/meshes/*

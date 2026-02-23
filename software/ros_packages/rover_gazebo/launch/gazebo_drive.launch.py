@@ -2,7 +2,7 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.actions import IncludeLaunchDescription, RegisterEventHandler
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.event_handlers import OnProcessStart
+from launch.event_handlers import OnProcessStart, OnProcessExit
 from launch.substitutions import Command, FindExecutable, PathJoinSubstitution, TextSubstitution
 from ament_index_python.packages import get_package_share_directory
 from launch_ros.substitutions import FindPackageShare
@@ -13,16 +13,19 @@ from launch.substitutions import LaunchConfiguration
 import os
 
 def generate_launch_description():
-    pkg_name = 'rover2_control' 
+    pkg_name = 'rover_gazebo' 
     ros_gz_sim_pkg_path = get_package_share_directory('ros_gz_sim') 
     gz_launch_path = PathJoinSubstitution([ros_gz_sim_pkg_path, 'launch', 'gz_sim.launch.py'])
+    rover2_control_path = get_package_share_directory('rover2_control')
+    rover_gazebo_path = get_package_share_directory(pkg_name)
     # print(f"ros_gz_sim_pkg_path: {ros_gz_sim_pkg_path}")
 
     #Gazebo Model Path
     rover_model_path = os.path.join(get_package_share_directory('rover_urdf'), '..')
+    world_model_path = os.path.join(get_package_share_directory('rover_gazebo', '..'))
 
-    os.environ['GZ_SIM_RESOURCE_PATH'] = os.environ.get('GZ_SIM_RESOURCE_PATH', '') + ':' + rover_model_path
-    os.environ['IGN_GAZEBO_RESOURCE_PATH'] = os.environ.get('IGN_GAZEBO_RESOURCE_PATH', '') + ':' + rover_model_path
+    os.environ['GZ_SIM_RESOURCE_PATH'] = os.environ.get('GZ_SIM_RESOURCE_PATH', '') + ':' + rover_model_path 
+    os.environ['IGN_GAZEBO_RESOURCE_PATH'] = os.environ.get('IGN_GAZEBO_RESOURCE_PATH', '') + ':' + rover_model_path 
 
     print(f"GZ_SIM_RESOURCE_PATH: {os.environ['GZ_SIM_RESOURCE_PATH']}")
 
@@ -120,7 +123,7 @@ def generate_launch_description():
     gazebo_node = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(gz_launch_path),
         launch_arguments={
-            'gz_args': os.path.join('/usr/share/ignition/ignition-gazebo6/worlds', 'empty.sdf'),
+            'gz_args': os.path.join(rover_gazebo_path, 'worlds/rubicon_model.sdf') +' -r -v 1',
             'on_exit_shutdown': 'True'
         }.items(),
     )
@@ -132,19 +135,56 @@ def generate_launch_description():
             "-topic", "/robot_description",
             "-name", "rover",
             "-allow_renaming",
-            "-x", "0", "-y", "0", "-z", "1.0"
+            "-x", "-8.8", "-y", "-1.96", "-z", "4.5"
         ],
         output="screen"
     )
 
+    joy_to_drive = Node(
+        package="rover2_control",
+        executable="joy_to_drive",
+        name="joy_to_drive",
+        output="screen"
+    )
+
+    ign_ros_bridge_config = PathJoinSubstitution([
+        FindPackageShare("rover_gazebo"),
+        "config",
+        "ros2_gz_bridge.yaml"
+    ])
+    gazebo_bridge_node = Node(
+        package="ros_gz_bridge",
+        executable="parameter_bridge",
+        parameters=[{
+            "config_file": ign_ros_bridge_config,
+        }]
+    )
+
+    world_path = os.path.join(rover_gazebo_path, 'worlds/rubicon.sdf')   
+
     return LaunchDescription([
         use_sim_time_arg,
-        robot_state_publisher_node,
+        gazebo_node,
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=spawn_robot,
+                on_exit=[joint_state_broadcaster_spawner],
+            )
+        ),
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=joint_state_broadcaster_spawner,
+                on_exit=[drive_controller_node],
+            )
+        ),
+
         tf2_node,
         joy_node,
-        gazebo_node,
-        ros2_control_node,
-        joint_state_broadcaster_spawner,
-        drive_controller_node,
+        gazebo_bridge_node,
         spawn_robot,
+        # ros2_control_node,
+        # joint_state_broadcaster_spawner,
+        # drive_controller_node,
+        joy_to_drive,
+        robot_state_publisher_node,
     ])

@@ -18,7 +18,7 @@ class TestAutonTyping(Node):
         self.get_logger().info('AutonTyping action server connected!')
 
         self.message = AutonTyping.Goal()
-        self.message.phrase = "q,w,e,r,t,y"
+        self.message.phrase = "d,a,m,r,o,b,o,t,i,c,s"
         self.send_future_goal = self.auton_typing_client.send_goal_async(self.message)
         self.send_future_goal.add_done_callback(self.goal_response_callback)
 

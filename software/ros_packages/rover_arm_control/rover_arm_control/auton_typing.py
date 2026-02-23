@@ -65,7 +65,7 @@ class AutonomousTyping(Node):
             ',': [7*0.0185+0.01475, -0.037], '.': [8*0.0185+0.01475, -0.037], '/': [9*0.0185+0.01475, -0.037], 'RShift': [10*0.0185+0.01475, -0.037],
 
             # Row 6 (Left Ctrl to Right Ctrl)
-            'LCtrl': [None, None], 'LWin': [None, None], 'LAlt': [None, None], 'Space': [None, None],
+            'LCtrl': [None, None], 'LWin': [None, None], 'LAlt': [None, None], 'SPACE': [None, None],
             'RAlt': [None, None], 'RWin': [None, None], 'Menu': [None, None], 'RCtrl': [None, None],
 
             # Navigation Cluster
@@ -201,7 +201,7 @@ class AutonomousTyping(Node):
         pose.header.frame_id = "rover_arm_tool0"
         pose.header.stamp = self.get_clock().now().to_msg()
         pose.pose.position.x = sign * self.key_dict[letter][0]
-        pose.pose.position.y = sign * self.key_dict[letter][1]
+        pose.pose.position.y =  -sign * self.key_dict[letter][1]
         pose.pose.position.z = 0.0
         pose.pose.orientation.x = 0.0
         pose.pose.orientation.y = 0.0
