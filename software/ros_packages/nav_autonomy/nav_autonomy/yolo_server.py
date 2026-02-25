@@ -14,6 +14,10 @@ from collections import deque
 import numpy as np
 from geometry_msgs.msg import Point
 import cv2
+import torch
+
+torch.backends.cudnn.enabled = False
+                    
 
 # ARUCO
 import asyncio
@@ -128,7 +132,8 @@ class YoloServer(Node):
         class ActionCanceled(Exception):
             """Custom exception to handle action cancellation"""
             pass
-
+        self.xc = None
+        self.yc = None
         try:
             # ==============================
             # Look for object
@@ -169,10 +174,10 @@ class YoloServer(Node):
                     ret, frame = cap.read()
                     if not ret:
                         self.get_logger().warn("Failed to read frame")
-                        break
+                        #break
 
                     # Run YOLO on frame
-                    result = model(frame)[0]
+                    result = model(frame, device=0)[0]
 
                     # Default display frame (no detections)
                     display_frame = frame.copy()
@@ -255,34 +260,36 @@ class YoloServer(Node):
                 # Complete action
                 # ==============================
                 if not self.quit:
-                    center = Point()
-                    center.x = self.xc
-                    center.y = self.yc
-                    center.z = 0.0
+                    if self.xc and self.yc:
+                        center = Point()
+                        center.x = self.xc
+                        center.y = self.yc
+                        center.z = 0.0
 
-                    x1, y1, x2, y2 = self.best_boxes
+                        x1, y1, x2, y2 = self.best_boxes
 
-                    top_left = Point()
-                    top_left.x = x1
-                    top_left.y = y1
-                    top_left.z = 0.0
+                        top_left = Point()
+                        top_left.x = x1
+                        top_left.y = y1
+                        top_left.z = 0.0
 
-                    bottom_right = Point()
-                    bottom_right.x = x2
-                    bottom_right.y = y2
-                    bottom_right.z = 0.0
+                        bottom_right = Point()
+                        bottom_right.x = x2
+                        bottom_right.y = y2
+                        bottom_right.z = 0.0
 
-                    self.get_logger().info("Yolo search completed")
-                    goal_handle.succeed()
-                    result = YoloFind.Result()
-                    result.header = Header()
-                    result.ack = YoloFind.Result.SUCCESS
-                    result.center = center
-                    result.top_left = top_left
-                    result.bottom_right = bottom_right
-                    self.busy = False
-                    return result
-
+                        self.get_logger().info("Yolo search completed")
+                        goal_handle.succeed()
+                        result = YoloFind.Result()
+                        result.header = Header()
+                        result.ack = YoloFind.Result.SUCCESS
+                        result.center = center
+                        result.top_left = top_left
+                        result.bottom_right = bottom_right
+                        self.busy = False
+                        return result
+                    else:
+                        return None
         except ActionCanceled:
             self.get_logger().info("Yolo search canceled")
             result = YoloFind.Result()

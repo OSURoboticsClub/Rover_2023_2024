@@ -23,22 +23,21 @@ from nav_autonomy_interface.action import Mission, YoloFind
 
 from nav_autonomy.utils.search_fsm import SearchFSM, SearchState, SearchPattern
 
-def gps_diff(lat1, lon1, lat2, lon2):
+def gps_translation(lat1, lon1, lat2, lon2):
     """
-    Calculate the approximate distance in meters between two GPS points 
+    Calculate the x, y translation (in meters) between two GPS points, assuming a small distance.
     """
     DEGREE_TO_METERS = 111000  # meters per degree of latitude
-    lat1_rad = math.radians(lat1)
-    lat2_rad = math.radians(lat2)
+
+    lat_avg_rad = (math.radians(lat1) + math.radians(lat2)) / 2
 
     dlat = lat2 - lat1
     dlon = lon2 - lon1
 
-    distance = math.sqrt((dlat * DEGREE_TO_METERS) ** 2 + 
-                        (dlon * DEGREE_TO_METERS * math.cos((lat1_rad + lat2_rad) / 2)) ** 2)
+    dy = dlat * DEGREE_TO_METERS
+    dx = dlon * DEGREE_TO_METERS * math.cos(lat_avg_rad)        # Scale dlon based on location
 
-    return distance
-    
+    return dx, dy
 
 class MissionManager(Node):
     """
@@ -135,9 +134,9 @@ class MissionManager(Node):
         pose.pose.orientation.w = math.cos(yaw / 2.0)
 
         # Sanity check for how far lat long is
-        sanity_translation = gps_diff(self.latest_gps_lat, self.latest_gps_long, lat, lon)
+        sanity_x, sanity_y = gps_translation(self.latest_gps_lat, self.latest_gps_long, lat, lon)
         self.get_logger().info(f'Sanity Check:')
-        self.get_logger().info(f'Meters between current gps and waypoint gps is {sanity_translation}')
+        self.get_logger().info(f'Waypoint should be about this far away dx={sanity_x} dy={sanity_y}')
         self.get_logger().info(f'Current map pose is x={self.latest_map_pose.pose.position.x} y={self.latest_map_pose.pose.position.y}')
         self.get_logger().info(f'Translated waypoint map pose is x={pose.pose.position.x} y={pose.pose.position.y}')
 
