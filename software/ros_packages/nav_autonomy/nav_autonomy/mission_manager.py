@@ -14,12 +14,31 @@ from robot_localization.srv import FromLL
 
 from std_msgs.msg import Header
 from geometry_msgs.msg import PoseStamped
+from sensor_msgs.msg import NavSatFix
+from nav_msgs.msg import Odometry
+
 
 #Custom action and message
 from nav_autonomy_interface.action import Mission, YoloFind
 
 from nav_autonomy.utils.search_fsm import SearchFSM, SearchState, SearchPattern
 
+def gps_diff(lat1, lon1, lat2, lon2):
+    """
+    Calculate the approximate distance in meters between two GPS points 
+    """
+    DEGREE_TO_METERS = 111000  # meters per degree of latitude
+    lat1_rad = math.radians(lat1)
+    lat2_rad = math.radians(lat2)
+
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+
+    distance = math.sqrt((dlat * DEGREE_TO_METERS) ** 2 + 
+                        (dlon * DEGREE_TO_METERS * math.cos((lat1_rad + lat2_rad) / 2)) ** 2)
+
+    return distance
+    
 
 class MissionManager(Node):
     """
@@ -58,37 +77,71 @@ class MissionManager(Node):
             'YoloFind',
             callback_group=self.callback_group
         )
-        
+
+        # Get current gps and map pose for sanity checking
+        self.gps_sub = self.create_subscription(
+            NavSatFix,
+            'gps/fix',
+            self.gps_callback,
+            10
+        )
+        self.latest_gps_lat = None
+        self.latest_gps_long = None  
+
+        self.pose_sub = self.create_subscription(
+            Odometry,
+            '/odometry/global',
+            self.pose_callback,
+            10
+        )
+        self.latest_map_pose = None
+
         self.get_logger().info('MissionManager action server ready.')
 
+    def gps_callback(self, msg):
+        # Update the latest GPS data whenever a new message is received
+        self.latest_gps_lat = msg.latitude
+        self.latest_gps_long = msg.longitude
+
+    def pose_callback(self, msg):
+        # Update the latest map pose data whenever a new message is received
+        self.latest_map_pose = msg.pose
 
     def gps_to_map_pose(self, lat, lon, yaw=0.0):    # KRJ TODO: Need to test how nav2 behaves if yaw on each point is 0
-       """Use robot_localization to convert GPS to map pose"""
+        """Use robot_localization to convert GPS to map pose"""
 
-       request = FromLL.Request()
-       request.ll_point.latitude = lat
-       request.ll_point.longitude = lon
-       request.ll_point.altitude = 0.0
-       self.get_logger().info(f'Converting GPS to map pose: lat={lat}, lon={lon}')
+        request = FromLL.Request()
+        request.ll_point.latitude = lat
+        request.ll_point.longitude = lon
+        request.ll_point.altitude = 0.0
+        self.get_logger().info(f'Converting GPS to map pose: lat={lat}, lon={lon}')
 
-       # Wait for service
-       self.get_logger().info('Wait for service')
-       self.fromLL_client.wait_for_service()
+        # Wait for service
+        self.get_logger().info('Wait for service')
+        self.fromLL_client.wait_for_service()
 
-       # Call service
-       future = self.fromLL_client.call_async(request)
-       rclpy.spin_until_future_complete(self.navigator, future)
-       response = future.result()
+        # Call service
+        future = self.fromLL_client.call_async(request)
+        rclpy.spin_until_future_complete(self.navigator, future)
+        response = future.result()
 
-       # Create PoseStamped
-       pose = PoseStamped()
-       pose.header.frame_id = 'map'
-       pose.header.stamp = self.navigator.get_clock().now().to_msg()
-       pose.pose.position.x = response.map_point.x
-       pose.pose.position.y = response.map_point.y
-       pose.pose.orientation.z = math.sin(yaw / 2.0)
-       pose.pose.orientation.w = math.cos(yaw / 2.0)
-       return pose
+        # Create PoseStamped
+        pose = PoseStamped()
+        pose.header.frame_id = 'map'
+        pose.header.stamp = self.navigator.get_clock().now().to_msg()
+        pose.pose.position.x = response.map_point.x
+        pose.pose.position.y = response.map_point.y
+        pose.pose.orientation.z = math.sin(yaw / 2.0)
+        pose.pose.orientation.w = math.cos(yaw / 2.0)
+
+        # Sanity check for how far lat long is
+        sanity_translation = gps_diff(self.latest_gps_lat, self.latest_gps_long, lat, lon)
+        self.get_logger().info(f'Sanity Check:')
+        self.get_logger().info(f'Meters between current gps and waypoint gps is {sanity_translation}')
+        self.get_logger().info(f'Current map pose is x={self.latest_map_pose.pose.position.x} y={self.latest_map_pose.pose.position.y}')
+        self.get_logger().info(f'Translated waypoint map pose is x={pose.pose.position.x} y={pose.pose.position.y}')
+
+        return pose
 
 
     # -------------------------
