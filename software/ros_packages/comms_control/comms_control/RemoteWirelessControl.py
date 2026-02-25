@@ -98,7 +98,9 @@ class WirelessInterface:
         result = InterfaceStatus()
         try:
             def sshRun(command: str) -> subprocess.CompletedProcess[str]:
-                    return subprocess.run(['ssh', f'{self.username}@{self.remoteAddr}', '"{command}"'], text=True, capture_output=True, check=True, timeout=self.syncTimeoutSec)
+                    args = ['ssh', f'{self.username}@{self.remoteAddr}'] + command.split(' ')
+                    #args = f"ssh {self.username}@{self.remoteAddr} {command}"
+                    return subprocess.run(args, text=True, capture_output=True, check=True,timeout=self.syncTimeoutSec)
 
             def intOrNone(input: str) -> typing.Optional[int]:
                 try:
@@ -116,22 +118,19 @@ class WirelessInterface:
                 #use iw to get interface info. This should contain the channel, frequency, channel width, and tx power.
                 output = sshRun(f"iw dev {self.interfaceName} info")
 
-                if output.returncode == 0:
-                    tokens = output.stdout.split()
-                    for i in range(0, len(tokens)):
-                        if (tokens[i] == 'channel'):
-                            i += 1
-                            result.channel = intOrNone(tokens[i])
-                            i += 1
-                            result.frequency = intOrNone(tokens[i].removeprefix('('))
-                        elif (tokens[i] == 'width:'):
-                            i += 1
-                            result.channelWidth = intOrNone(tokens[i])
-                        elif (tokens[i] == 'txpower'):
-                            i += 1
-                            result.txpower = floatOrNone(tokens[i])
-                else:
-                    print(f"Failed to connect to {self.username}@{self.remoteAddr} over ssh.")
+                tokens = output.stdout.split()
+                for i in range(0, len(tokens)):
+                    if (tokens[i] == 'channel'):
+                        i += 1
+                        result.channel = intOrNone(tokens[i])
+                        i += 1
+                        result.frequency = intOrNone(tokens[i].removeprefix('('))
+                    elif (tokens[i] == 'width:'):
+                        i += 1
+                        result.channelWidth = intOrNone(tokens[i])
+                    elif (tokens[i] == 'txpower'):
+                        i += 1
+                        result.txpower = floatOrNone(tokens[i])
 
                 #use iw to get link info. Should contain signal level, bitrates, and mcs info
                 output = sshRun(f"iw dev {self.interfaceName} link")
@@ -182,16 +181,16 @@ class WirelessInterface:
                     elif tokens[0] == "Current Operating BW MHz":
                         result.channelWidth = intOrNone(tokens[1])
 
-                output = sshRun(f"iwinfo {self.interfaceName} info") 
+                output = sshRun(f"iwinfo {self.interfaceName} info")
+
+                lines = output.stdout.splitlines()
 
                 for l in lines:
                     tokens = l.split(':')
                     if tokens[0].strip() == "Tx-Power":
-                        result.txpower = intOrNone(tokens[1])
-                    elif tokens[0].strip() == "Mode":
-                        result.channel = intOrNone(tokens[3])
+                        result.txpower = floatOrNone(tokens[1].strip().split(' ')[0])
                     elif tokens[0].strip() == "Bit Rate":
-                        result.txbitrate = floatOrNone(tokens[1])  
+                        result.txbitrate = floatOrNone(tokens[1].strip().split(' ')[0])  
 
             elif self.type == WirelessInterface.InterfaceType.UBIQUITI_AIROS:
                 ubiquiti_properties = {"wireless" : {"channel":None, "frequency":None, "opmode":None, "signal":None, "noisef":None, "rssi":None, "txpower":None, "distance":None, "ccq":None, "rxrate":None, "txrate":None}}
@@ -333,13 +332,14 @@ class WirelessInterface:
             result.connected = True
             result.syncing = True
 
-        except ChildProcessError as e:
-            if e.errno == 255:
-                result.connected = True
+        except subprocess.CalledProcessError as e:
+            #print(f"ssh returned: {e.returncode} attempting to run {e.args}.\n Stdout: {e.stdout}\n Stderr: {e.stderr}")
+            if e.returncode == 255:
+                result.connected = False
                 result.syncing = False
                 return result
             else:
-                result.connected = False
+                result.connected = True
                 result.syncing = False
                 return result
         except subprocess.TimeoutExpired as e:

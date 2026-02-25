@@ -255,7 +255,7 @@ def main(args=None):
 
         nodeExecutor = MultiThreadedExecutor()
 
-        for node in generateNodesFromConfig("./comms_control/comms_control/comms_monitor.cfg"):
+        for node in generateNodesFromConfig("./ros_packages/comms_control/comms_control/comms_monitor.cfg"):
             nodeExecutor.add_node(node)
 
         nodeExecutor.spin()
