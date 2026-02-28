@@ -128,7 +128,6 @@ class MissionManager(Node):
         # Create PoseStamped
         pose = PoseStamped()
         pose.header.frame_id = 'map'
-        pose.header.stamp = self.navigator.get_clock().now().to_msg()
         pose.pose.position.x = response.map_point.x
         pose.pose.position.y = response.map_point.y
         pose.pose.orientation.z = math.sin(yaw / 2.0)
