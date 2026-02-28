@@ -236,7 +236,7 @@ global_costmap:
       # origin_y: -25.0
 
       #Layers
-      plugins: ["obstacle_layer", "inflation_layer"]
+      plugins: ["obstacle_layer", "inflation_layer", "gradient_layer"]
       
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
@@ -280,6 +280,17 @@ global_costmap:
         enabled: True
         cost_scaling_factor: 3.0
         inflation_radius: 0.5
+
+      gradient_layer:
+        plugin: "gradient_cost_plugin::GradientCostLayer"
+        enabled: True
+        max_step: 0.3
+        min_angle: 10
+        max_angle: 40
+        topic: /camera/ground
+        obstacle_max_range: 5.0
+        obstacle_min_range: 0.2
+        elevation_combination: "last"
       
 # map_server:
   #ros__parameters:
