@@ -28,30 +28,30 @@ def generate_launch_description():
         package='realsense2_camera',
         executable='realsense2_camera_node',
         name='d455',
-	parameters=[{
-	    "camera_name": "d455",
-	    "serial_no": "318122302525",
-	    # "depth_module.depth_profile": "424x240x5",  
-	    # "depth_module.infra_profile": "424x240x5", 
-	    # "rgb_camera.color_profile": "424x240x5",
-        
-        # Test for better costmap clearing
-        #"depth_module.profile": "848x480x15",
-        #"rgb_camera.profile": "848x480x15",
-        # "depth_module.emitter_enabled": True, 
-        # "depth_module.laser_power": 360,
-        # "depth_module.enable_auto_exposure": True,
-        # "pointcloud.enable": False,
+        parameters=[{
+            "camera_name": "d455",
+            "serial_no": "318122302525",
+            # "depth_module.depth_profile": "424x240x5",  
+            # "depth_module.infra_profile": "424x240x5", 
+            # "rgb_camera.color_profile": "424x240x5",
+            
+            # Test for better costmap clearing
+            #"depth_module.profile": "848x480x15",
+            #"rgb_camera.profile": "848x480x15",
+            # "depth_module.emitter_enabled": True, 
+            # "depth_module.laser_power": 360,
+            # "depth_module.enable_auto_exposure": True,
+            # "pointcloud.enable": False,
 
-        "depth_width": 1280,
-        "depth_height": 720,
-        "color_width": 1280,
-        "color_height": 720,
-        "pointcloud.enable": True,
-        "align_depth.enable": True,
-        "depth_fps": 10,
-        "rgb_fps": 10,
-	}],
+            "depth_width": 1280,
+            "depth_height": 720,
+            "color_width": 1280,
+            "color_height": 720,
+            "pointcloud.enable": True,
+            "align_depth.enable": True,
+            "depth_fps": 5,
+            "rgb_fps": 5,
+        }],
         output='screen'
     ) 
    # Your rover2_camera nodes
@@ -154,8 +154,8 @@ def generate_launch_description():
 #        ir_camera_node,
 #        main_nav_node,
 #        gripper_rgb_node,
-        chassis_right_cam_node,
-        chassis_left_cam_node,
-        muxing_node
+#        chassis_right_cam_node,
+#        chassis_left_cam_node,
+#        muxing_node
     ])
 
