@@ -176,7 +176,7 @@ local_costmap:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
         footprint_clearing_enabled: True
-        min_obstacle_height: -1.5
+        min_obstacle_height: .15    # can roll over things under 6 inches
         max_obstacle_height: 2.0 # rover height, we can roll under things above this height (discard points above)
         # combination_method: 1
 
@@ -188,7 +188,7 @@ local_costmap:
           data_type: "PointCloud2"
           transport_type: "raw"
           min_obstacle_height: -1.5
-          max_obstacle_height: 0.5
+          max_obstacle_height: 0.3
           obstacle_min_range: 0.0
           obstacle_max_range: 3.5
           raytrace_min_range: 0.0
@@ -201,7 +201,7 @@ local_costmap:
           marking: True
           data_type: "PointCloud2"
           transport_type: "raw"
-          min_obstacle_height: -1.5
+          min_obstacle_height: .15
           max_obstacle_height: 2.0 # rover height, we can roll under things above this height (discard points above)
           obstacle_min_range: 0.0
           obstacle_max_range: 3.5
@@ -236,58 +236,60 @@ global_costmap:
       # origin_y: -25.0
 
       #Layers
-      plugins: ["obstacle_layer", "inflation_layer", "gradient_layer"]
+      plugins: ["gradient_layer"]
+      # plugins: ["obstacle_layer", "inflation_layer", "gradient_layer"]
       
-      obstacle_layer:
-        plugin: "nav2_costmap_2d::ObstacleLayer"
-        enabled: True
-        footprint_clearing_enabled: True
-        min_obstacle_height: -1.5
-        max_obstacle_height: 2.0
-        # combination_method: 1
+      # obstacle_layer:
+      #   plugin: "nav2_costmap_2d::ObstacleLayer"
+      #   enabled: True
+      #   footprint_clearing_enabled: True
+      #   min_obstacle_height: -1.5
+      #   max_obstacle_height: 2.0
+      #   # combination_method: 1
 
-        observation_sources: obstacles
-        # observation_sources: ground obstacles
-        # ground:
-        #   topic: /camera/ground
-        #   clearing: True
-        #   marking: False
-        #   data_type: "PointCloud2"
-        #   transport_type: "raw"
-        #   min_obstacle_height: -1.5
-        #   max_obstacle_height: 0.5
-        #   obstacle_min_range: 0.0
-        #   obstacle_max_range: 5.0
-        #   raytrace_min_range: 0.0
-        #   raytrace_max_range: 6.0
-        #   inf_is_valid: False
+      #   observation_sources: obstacles
+      #   # observation_sources: ground obstacles
+      #   # ground:
+      #   #   topic: /camera/ground
+      #   #   clearing: True
+      #   #   marking: False
+      #   #   data_type: "PointCloud2"
+      #   #   transport_type: "raw"
+      #   #   min_obstacle_height: -1.5
+      #   #   max_obstacle_height: 0.5
+      #   #   obstacle_min_range: 0.0
+      #   #   obstacle_max_range: 5.0
+      #   #   raytrace_min_range: 0.0
+      #   #   raytrace_max_range: 6.0
+      #   #   inf_is_valid: False
 
-        obstacles:
-          topic: /camera/obstacles
-          clearing: True
-          marking: True
-          data_type: "PointCloud2"
-          transport_type: "raw"
-          min_obstacle_height: -1.5
-          max_obstacle_height: 2.0
-          obstacle_min_range: 0.0
-          obstacle_max_range: 5.0
-          raytrace_min_range: 0.0
-          raytrace_max_range: 6.0
-          inf_is_valid: False
+      #   obstacles:
+      #     topic: /camera/obstacles
+      #     clearing: True
+      #     marking: True
+      #     data_type: "PointCloud2"
+      #     transport_type: "raw"
+      #     min_obstacle_height: -1.5
+      #     max_obstacle_height: 2.0
+      #     obstacle_min_range: 0.0
+      #     obstacle_max_range: 5.0
+      #     raytrace_min_range: 0.0
+      #     raytrace_max_range: 6.0
+      #     inf_is_valid: False
 
-      inflation_layer:
-        plugin: "nav2_costmap_2d::InflationLayer"
-        enabled: True
-        cost_scaling_factor: 3.0
-        inflation_radius: 0.5
+      # inflation_layer:
+        # plugin: "nav2_costmap_2d::InflationLayer"
+        # enabled: True
+        # cost_scaling_factor: 3.0
+        # inflation_radius: 0.5
 
       gradient_layer:
         plugin: "gradient_cost_plugin::GradientCostLayer"
         enabled: True
         max_step: 0.3
         min_angle: 10
-        max_angle: 40
+        max_angle: 60
+        min_cost: 0.0
         topic: /camera/ground
         obstacle_max_range: 5.0
         obstacle_min_range: 0.2
