@@ -16,7 +16,7 @@ def generate_launch_description():
          get_package_share_directory('rover2_camera'),
          'launch'), '/camera_capture_launch.py'])
       )
-   imu = IncludeLaunchDescription(
+   odometry = IncludeLaunchDescription(
       PythonLaunchDescriptionSource([os.path.join(
          get_package_share_directory('rover2_odometry')),
          '/rover2_odometry_launch.py'])
@@ -36,15 +36,20 @@ def generate_launch_description():
          get_package_share_directory('nav_autonomy'),
          'launch'), '/mapping_launch.py'])
       )
-   # Timer action to delay the listener node
+   # Timer action to delay  startup
    delay_mapping = TimerAction(
-         period=5.0,  # Delay in seconds
+         period=4.0,  # Delay in seconds
          actions=[mapping]
       )
    nav_autonomy = IncludeLaunchDescription(
       PythonLaunchDescriptionSource([os.path.join(
          get_package_share_directory('nav_autonomy'),
          'launch'), '/nav_launch.py'])
+      )
+   # Timer action to delay  startup
+   delay_nav_autonomy = TimerAction(
+         period=5.0,  # Delay in seconds
+         actions=[nav_autonomy]
       )
    state_publisher = IncludeLaunchDescription(
       PythonLaunchDescriptionSource([os.path.join(
@@ -54,10 +59,10 @@ def generate_launch_description():
    return LaunchDescription([
       state_publisher,
       drive_control,
-      imu,
-      arm,
+      odometry,
+#      arm,
       status,
       cameras,
-      nav_autonomy,
       delay_mapping,
+      delay_nav_autonomy,
    ])
