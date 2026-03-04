@@ -367,29 +367,32 @@ Urdf of the rovers chassis and bogies
             <child link="${name}_rear_bogie"/>
             <axis xyz="0.0 1.0 0.0"/>
             <limit upper="0.2617994" lower="-0.2617994" effort="100" velocity="100"/>
+            <dynamics damping="2.0" friction="0.2"/>
         </joint>
 
 
-        <joint name="${name}_front_left_link_joint" type="revolute">
+        <joint name="${name}_front_left_link_joint" type="fixed">
             <origin xyz="0.244132 0.178623 0.051277" rpy="0 0 1.5708"/>
             <parent link="${name}_base_origin"/>
             <child link="${name}_front_left_link"/>
             <axis xyz="1.0 0.0 0.0"/>
             <limit upper="0.2617994" lower="-0.2617994" effort="100" velocity="100"/>
+            <dynamics damping="2.0" friction="0.2"/>
         </joint>
-        <joint name="${name}_back_left_link_joint" type="revolute">
+        <joint name="${name}_back_left_link_joint" type="fixed">
             <origin xyz="0.170002 0.178623 0.051277" rpy="0 0 1.5708"/>
             <parent link="${name}_base_origin"/>
             <child link="${name}_back_left_link"/>
-            <axis xyz="1.0 0.0 0.0"/>
-            <limit upper="0.2617994" lower="-0.2617994" effort="100" velocity="100"/>
+            <!-- <axis xyz="1.0 0.0 0.0"/>
+            <limit upper="0.2617994" lower="-0.2617994" effort="100" velocity="100"/> -->
         </joint>
-        <joint name="${name}_front_left_bogie_joint" type="continuous">
+        <joint name="${name}_front_left_bogie_joint" type="fixed">
             <origin xyz="0.036626 0.062229 -0.077732" rpy="0 0 0"/>
             <parent link="${name}_front_left_link"/>
             <child link="${name}_left_bogie"/>
             <axis xyz="1.0 0.0 -0.0"/>
             <limit upper="0.2617994" lower="-0.2617994" effort="100" velocity="100"/>
+            <dynamics damping="2.0" friction="0.2"/>
         </joint>
         <!-- Four Bars Don't exist in URDF's See mimic for Parallel four bars -->
         <!-- <joint name="${name}_back_left_bogie_joint" type="revolute">
@@ -402,24 +405,28 @@ Urdf of the rovers chassis and bogies
 
 
 
-        <joint name="${name}_front_right_link_joint" type="revolute">
+        <joint name="${name}_front_right_link_joint" type="fixed">
             <origin xyz="0.244132 -0.220157 0.051277" rpy="0 0 1.5708"/>
             <parent link="${name}_base_origin"/>
             <child link="${name}_front_right_link"/>
             <axis xyz="1.0 0.0 0.0"/>
             <limit upper="0.2617994" lower="-0.2617994" effort="100" velocity="100"/>
+            <dynamics damping="2.0" friction="0.2"/>
+
         </joint>
-        <joint name="${name}_back_right_link_joint" type="continuous">
+        <joint name="${name}_back_right_link_joint" type="fixed">
             <origin xyz="0.170002 -0.220157 0.051277" rpy="0 0 1.5708"/>
             <parent link="${name}_base_origin"/>
             <child link="${name}_back_right_link"/>
-            <axis xyz="1.0 0.0 0.0"/>
+            <!-- <axis xyz="1.0 0.0 0.0"/> -->
         </joint>
-        <joint name="${name}_front_right_bogie_joint" type="continuous">
+        <joint name="${name}_front_right_bogie_joint" type="fixed">
             <origin xyz="-0.036626 0.054471 -0.076141" rpy="0 0 0"/>
             <parent link="${name}_front_right_link"/>
             <child link="${name}_right_bogie"/>
             <axis xyz="-1.0 0.0 0.0"/>
+            <limit upper="0.2617994" lower="-0.2617994" effort="100" velocity="100"/>
+            <dynamics damping="2.0" friction="0.2"/>
         </joint>
         <!-- Four bars don't exist in URDF's -->
         <!-- <joint name="${name}_back_right_bogie_joint" type="revolute">
@@ -436,7 +443,7 @@ Urdf of the rovers chassis and bogies
             <origin xyz="0.188902 -0.225425 -0.000314" rpy="0 0 0"/>
             <parent link="${name}_left_bogie"/>
             <child link="${name}_front_left_wheel"/>
-            <axis xyz="-1.0 0.0 0.0"/>
+            <axis xyz="1.0 0.0 0.0"/>
         </joint>
         <joint name="${name}_back_left_wheel_joint" type="continuous">
             <origin xyz="0.423979 0.027271 -0.078592" rpy="0 0 0"/>
@@ -448,7 +455,7 @@ Urdf of the rovers chassis and bogies
             <origin xyz="0.188902 0.174625 0.000242" rpy="0 0 0"/>
             <parent link="${name}_left_bogie"/>
             <child link="${name}_middle_left_wheel"/>
-            <axis xyz="-1.0 0.0 0.0"/>
+            <axis xyz="1.0 0.0 0.0"/>
         </joint>
 
 
@@ -456,13 +463,13 @@ Urdf of the rovers chassis and bogies
             <origin xyz="-0.188394 -0.225172 -0.010687" rpy="0 0 0"/>
             <parent link="${name}_right_bogie"/>
             <child link="${name}_front_right_wheel"/>
-            <axis xyz="-1.0 -0.0 0.0"/>
+            <axis xyz="1.0 -0.0 0.0"/>
         </joint>
         <joint name="${name}_middle_right_wheel_joint" type="continuous">
             <origin xyz="-0.188148 0.174428 0.008279" rpy="0 0 0"/>
             <parent link="${name}_right_bogie"/>
             <child link="${name}_middle_right_wheel"/>
-            <axis xyz="-1.0 0.0 0.0"/>
+            <axis xyz="1.0 0.0 0.0"/>
         </joint>
         <joint name="${name}_back_right_wheel_joint" type="continuous">
             <origin xyz="-0.424281 0.027271 -0.076944" rpy="0 0 0"/>
@@ -470,6 +477,62 @@ Urdf of the rovers chassis and bogies
             <child link="${name}_back_right_wheel"/>
             <axis xyz="1.0 0.0 0.0"/>
         </joint>
+
+        <gazebo reference="${name}_base_origin">
+            <sensor name="imu_sensor" type="imu">
+                <always_on>1</always_on>
+                <update_rate>100</update_rate>
+                <visualize>true</visualize>
+                <topic>imu/data/raw</topic>
+                <ignition_frame_id>${name}_base_origin</ignition_frame_id>
+                <plugin filename="gz-sim-imu-system"
+                    name="gz::sim::systems::Imu">
+                </plugin>
+            </sensor>
+        </gazebo>
+        <gazebo reference="${name}_base_origin">
+            <sensor name="imu_mag" type="magnetometer">
+                <always_on>1</always_on>
+                <update_rate>100</update_rate>
+                <visualize>true</visualize>
+                <topic>imu/mag/raw</topic>
+                <ignition_frame_id>${name}_base_origin</ignition_frame_id>
+                <plugin filename="ignition-gazebo-magnetometer-system"
+                    name="ignition::gazebo::systems::Magnetometer">
+                </plugin>
+            </sensor>
+        </gazebo>
+
+        <gazebo reference="${name}_base_origin">
+            <sensor name="gps" type="navsat">
+                <always_on>true</always_on>
+                <update_rate>100</update_rate>
+                <visualize>true</visualize>
+                <topic>gps/raw</topic>
+                <ignition_frame_id>${name}_base_origin</ignition_frame_id>
+                <plugin
+                    filename="ignition-gazebo-navsat-system"
+                    name="ignition::gazebo::systems::NavSat">
+                </plugin>
+
+                <navsat>
+                    <position_sensing>
+                        <horizontal>
+                            <noise type="gaussian">
+                                <mean>0.0</mean>
+                                <stddev>1.5e-5</stddev>   <!-- meters -->
+                            </noise>
+                        </horizontal>
+                        <vertical>
+                            <noise type="gaussian">
+                                <mean>0.0</mean>
+                                <stddev>3.0</stddev>
+                            </noise>
+                        </vertical>
+                    </position_sensing>
+                </navsat>
+            </sensor>
+        </gazebo>
 
     </xacro:macro>
 </robot>

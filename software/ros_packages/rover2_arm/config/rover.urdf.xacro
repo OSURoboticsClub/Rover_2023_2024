@@ -6,6 +6,7 @@
     <xacro:arg name="attachment" default="arm" />
 
     <xacro:property name="hardware_type" value="$(arg ros2_control_hardware_type)"/>
+    <xacro:property name="front_attachment" value = "$(arg attachment)"/>
     <!-- Import rover urdf file -->
     <xacro:include filename="$(find rover_urdf)/urdf/rover2_urdf.xacro" />
 
@@ -16,20 +17,10 @@
 
     <xacro:include filename="$(find rover_urdf)/ros2_control/rover_body.ros2_control.xacro" />
 
-    <!-- Include sensors and other links -->
-    <xacro:include filename="$(find realsense2_description)/urdf/_d405.urdf.xacro"/>
-  
-    <!-- Instantiate micros  -->
-    <xacro:unless value="${hardware_type == 'gazebo'}">
-        <xacro:sensor_d405 parent ="rover_arm_gripper" name="d405" use_nominal_extrinsics="true">
-            <!-- For older urdf <origin xyz="0 0.04075 0.1" rpy="0 -1.3963 -1.5708"/> -->
-            <origin xyz="-0.001611 -0.040711 0.099525" rpy="0.0 -1.3963635 1.5707963"/> 
-        </xacro:sensor_d405>
-
     <!-- Include rover arm ros2_control -->
-    
+    <xacro:if value="${front_attachment == 'arm'}">
         <xacro:rover_ros2_control name="rover_arm" initial_positions_file="$(arg initial_positions_file)" ros2_control_hardware_type="$(arg ros2_control_hardware_type)"/>
-    </xacro:unless>
+    </xacro:if>
     <!-- Include rover drive ros2_control -->
-    <xacro:rover_body_ros2_control name="rover_drive" initial_positions_file="$(arg drive_initial_positions_file)" ros2_control_hardware_type="gazebo"/>
+    <xacro:rover_body_ros2_control name="rover_drive" initial_positions_file="$(arg drive_initial_positions_file)" ros2_control_hardware_type="$(arg ros2_control_hardware_type)"/>
 </robot>

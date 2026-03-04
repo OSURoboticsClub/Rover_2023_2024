@@ -42,7 +42,7 @@ class GripperCanControl(Node):
         self.declare_parameter('joy_publish_rate', 30)
         self.declare_parameter('direction', -1)
         self.declare_parameter('flat_endpoints', "")
-        self.declare_parameter('can', "can1")
+        self.declare_parameter('can', "can0")
         self.is_position_control = self.get_parameter('is_position_control').value
         self.joy_publish_rate = self.get_parameter('joy_publish_rate').value
         self.direction = self.get_parameter('direction').value #direction odrive closes
