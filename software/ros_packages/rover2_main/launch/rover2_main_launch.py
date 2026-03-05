@@ -57,7 +57,7 @@ def generate_launch_description():
       imu,
       arm,
       status,
-      cameras,
+#      cameras,
       nav_autonomy,
       delay_mapping,
    ])
