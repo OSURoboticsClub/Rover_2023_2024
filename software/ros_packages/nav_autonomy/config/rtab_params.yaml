@@ -14,33 +14,75 @@ rtabmap:
     subscribe_rgb: true
     subscribe_odom_info: false
     approx_sync: true                    # Odom is from external source, so best to approx sync?
-    publish_tf: true
+    publish_tf: false                    # KRJ TODO: Setting this to false for now, so that it does not interfere with gps map frame.
     
     # Internal parameters (must be strings)
     # /Grid
     # Configure generation of obstacle map
     Grid/3D: "false"                     # We do not want octomap. Saves memory and time. Allows raytracing?
     Grid/CellSize: "0.05"
-    Grid/RangeMin: "0.0"                 # 0 default
-    Grid/RangeMax: "5"                   # 5 default
+    # Grid/RangeMin: "0.0"                 # 0 default
+    # Grid/RangeMax: "5"                   # 5 default
     Grid/MaxGroundAngle: "60"
     Grid/RayTracing: "true"              # Fill empty space
     # Grid/FromDepth: "true"             # KRJ TODO: IDK what this was for
-    # Grid/MaxGroundHeight: "0.1"
+    Grid/MaxGroundHeight: "0.2"
+    Grid/MaxObstacleHeight: "2"
+    Grid/NormalsSegmentation: "false"    # Use flat cuttoffs to split ground and obstacles at MaxGroundHeight and MaxObstacleHeight instead of based on normals
     # Grid/MapFrameProjection: "true"
+    # GridGlobal/OccupancyThr: ".7"         # .5 default
+
+    # optimizer
+    # Optimizer/Strategy: "1" # 0=TORO, 1=g2o, 2=GTSAM and 3=Ceres
+    # Optimizer/Iteration: "20"
+    # Optimizer/Epsilon: "0.000001"    # Stop optimizing when the error improvement is less than this value.  
+    Optimizer/Robust: "true"    # Required to remove bad loop closured from map in post. Robust graph optimization using Vertigo (only work for g2o and GTSAM optimization strategies)
+    # Optimizer/VarianceIgnored: 'true'           # This might be what I want to ignore varaince and trust? No this just smears it without moving graph
+
+    RGBD/LinearUpdate:          '0.0'
+    RGBD/NeighborLinkRefining: 'false'
+    RGBD/ProximityBySpace:     'false'  # Referred paper did only global loop closure detection
+    RGBD/OptimizeFromGraphEnd: 'true'   # more compute, but if set to false, could have more jumpy map
+    RGBD/OptimizeMaxError:     '10000'       # KRJ changed: from 10 to default 3, only accept good closures
+    RGBD/LoopCovLimited:        'false'
+    RGBD/LocalBundleOnLoopClosure: 'true'
+
+    # These might not even apply because not in localization mode?
+    # RGBD/LocalizationSmoothing: 'false'   # True by default, turn off to stop odometry from limiting our jumps
+    # RGBD/LocalizationPriorError: '0.0'    # .0001 default, does this hard set prior cov to small?
+
+    Reg/Strategy:              '2'
+    Icp/Iterations':            '30'
+    Icp/VoxelSize':             '0'
+    Vis/MinInliers':            '12'
+    Vis/MaxDepth':              '0'
+    RGBD/AngularUpdate':        '0.05'  # KRJ changed: .01 - .05 to reduce compute
+    # RGBD/LinearUpdate':         '0.05'  # KRJ changed: .01 - .05 to reduce compute
+    Rtabmap/TimeThr':           '700'
+    Mem/RehearsalSimilarity':   '0.30'   
+    Kp/TfIdfLikelihoodUsed':    'false'
+    Bayes/FullPredictionUpdate': 'false' # KRJ changed: save compute
+    Kp/DetectorStrategy':       '1'      
+    Vis/FeatureType':           '1'      
+    Kp/MaxFeatures':            '400'
+    Reg/Force3DoF':             'false'   # KRJ changed: we will be moving on 3D terrain
+    Optimizer/Strategy':        '2'       # This is default
+    Optimizer/Iterations':      '30'      # KRJ changed: reduced from 100 to save processing
+    Kp/IncrementalFlann':       'true'    # KRJ changed: save processing
+    Icp/MaxTranslation':        '0.5'
     
     # Noise filtering
     # KRJ TODO: This could break it if it filters out too many
     Grid/NoiseFilteringRadius: "0.1"     # Must have so many neighbors within radius to be considered. Done after segmentation
-    Grid/NoiseFilteringMinNeighbors: "5"
+    Grid/NoiseFilteringMinNeighbors: "2"
     GridGlobal/Eroded: "true"            # Take off the outer edge of obstacles (grid square only included if all of its neighbors are obstacles)
     
     # Other stuff
-    Grid/MinClusterSize: "10"            # 10 default. Minimum cluster size to project the points. KRJ TODO: How is this different from noise filtering min neighbors. I don't think I understand what this does, so I'm not gonna mess with it. Its part of segmenting ground from objects by normals
-    GridGlobal/FootprintRadius: "0.2"    # Footprint radius (m) used to clear all obstacles under the graph.
+    # Grid/MinClusterSize: "10"            # 10 default. Minimum cluster size to project the points. KRJ TODO: How is this different from noise filtering min neighbors. I don't think I understand what this does, so I'm not gonna mess with it. Its part of segmenting ground from objects by normals
+    # GridGlobal/FootprintRadius: "0.2"    # Footprint radius (m) used to clear all obstacles under the graph.
     
     # /Optimizer
-    # Optimizer/PriorsIgnored: "false"   # Fuse GPS as a prior
+    Optimizer/PriorsIgnored: "false"   # Fuse GPS as a prior
     
     # Note from the docs: "Currently only g2o and gtsam optimization supports this."
     # It is ambiguous whether this is referring to supporting priors or supporting ignoring priors

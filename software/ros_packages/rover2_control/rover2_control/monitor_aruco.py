@@ -58,9 +58,7 @@ def main(args=None):
 
     # Map of camera labels to device paths
     camera_devices = {
-        "infrared": "/dev/video20",
-        "tower": "/dev/video22",
-	"gripper": "/dev/video21"
+        "infrared": "/dev/rover/camera_infrared",
     }
 
     node = monitor_aruco(camera_devices)
