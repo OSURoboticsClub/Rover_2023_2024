@@ -1,9 +1,10 @@
-#!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import UInt8MultiArray
-from sensor_msgs.msg import NavSatFix, NavSatStatus
-
+from sensor_msgs.msg import NavSatFix, NavSatStatus, Imu
+from robot_localization.srv import SetDatum
+from geographic_msgs.msg import GeoPoint
+from geometry_msgs.msg import PoseStamped, Pose, Quaternion
 import serial
 
 class GPSNode(Node):
@@ -14,11 +15,14 @@ class GPSNode(Node):
         self.get_logger().info(f"Serial port {self.ser.port} opened at {self.ser.baudrate} baud")
 
         self.fix_pub = self.create_publisher(NavSatFix, 'gps/fix', 10)
-
+        self.set_datum_srv = self.create_client(SetDatum, 'datum')
+        
         self.rtcm_sub = self.create_subscription(UInt8MultiArray, 'rtcm', self.rtcm_callback, 10)
-
+        self.imu_sub = self.create_subscription(Imu, 'imu/data', self.imu_callback, 10)
         self.buffer = bytearray()
         self.timer = self.create_timer(0.01, self.read_serial)
+        self.imu_quat = Quaternion()
+        self.datum_set = False  # Track if we've already set the datum
 
     def read_serial(self):
         try:
@@ -41,6 +45,9 @@ class GPSNode(Node):
 
         except serial.SerialException as e:
             self.get_logger().error(f"Serial error: {e}")
+
+    def imu_callback(self, msg):
+        self.imu_quat = msg.orientation
 
     def parse_nmea(self, line):
         parts = line.split(',')
@@ -75,26 +82,110 @@ class GPSNode(Node):
                     fix_msg.header.stamp = self.get_clock().now().to_msg()
                     fix_msg.header.frame_id = 'gps'
 
-                    fix_msg.status.status = NavSatStatus.STATUS_FIX if fix_quality > 0 else NavSatStatus.STATUS_NO_FIX
-                    fix_msg.status.service = NavSatStatus.SERVICE_GPS
+                    # Map NMEA fix quality to NavSatStatus
+                    if fix_quality == 0:
+                        fix_msg.status.status = NavSatStatus.STATUS_NO_FIX
+                    elif fix_quality == 1:
+                        fix_msg.status.status = NavSatStatus.STATUS_FIX
+                    elif fix_quality == 2:
+                        fix_msg.status.status = NavSatStatus.STATUS_SBAS_FIX
+                    elif fix_quality in [4, 5]:
+                        fix_msg.status.status = NavSatStatus.STATUS_GBAS_FIX
+                    else:
+                        fix_msg.status.status = NavSatStatus.STATUS_FIX
+
+                    # Detect service based on NMEA sentence type
+                    if parts[0].startswith('$GN'):
+                        fix_msg.status.service = NavSatStatus.SERVICE_GPS | NavSatStatus.SERVICE_GLONASS
+                    else:
+                        fix_msg.status.service = NavSatStatus.SERVICE_GPS
 
                     fix_msg.latitude = lat
                     fix_msg.longitude = lon
                     fix_msg.altitude = altitude
-                    fix_msg.position_covariance_type = NavSatFix.COVARIANCE_TYPE_UNKNOWN
 
-                    self.fix_pub.publish(fix_msg)
-                    self.get_logger().debug(f"Published GPS fix: lat={lat}, lon={lon}, alt={altitude}, sats={num_sats}")
+                    # Set position covariance based on GPS fix quality  
+                    fix_msg.position_covariance_type = NavSatFix.COVARIANCE_TYPE_DIAGONAL_KNOWN
+                    fix_msg.position_covariance = self.get_gps_covariance(fix_quality)
+                    
+                    if fix_quality > 0:
+                        self.fix_pub.publish(fix_msg)
+                        self.get_logger().debug(f"Published GPS fix: lat={lat}, lon={lon}, alt={altitude}, sats={num_sats}, quality={fix_quality}")
+                        
+                        # Set datum if fix quality > 1 and not already set
+                        if not self.datum_set:
+                            self.call_set_datum(lat, lon, altitude)
+                    else:
+                        self.get_logger().debug(f"GPS fix: NO FIX STATUS")
 
-            except (ValueError, IndexError):
-                self.get_logger().warn(f"Failed to parse NMEA line: {line}")
+            except (ValueError, IndexError) as e:
+                self.get_logger().warn(f"Failed to parse NMEA line: {line}, error: {e}")
+
+    def get_gps_covariance(self, fix_quality):
+        """Get position covariance based on GPS fix quality"""
+        if fix_quality in [4, 5]:
+            # RTK 0.01-0.5m
+            return [
+                0.01, 0.0, 0.0, 
+                0.0, 0.01, 0.0, 
+                0.0, 0.0, 0.04
+            ]
+        elif fix_quality == 2:
+            # DGPS 0.5-2m
+            return [
+                1.0, 0.0, 0.0, 
+                0.0, 1.0, 0.0, 
+                0.0, 0.0, 4.0
+            ]
+        elif fix_quality == 1:
+            # Standard GPS 2-5m 
+            return [
+                5.0, 0.0, 0.0, 
+                0.0, 5.0, 0.0, 
+                0.0, 0.0, 10.0
+            ]
+        else:
+            # No Fix 
+            return [
+                1e6, 0.0, 0.0, 
+                0.0, 1e6, 0.0, 
+                0.0, 0.0, 1e6
+            ]
+        
+
+    def call_set_datum(self, lat, lon, alt):
+        """Call SetDatum service to set the datum origin"""
+        if not self.set_datum_srv.wait_for_service(timeout_sec=1.0):
+            self.get_logger().warn('SetDatum service not available')
+            return
+        
+        req = SetDatum.Request()
+        req.geo_pose.position.latitude = lat
+        req.geo_pose.position.longitude = lon
+        req.geo_pose.position.altitude = alt
+        req.geo_pose.orientation = self.imu_quat
+	        
+
+        future = self.set_datum_srv.call_async(req)
+        future.add_done_callback(self.datum_response_callback)
+        
+        self.get_logger().info(f"Calling SetDatum with lat={lat}, lon={lon}, alt={alt}")
+
+    def datum_response_callback(self, future):
+        """Handle SetDatum service response"""
+        try:
+            response = future.result()
+            self.datum_set = True
+            self.get_logger().info('SetDatum service call successful - datum has been set')
+        except Exception as e:
+            self.get_logger().error(f'SetDatum service call failed: {e}')
 
     def rtcm_callback(self, msg: UInt8MultiArray):
         """Write incoming RTCM bytes to GPS"""
         try:
             data = bytes(msg.data)
             self.ser.write(data)
-            self.get_logger().debug(f"Wrote {len(data)} RTCM bytes to GPS")
+            self.get_logger().info(f"Wrote {len(data)} RTCM bytes to GPS")
         except serial.SerialException as e:
             self.get_logger().error(f"Failed to write RTCM data: {e}")
 

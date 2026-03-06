@@ -1,7 +1,7 @@
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_xml.launch_description_sources import XMLLaunchDescriptionSource
 
@@ -36,18 +36,28 @@ def generate_launch_description():
          get_package_share_directory('nav_autonomy'),
          'launch'), '/mapping_launch.py'])
       )
+   # Timer action to delay the listener node
+   delay_mapping = TimerAction(
+         period=5.0,  # Delay in seconds
+         actions=[mapping]
+      )
    nav_autonomy = IncludeLaunchDescription(
       PythonLaunchDescriptionSource([os.path.join(
          get_package_share_directory('nav_autonomy'),
          'launch'), '/nav_launch.py'])
       )
+   state_publisher = IncludeLaunchDescription(
+      PythonLaunchDescriptionSource([os.path.join(
+         get_package_share_directory('nav_autonomy'),
+         'launch'), '/state_publisher_launch.py'])
+      )
    return LaunchDescription([
+      state_publisher,
       drive_control,
       imu,
       arm,
       status,
-      mapping,
+#      cameras,
       nav_autonomy,
-      cameras,
-
+      delay_mapping,
    ])

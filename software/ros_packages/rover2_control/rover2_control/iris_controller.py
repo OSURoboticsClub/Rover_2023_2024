@@ -5,10 +5,8 @@
 # Python native imports
 import rclpy
 from rclpy.node import Node
-
+import serial
 from time import time,sleep
-import serial.rs485
-import minimalmodbus
 from sensor_msgs.msg import Joy
 from std_msgs.msg import Float32MultiArray
 
@@ -19,7 +17,7 @@ from rover2_control_interface.msg import DriveCommandMessage, IrisStatusMessage
 #####################################
 NODE_NAME = "iris_controller"
 
-DEFAULT_PORT = "/dev/rover/ttyIRIS"
+DEFAULT_PORT = "/dev/ttyUSB0"
 DEFAULT_BAUD = 115200
 
 DEFAULT_DRIVE_COMMAND_TOPIC = "command_control/iris_drive"
@@ -32,7 +30,7 @@ DEFAULT_ARM_POSE_COMMAND_TOPIC = "set_joint_angles"
 DEFAULT_MOVEIT_CONTROLLER_JOY_BUTTON = 8
 
 
-DEFAULT_HERTZ = 100
+DEFAULT_HERTZ = 30
 COMMUNICATIONS_TIMEOUT = 0.15  # Seconds
 
 MODBUS_ID = 1
@@ -110,8 +108,6 @@ class IrisController(Node):
 
         self.wait_time = 1.0 / self.declare_parameter('~hertz', DEFAULT_HERTZ).value
 
-        self.iris = minimalmodbus.Instrument(self.port, MODBUS_ID)
-        self.__setup_minimalmodbus_for_485()
 
         self.drive_command_publisher = self.create_publisher(DriveCommandMessage, self.drive_command_publisher_topic, 1)
         self.iris_status_publisher = self.create_publisher(IrisStatusMessage, self.iris_status_publisher_topic, 1)
@@ -120,7 +116,7 @@ class IrisController(Node):
         self.arm_pose_command_publisher = self.create_publisher(Float32MultiArray,self.arm_pose_command_publisher_topic, 1)
        
 
-        self.registers = []
+        self.registers = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 
         self.iris_connected = False
 
@@ -132,14 +128,11 @@ class IrisController(Node):
 
         self.published_ik_controller = True
 
+        self.ser = serial.Serial(port=self.port, baudrate=self.baud, timeout=1)
         
         self.sa_switch_toggle = False
 
         self.sb_switch_toggle = False
-    def __setup_minimalmodbus_for_485(self):
-        self.iris.serial = serial.rs485.RS485(self.port, baudrate=self.baud, timeout=COMMUNICATIONS_TIMEOUT)
-        self.iris.serial.rs485_mode = serial.rs485.RS485Settings(rts_level_for_rx=1, rts_level_for_tx=0,
-                                                                 delay_before_rx=RX_DELAY, delay_before_tx=TX_DELAY)
 
     def main_loop(self):
         try:
@@ -147,24 +140,25 @@ class IrisController(Node):
             self.read_registers()
             self.broadcast_drive_if_current_mode()
             self.broadcast_arm_if_current_mode()
-            self.broadcast_iris_status()
+            #self.broadcast_iris_status()
             self.broadcast_arm_change_controller()
       
         except Exception as error:
             print(f"IRIS: Error occurred: {error}")
 
-        if (time() - self.iris_last_seen_time) > IRIS_LAST_SEEN_TIMEOUT:
-            print(f"Iris not seen for {IRIS_LAST_SEEN_TIMEOUT} seconds. Exiting.")
-            self.destroy_node()
-            return  # Exit so respawn can take over
 
     def read_registers(self):
-        try:
-            self.registers = self.iris.read_registers(0, len(MODBUS_REGISTERS))
+        if self.ser.in_waiting > 0:
+            self.ser.reset_input_buffer()
             self.iris_last_seen_time = time()
-        except Exception as error:
-            self.iris_connected = False
-
+            self.ser.readline()
+            line = self.ser.readline().decode('utf-8').strip()
+            try:
+                delimit_line = line.split("\t")
+                self.registers = list(map(int, delimit_line))
+                print(self.registers)
+            except ValueError:
+                print(f"IRIS: Malformed line: {line}")
     def broadcast_drive_if_current_mode(self):
         if self.registers[MODBUS_REGISTERS[REGISTER_STATE_MAPPING["DRIVE_VS_NEUTRAL_VS_ARM"]]] < SBUS_VALUES["SBUS_MID"] - SBUS_VALUES["SBUS_DEADZONE"]:
             command = DriveCommandMessage()

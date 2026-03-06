@@ -28,6 +28,7 @@ setup(
             'scimech_sensors = rover2_odometry.scimech_sensors:main',
             'odrive_can_info = rover2_odometry.odrive_can_info:main',
             'GPSNode = rover2_odometry.GPSNode:main',
+            'RTCMSerialNode = rover2_odometry.RTCMSerialNode:main',
         ],
     },
 )
