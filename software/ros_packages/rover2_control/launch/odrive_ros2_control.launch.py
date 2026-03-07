@@ -171,7 +171,7 @@ def generate_launch_description():
         # IRIS controller
         use_sim_time_arg,
         hardware_type_arg,
-        launch_rover2_control_arg,
+        launch_ros2_control_arg,
         Node(
             package='rover2_control',
             executable='iris_controller',

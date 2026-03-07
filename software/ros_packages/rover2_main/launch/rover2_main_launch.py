@@ -22,7 +22,7 @@ def generate_launch_description():
          '/odrive_ros2_control.launch.py']
       ),
       launch_arguments={
-          "launch_ros2_control":"false"
+          "launch_ros2_control":"False"
       }.items()
    )
 
@@ -44,7 +44,7 @@ def generate_launch_description():
          'launch'), '/rover_arm.launch.py']
       ),
       launch_arguments={
-          "launch_ros2_control":"false"
+          "launch_ros2_control":"False"
       }.items()
    )
 
@@ -138,6 +138,9 @@ def generate_launch_description():
 
     return LaunchDescription([
 #      state_publisher,
+      ros2_control_node,
+      robot_state_publisher_node,
+      joint_state_broadcaster_spawner,
       drive_control,
       imu,
       arm,
