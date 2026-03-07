@@ -463,19 +463,19 @@ Urdf of the rovers chassis and bogies
             <origin xyz="-0.188394 -0.225172 -0.010687" rpy="0 0 0"/>
             <parent link="${name}_right_bogie"/>
             <child link="${name}_front_right_wheel"/>
-            <axis xyz="-1.0 -0.0 0.0"/>
+            <axis xyz="1.0 -0.0 0.0"/>
         </joint>
         <joint name="${name}_middle_right_wheel_joint" type="continuous">
             <origin xyz="-0.188148 0.174428 0.008279" rpy="0 0 0"/>
             <parent link="${name}_right_bogie"/>
             <child link="${name}_middle_right_wheel"/>
-            <axis xyz="-1.0 0.0 0.0"/>
+            <axis xyz="1.0 0.0 0.0"/>
         </joint>
         <joint name="${name}_back_right_wheel_joint" type="continuous">
             <origin xyz="-0.424281 0.027271 -0.076944" rpy="0 0 0"/>
             <parent link="${name}_rear_bogie"/>
             <child link="${name}_back_right_wheel"/>
-            <axis xyz="-1.0 0.0 0.0"/>
+            <axis xyz="1.0 0.0 0.0"/>
         </joint>
 
         <gazebo reference="${name}_base_origin">

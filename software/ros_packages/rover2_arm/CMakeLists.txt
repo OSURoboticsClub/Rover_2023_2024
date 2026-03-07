@@ -7,8 +7,7 @@ ament_package()
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/launch")
   install(
-    DIRECTORY launch
-    DIRECTORY config
+    DIRECTORY launch config
     DESTINATION share/${PROJECT_NAME}
     PATTERN "setup_assistant.launch" EXCLUDE)
 endif()
