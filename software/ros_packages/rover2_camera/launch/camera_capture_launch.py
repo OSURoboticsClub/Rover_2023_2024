@@ -54,6 +54,34 @@ def generate_launch_description():
 	}],
         output='screen'
     ) 
+
+    d405_node = Node(
+        package='realsense2_camera',
+        executable='realsense2_camera_node',
+        name='d405',
+        parameters=[{
+            "camera_name": "d405",
+            "depth_width": 1280,
+            "depth_height": 720,
+            "color_width": 1280,
+            "color_height": 720,
+            "pointcloud.enable": True,
+            "align_depth.enable": True,
+            #"enable_rgbd": True,
+            "decimation_filter": True,
+            "decimation_filter.filter_magnitude": 8,
+            "enable_sync": True,
+            "pointcloud.stream_filter": 2,
+            # "enable_color": True,
+            # "enable_depth": True,
+            "serial_no":"_218622273613",
+            "depth_fps": 5,
+            "rgb_fps": 5,
+        }],
+        output='screen'
+    )
+
+
    # Your rover2_camera nodes
     ir_camera_node = Node(
         package='rover2_camera',
@@ -149,6 +177,8 @@ def generate_launch_description():
     respawn=True
     )
 
+
+
     return LaunchDescription([
         realsense_launch_nav,
 #        ir_camera_node,
@@ -156,6 +186,7 @@ def generate_launch_description():
 #        gripper_rgb_node,
         chassis_right_cam_node,
         chassis_left_cam_node,
-        muxing_node
+        muxing_node,
+        d405_node
     ])
 

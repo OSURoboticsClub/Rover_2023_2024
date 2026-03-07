@@ -10,6 +10,7 @@ from launch_ros.descriptions import ComposableNode
 from launch.actions import ExecuteProcess
 import xacro
 from moveit_configs_utils import MoveItConfigsBuilder
+from launch.conditions import IfCondition
 
 def load_file(package_name, file_path):
     package_path = get_package_share_directory(package_name)
@@ -44,6 +45,14 @@ def generate_launch_description():
         default_value="xbox",
         description="Ros2 Control Hardware Interface Type [xbox, ps, flight]",
     )
+
+    launch_ros2_control = LaunchConfiguration('launch_ros2_control', default='true')
+    launch_ros2_control_arg = DeclareLaunchArgument(
+            'launch_ros2_control',
+            default_value='true',
+            description='Launch drivetrain with indendent ros2 control[default:true]'
+    )
+
 
     kinematics_yaml = load_yaml(
         "rover2_arm", "config/kinematics.yaml"   
@@ -132,6 +141,7 @@ def generate_launch_description():
             ("/controller_manager/robot_description", "/robot_description"),
         ],
         output="screen",
+        condition=IfCondition(launch_ros2_control)
     )
 
     joint_state_broadcaster_spawner = Node(
@@ -144,6 +154,7 @@ def generate_launch_description():
             "--controller-manager",
             "/controller_manager",
         ],
+        condition=IfCondition(launch_ros2_control)
     )
 
     moveit_arm_controller_spawner = Node(
@@ -219,12 +230,6 @@ def generate_launch_description():
                 parameters=[{"child_frame_id": "/rover_base_origin", "frame_id": "/world"}],
             ),
             ComposableNode(
-                package="robot_state_publisher",
-                plugin="robot_state_publisher::RobotStatePublisher",
-                name="robot_state_publisher",
-                parameters=[moveit_config.robot_description],
-            ),
-            ComposableNode(
                 package="joy",
                 plugin="joy::Joy",
                 name="joy_node",
@@ -265,7 +270,7 @@ def generate_launch_description():
             "pointcloud.stream_filter": 2,
             # "enable_color": True,
             # "enable_depth": True,
-            #"serial_no":"_218622273613",
+            "serial_no":"_218622273613",
             "depth_fps": 5,
             "rgb_fps": 5,
         }],
@@ -291,8 +296,21 @@ def generate_launch_description():
         output='screen'
     )
 
+
+    robot_state_publisher_node = Node(
+        package="robot_state_publisher",
+        executable="robot_state_publisher",
+        parameters=[{
+            'use_sim_time': "false",
+            "robot_description": moveit_config.robot_description
+        }],
+        output="screen",
+        condition=IfCondition(launch_ros2_control)
+    )
+
     return LaunchDescription(
         [
+            launch_ros2_control_arg,
             ros2_control_hardware_type, 
             controller_type,
             rviz_node,
@@ -303,7 +321,8 @@ def generate_launch_description():
             rover_arm_controller_spawner,
             moveit_arm_controller_spawner,
             controller_switcher_node,
-            d405_node,
+            robot_state_publisher_node,
+            #d405_node,
             #d455_node,
         ]
     )

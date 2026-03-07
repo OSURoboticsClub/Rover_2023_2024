@@ -8,7 +8,7 @@ from ament_index_python.packages import get_package_share_directory
 from launch_ros.substitutions import FindPackageShare
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
-
+from launch.conditions import IfCondition
 
 import os
 
@@ -56,6 +56,13 @@ def generate_launch_description():
             description='Robot Hardware [main, sim, gazebo]'
     )
 
+    launch_ros2_control = LaunchConfiguration('launch_ros2_control', default='true')
+    launch_ros2_control_arg = DeclareLaunchArgument(
+            'launch_ros2_control',
+            default_value='true',
+            description='Launch drivetrain with indendent ros2 control[default:true]'
+    )
+
     #Load Robot Description
     robot_description = Command([
         FindExecutable(name="xacro"), 
@@ -82,7 +89,8 @@ def generate_launch_description():
             'use_sim_time': use_sim_time,
             "robot_description": robot_description
         }],
-        **config
+        output="screen",
+        condition=IfCondition(launch_ros2_control)
     )
     
     # Load joint_state_broadcaster after ros2_control_node is up
@@ -96,7 +104,14 @@ def generate_launch_description():
             "--controller-manager",
             "/controller_manager",
         ],
-        **config
+        condition=IfCondition(launch_ros2_control)
+    )
+    
+   #drive controller
+    drive_controller = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["drive_controller",  "-c", "/controller_manager"],
     )
     #ros2 control node
     ros2_controllers_path = os.path.join(
@@ -111,6 +126,7 @@ def generate_launch_description():
         remappings=[
             ("/controller_manager/robot_description", "/robot_description"),
         ],
+        condition=IfCondition(launch_ros2_control),
         **config
     )
 
@@ -155,24 +171,25 @@ def generate_launch_description():
         # IRIS controller
         use_sim_time_arg,
         hardware_type_arg,
+        launch_rover2_control_arg,
         Node(
             package='rover2_control',
             executable='iris_controller',
             name='iris_controller',
             parameters=[{
-                '~port': '/dev/rover/ttyIRIS',
-                '~hertz': 20
+                '~port': '/dev/ttyUSB0',
+                '~hertz': 30
             }],
             **config
         ),
         # Load joint_state_broadcaster after ros2_control_node is up
   
-        Node(
-            package='rover2_control',
-            executable='chassis_pan_tilt_control',
-            name='chassis_pan_tilt',
-            **config
-        ),
+        #Node(
+        #    package='rover2_control',
+        #    executable='chassis_pan_tilt_control',
+        #    name='chassis_pan_tilt',
+        #    **config
+        #),
 #        Node(
 #            package='rover2_control',
 #            executable='monitor_aruco',
@@ -185,15 +202,16 @@ def generate_launch_description():
         #     name='tower_pan_tilt',
         #     **config
         # ),
-        Node(
-            package='rover2_control',
-            executable='joint_position_control',
-            name='joint_position',
-            **config
-        ),
+        #Node(
+        #    package='rover2_control',
+        #    executable='joint_position_control',
+        #    name='joint_position',
+        #    **config
+        #),
         robot_state_publisher_node,
         ros2_control_node,
-        # joint_state_broadcaster_spawner,
+        joint_state_broadcaster_spawner,
+        drive_controller,
         joy_to_drive,
         # gripper_can_control_node,
 #        auton_controller

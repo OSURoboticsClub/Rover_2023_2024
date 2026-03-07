@@ -155,8 +155,8 @@ class IrisController(Node):
             line = self.ser.readline().decode('utf-8').strip()
             try:
                 delimit_line = line.split("\t")
-                self.registers = list(map(int, delimit_line))
-                print(self.registers)
+                if len(delimit_line)==16:
+                    self.registers = list(map(int, delimit_line))
             except ValueError:
                 print(f"IRIS: Malformed line: {line}")
     def broadcast_drive_if_current_mode(self):

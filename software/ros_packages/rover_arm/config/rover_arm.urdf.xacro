@@ -3,8 +3,18 @@
     <xacro:arg name="initial_positions_file" default="initial_positions.yaml" />
     <xacro:arg name="ros2_control_hardware_type" default="main" />
 
+    <xacro:include filename="$(find rover_urdf)/urdf/rover_body.urdf.xacro" />
+    
+    <xacro:rover_body name="rover_body">
+    </xacro:rover_body>
+
+
     <!-- Import rover_arm urdf file -->
     <xacro:include filename="$(find rover_arm_urdf)/urdf/rover_arm.urdf" />
+
+    <xacro:rover_arm parent="rover_base_origin">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:sensor_d455>
 
     <!-- Import control_xacro -->
     <xacro:include filename="rover_arm.ros2_control.xacro" />
