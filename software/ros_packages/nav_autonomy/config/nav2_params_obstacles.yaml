@@ -213,7 +213,7 @@ local_costmap:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: True
         cost_scaling_factor: 5.0
-        inflation_radius: 0.5
+        inflation_radius: 0.7
 
 
 global_costmap:
@@ -279,7 +279,7 @@ global_costmap:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: True
         cost_scaling_factor: 3.0
-        inflation_radius: 0.5
+        inflation_radius: 0.7
       
 # map_server:
   #ros__parameters:
