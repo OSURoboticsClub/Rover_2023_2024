@@ -1,5 +1,7 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
+from launch.actions import TimerAction
+
 
 def generate_launch_description():
     config = {
@@ -82,7 +84,7 @@ def generate_launch_description():
                 'print_diagnostics': True,
                 'debug': False,
                 'frequency': 30.0,
-                'two_d_mode': True,
+                'two_d_mode': False,
                 'publish_tf': True,
                 # 'sensor_timeout': 0.1,
                 # 'transform_time_offset': 0.0,
@@ -120,67 +122,7 @@ def generate_launch_description():
                 # [false, false, false, false,  false,  true, false, false, false, false,  false,  false, false,  false,  false]
                 'imu0': '/imu/data',
                 'imu0_config': [False, False, False,
-                               False, False, True,
-                               False, False, False,
-                               False, False, False,
-                               False,  False,  False],
-                'imu0_queue_size': 10,
-                'imu0_differential': False,
-                'imu0_relative': True,
-                'imu0_remove_gravitational_acceleration': False,
-            }],
-            remappings=[
-                ('/odometry/filtered', '/odometry/local'),
-            ]
-        ),
-        
-        # Global EKF (map)
-        Node(
-            package='robot_localization',
-            executable='ekf_node',
-            name='ekf_node_map',
-            output='screen',
-            parameters=[{
-                'print_diagnostics': True,
-                'debug': False,
-                'publish_tf': True,
-                'frequency': 10.0,
-                'two_d_mode': True,
-                # 'sensor_timeout': 0.1,
-                # 'transform_time_offset': 0.0,
-                # 'transform_timeout': 0.0,
-                
-                'odom_frame': 'odom',
-                'base_link_frame': 'rover_base_origin',
-                'world_frame': 'map',
-                'map_frame': 'map', # published map frame tf name
-                
-                # Local odometry 
-                'odom0': '/wheel_odom',
-                'odom0_config': [False, False, False,
-                                False, False, False,
-                                True,  True,  False,
-                                False, False, True,
-                                False, False, False],
-                'odom0_queue_size': 10,
-                'odom0_differential': False,
-                'odom0_relative': False,
-
-                # GPS odometry (from navsat_transform) (pose x, y)
-                'odom1': 'odometry/gps',
-                'odom1_config': [True,  True,  False,   # x, y position
-                                False, False, False,
-                                False, False, False,
-                                False, False, False,
-                                False, False, False],
-                'odom1_queue_size': 10,
-                'odom1_differential': False,
-                'odom1_relative': False,
-                
-                # IMU (accel x, vel yaw)
-                'imu0': '/imu/data',
-                'imu0_config': [False, False, False,
-                               False, False, True,
+                               True, True, True,
                                False, False, False,
                                False, False, False,
                                False,  False,  False],
@@ -190,51 +132,115 @@ def generate_launch_description():
                 'imu0_remove_gravitational_acceleration': False,
             }],
             remappings=[
-                ('/odometry/filtered', 'odometry/global'),
+                ('/odometry/filtered', '/odometry/local'),
             ]
+        ),
+        
+        # Global EKF (map)
+        TimerAction(
+         period=1.0,  # Delay in seconds
+         actions=[
+            Node(
+                package='robot_localization',
+                executable='ekf_node',
+                name='ekf_node_map',
+                output='screen',
+                parameters=[{
+                    'print_diagnostics': True,
+                    'debug': False,
+                    'publish_tf': True,
+                    'frequency': 10.0,
+                    'two_d_mode': True,
+                    # 'sensor_timeout': 0.1,
+                    # 'transform_time_offset': 0.0,
+                    # 'transform_timeout': 0.0,
+                    
+                    'odom_frame': 'odom',
+                    'base_link_frame': 'rover_base_origin',
+                    'world_frame': 'map',
+                    'map_frame': 'map', # published map frame tf name
+                    
+                    # Local odometry 
+                    'odom0': '/wheel_odom',
+                    'odom0_config': [False, False, False,
+                                    False, False, False,
+                                    True,  True,  False,
+                                    False, False, True,
+                                    False, False, False],
+                    'odom0_queue_size': 10,
+                    'odom0_differential': False,
+                    'odom0_relative': False,
+
+                    # GPS odometry (from navsat_transform) (pose x, y)
+                    'odom1': 'odometry/gps',
+                    'odom1_config': [True,  True,  False,   # x, y position
+                                    False, False, False,
+                                    False, False, False,
+                                    False, False, False,
+                                    False, False, False],
+                    'odom1_queue_size': 10,
+                    'odom1_differential': False,
+                    'odom1_relative': False,
+                    
+                    # IMU (accel x, vel yaw)
+                    'imu0': '/imu/data',
+                    'imu0_config': [False, False, False,
+                                    True, True, True,
+                                    False, False, False,
+                                    False, False, False,
+                                    False,  False,  False],
+                    'imu0_queue_size': 10,
+                    'imu0_differential': False,
+                    'imu0_relative': False,
+                    'imu0_remove_gravitational_acceleration': False,
+                }],
+                remappings=[
+                    ('/odometry/filtered', 'odometry/global'),
+                ]
+            )]
         ),
 
 
-      # 5. NavSat Transform - converts GPS to map frame
-      Node(
-         package='robot_localization',
-         executable='navsat_transform_node',
-         name='navsat_transform',
-         output='screen',
-         parameters=[{
-            # Frequency and timing
-            'frequency': 30.0,
-            'delay': 3.0,
+        # 5. NavSat Transform - converts GPS to map frame
+        Node(
+            package='robot_localization',
+            executable='navsat_transform_node',
+            name='navsat_transform',
+            output='screen',
+            parameters=[{
+                # Frequency and timing
+                'frequency': 30.0,
+                'delay': 3.0,
 
-            # Magnetic declination at your location (radians)
-            # Find yours: https://www.ngdc.noaa.gov/geomag/calculators/magcalc.shtml
-            # 'magnetic_declination_radians': 0.253,
+                # Magnetic declination at your location (radians)
+                # Find yours: https://www.ngdc.noaa.gov/geomag/calculators/magcalc.shtml
+                # 'magnetic_declination_radians': 0.253,
 
-            # Use odometry heading instead of IMU
-            'use_odometry_yaw': False,
-            #'yaw_offset': 1.570796326, # yaw correction of IMU absolute yaw measurement (must point east)
+                # Use odometry heading instead of IMU
+                'use_odometry_yaw': False,
+                #'yaw_offset': 1.570796326, # yaw correction of IMU absolute yaw measurement (must point east)
 
-            # 2D navigation
-            'zero_altitude': True,
+                # 2D navigation
+                'zero_altitude': True,
 
-            # Publishing options
-            'broadcast_cartesian_transform': True,
-            'publish_filtered_gps': True,
+                # Publishing options
+                'broadcast_cartesian_transform': True,
+                'publish_filtered_gps': True,
 
-            # Let first GPS message set origin
-            'wait_for_datum': True,
-            #'use_manual_datum': True,
-            #'datum': [44.56722346625757, -123.27433385957002, 0.0],
+                # Let first GPS message set origin
+                'wait_for_datum': True,
+                #'use_manual_datum': True,
+                #'datum': [44.56722346625757, -123.27433385957002, 0.0],
 
-            'base_link_frame_id': 'rover_base_origin',
-            'world_frame_id': 'map',  # Match the EKFs
-         }],
-         remappings=[
-            ('/imu', '/imu/data'),                  # IMU topic
-            ('/gps/fix', '/gps/fix'),                    # GPS INPUT TOPIC
-            ('/gps/filtered', '/gps/filtered'),          # GPS INPUT TOPIC
-            ('/odometry/filtered', '/odometry/global'),  # Which EKF to use for heading
-            ('/odometry/gps', '/odometry/gps'),          # GPS output topic
-         ]
-      ),
+                'base_link_frame_id': 'rover_base_origin',
+                'world_frame_id': 'map',  # Match the EKFs
+            }],
+            remappings=[
+                ('/imu', '/imu/data'),                  # IMU topic
+                ('/gps/fix', '/gps/fix'),                    # GPS INPUT TOPIC
+                ('/gps/filtered', '/gps/filtered'),          # GPS INPUT TOPIC
+                ('/odometry/filtered', '/odometry/global'),  # Which EKF to use for heading
+                ('/odometry/gps', '/odometry/gps'),          # GPS output topic
+            ]
+        ),
     ])

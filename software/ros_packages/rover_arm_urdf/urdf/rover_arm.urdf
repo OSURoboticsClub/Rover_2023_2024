@@ -43,7 +43,7 @@
   <joint name="imu_joint" type="fixed">
     <parent link="rover_base_origin"/>
     <child link="imu_link"/>
-    <origin rpy="0 0 -1.5708" xyz=".1524 .1016 0"/>
+    <origin rpy="-0.0556722 0.116731 -1.5708" xyz=".1524 .1016 0"/>
   </joint>
 
   <link name="gps">
