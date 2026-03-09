@@ -32,6 +32,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            "gps_node = rover_gazebo.GPSNode:main",
+            "imu_node = rover_gazebo.imu:main",
         ],
     },
 )

@@ -48,6 +48,7 @@ Urdf for the rover of the DAM Robotics Rover triple bogie system.
             <!-- Arm option for gripper -->
 
         <!-- Gazebo Setup -->
+        <!-- Note that the below camera is on the depth frame which may not be the actual frame since aligned depth to color may be used instead -->
         <gazebo reference="d455_depth_frame">
             <sensor name="d455" type="rgbd_camera">
                 <ignition_frame_id>d455_depth_frame</ignition_frame_id>
@@ -74,6 +75,7 @@ Urdf for the rover of the DAM Robotics Rover triple bogie system.
                     <width>1280</width>
                     <height>720</height>
                     <format>R_FLOAT32</format>
+                    <!-- <format>R8G8B8</format> -->
                 </image>
                 <clip>
                     <near>0.1</near>
