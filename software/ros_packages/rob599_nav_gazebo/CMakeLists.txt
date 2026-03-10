@@ -18,6 +18,8 @@ find_package(tf2_ros REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(rclcpp_components REQUIRED)
+find_package(pluginlib REQUIRED)
+find_package(nav2_costmap_2d REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -29,6 +31,8 @@ install(DIRECTORY launch/
 install(DIRECTORY config/
   DESTINATION share/${PROJECT_NAME}/config
 )
+
+
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -47,4 +51,16 @@ add_library(${lib_name} SHARED
 include_directories(include)
 
 pluginlib_export_plugin_description_file(nav2_costmap_2d volumetriclayer.xml)
+
+ament_target_dependencies(${lib_name}
+  rclcpp
+  pluginlib
+  nav2_costmap_2d
+  nav2_msgs
+  nav2_voxel_grid
+  nav_msgs
+  sensor_msgs
+  laser_geometry
+)
 ament_package()
+

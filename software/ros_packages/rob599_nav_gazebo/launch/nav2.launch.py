@@ -395,12 +395,14 @@ def generate_launch_description():
         'use_action_for_goal':True,
         'Reg/Force3DoF':'true',
         'Grid/RayTracing':'true', # Fill empty space
+        'Grid/Sensor':'true',
         'Grid/3D':'True', # Use 2D occupancy
         'Grid/RangeMax':'3',
         'Grid/NormalsSegmentation':'false', # Use passthrough filter to detect obstacles
         'Grid/MaxGroundHeight':'0.05', # All points above 5 cm are obstacles
         'Grid/MaxObstacleHeight':'0.4',  # All points over 1 meter are ignored
-        'Optimizer/GravitySigma':'0' # Disable imu constraints (we are already in 2D)
+        'Optimizer/GravitySigma':'0', # Disable imu constraints (we are already in 2D)
+        "delete_db_on_start": True,
     }
     rtabmap_remappings = [
         ('odom', '/odometry/local'),
