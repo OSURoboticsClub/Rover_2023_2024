@@ -32,11 +32,11 @@ global_costmap:
 local_costmap:
   local_costmap:
     ros__parameters:
-      update_frequency: 5.0
-      publish_frequency: 2.0
+      update_frequency: 10.0
+      publish_frequency: 10.0
       global_frame: odom
       robot_base_frame: rover_base_origin
-      rolling_window: true
+      rolling_window: False
       width: 5.0
       height: 5.0
       resolution: 0.05
