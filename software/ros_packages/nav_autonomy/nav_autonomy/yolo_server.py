@@ -17,7 +17,7 @@ import cv2
 import torch
 
 torch.backends.cudnn.enabled = False
-                    
+# CUDNN still broken - may need to figure out for accel - benchmark difference on home pc w/ nvidia card?
 
 # ARUCO
 import asyncio
@@ -48,19 +48,70 @@ class YoloServer(Node):
 
         self.get_logger().info("YoloServer action server ready.")
 
-        # YOLO PARAMETERS
-        self.num_cameras = 1
-        self.source = "/dev/video64"
+        # TODO: Parameterize these as ROS2 params
+        # ROS2 Parameters
+        self.declare_parameter(
+            "num_cameras",
+            1,
+            ParameterDescriptor(
+                description="Number of cameras carouselling through MUXing node"
+            ),
+        )
+        self.declare_parameter(
+            "source",
+            "/dev/rover/camera_infrared",
+            ParameterDescriptor(
+                description="Camera source, default to normal camera - change to muxing node"
+            ),
+        )
+        self.declare_parameter(
+            "stop_threshold",
+            0.85,
+            ParameterDescriptor(
+                description="Threshold to search entire camera stack for to stop server and send back result"
+            ),
+        )
+        self.declare_parameter(
+            "check_threshold",
+            0.60,
+            ParameterDescriptor(
+                description="Threshold to start search pattern to check for object in environment"
+            ),
+        )
+        self.declare_parameter(
+            "max_frames",
+            25,
+            ParameterDescriptor(
+                description="Number of frames stored for history per camera, full history checked for stop_threshold"
+            ),
+        )
+        self.declare_parameter(
+            "check_frames",
+            10,
+            ParameterDescriptor(
+                description="Number of frames checked in history for check_threshold"
+            ),
+        )
+        self.declare_parameter(
+            "camera_carousel",
+            [0],
+            ParameterDescriptor(description="Array of camera numbers for input"),
+        )
+
+        # Internal Parameters
+        self.num_cameras = self.get_parameter("num_cameras").value
+        self.source = self.get_parameter("source").value
         self.quit = False
-        self.cam_queue = deque()
         # Append camera carousel order
-        self.cam_queue.append(0)
+        self.cam_queue = deque()
+        for cam in self.get_parameter("camera_carousel").value:
+            self.cam_queue.append(cam)
         # Confidence thresholds
-        self.stop_threshold = 0.85
-        self.check_threshold = 0.60
+        self.stop_threshold = self.get_parameter("stop_threshold").value
+        self.check_threshold = self.get_parameter("check_threshold").value
         # Frame Storage
-        self.max_frames = 25
-        self.check_frames = 10
+        self.max_frames = self.get_parameter("max_frames").value
+        self.check_frames = self.get_parameter("check_frames").value
 
     def goal_callback(self, goal_request):
         """Accept or reject a client request to begin an action."""
@@ -131,7 +182,9 @@ class YoloServer(Node):
     async def action_callback(self, goal_handle):
         class ActionCanceled(Exception):
             """Custom exception to handle action cancellation"""
+
             pass
+
         self.xc = None
         self.yc = None
         try:
@@ -163,7 +216,6 @@ class YoloServer(Node):
                 frame_id = 0
 
                 while cap.isOpened():
-
                     if goal_handle.is_cancel_requested:
                         goal_handle.canceled()
                         self.busy = False
@@ -174,7 +226,7 @@ class YoloServer(Node):
                     ret, frame = cap.read()
                     if not ret:
                         self.get_logger().warn("Failed to read frame")
-                        #break
+                        # break
 
                     # Run YOLO on frame
                     result = model(frame, device=0)[0]
@@ -199,11 +251,10 @@ class YoloServer(Node):
                         camera_stacks[current_cam].append(current_conf)  # add newest
 
                         # Grab average of list and check against thresholds
-                        total_mean = sum(camera_stacks[current_cam]) / len(
-                            camera_stacks[current_cam]
-                        )
+                        total_mean = sum(camera_stacks[current_cam]) / self.max_frames
+
                         recent_stack = camera_stacks[current_cam][-self.check_frames :]
-                        recent_mean = sum(recent_stack) / len(recent_stack)
+                        recent_mean = sum(recent_stack) / self.check_frames
 
                         # Overlay stats on display frame
                         cv2.putText(
@@ -226,9 +277,6 @@ class YoloServer(Node):
                             cv2.imshow("YOLO Detection", display_frame)
                             cv2.waitKey(1)
                             break
-                        elif recent_mean >= self.check_threshold:
-                            # TODO: send message to nav to stop and gather frames
-                            pass
 
                         feedback = YoloFind.Feedback()
                         feedback.confidence = current_conf
