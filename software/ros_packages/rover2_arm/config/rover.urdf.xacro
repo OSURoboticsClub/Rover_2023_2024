@@ -10,7 +10,7 @@
     <!-- Import rover urdf file -->
     <xacro:include filename="$(find rover_urdf)/urdf/rover2_urdf.xacro" />
 
-    <xacro:rover name="rover" attachment="$(arg attachment)"/>
+    <xacro:rover name="rover" attachment="$(arg attachment)" hardware_type="(arg ros2_control_hardware_type)"/>
 
     <!-- Import control_xacro -->
     <xacro:include filename="rover.ros2_control.xacro" />

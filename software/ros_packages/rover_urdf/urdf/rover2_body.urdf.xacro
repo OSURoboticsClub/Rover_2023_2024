@@ -3,7 +3,13 @@
 Urdf of the rovers chassis and bogies
 -->
 <robot name="rover_body" xmlns:xacro="https://ros.org/wiki/xacro">
-    <xacro:macro name="rover_body" params="name:=rover">
+    <xacro:macro name="rover_body" params="name:=rover hardware_type:=main">
+        <!-- Set wheel direction -->
+        <xacro:property name="wheel_direction" value="1.0"/>
+        <xacro:if value="${hardware_type == 'main'}">
+            <xacro:property name="wheel_direction" value="-1.0"/>
+        </xacro:if>
+
         <!-- Main Body -->
         <link name="${name}_base_origin">
             <inertial>
@@ -463,19 +469,19 @@ Urdf of the rovers chassis and bogies
             <origin xyz="-0.188394 -0.225172 -0.010687" rpy="0 0 0"/>
             <parent link="${name}_right_bogie"/>
             <child link="${name}_front_right_wheel"/>
-            <axis xyz="-1.0 -0.0 0.0"/>
+            <axis xyz="${wheel_direction} 0.0 0.0"/>
         </joint>
         <joint name="${name}_middle_right_wheel_joint" type="continuous">
             <origin xyz="-0.188148 0.174428 0.008279" rpy="0 0 0"/>
             <parent link="${name}_right_bogie"/>
             <child link="${name}_middle_right_wheel"/>
-            <axis xyz="-1.0 0.0 0.0"/>
+            <axis xyz="${wheel_direction} 0.0 0.0"/>
         </joint>
         <joint name="${name}_back_right_wheel_joint" type="continuous">
             <origin xyz="-0.424281 0.027271 -0.076944" rpy="0 0 0"/>
             <parent link="${name}_rear_bogie"/>
             <child link="${name}_back_right_wheel"/>
-            <axis xyz="-1.0 0.0 0.0"/>
+            <axis xyz="${wheel_direction} 0.0 0.0"/>
         </joint>
 
         <gazebo reference="${name}_base_origin">
@@ -506,7 +512,7 @@ Urdf of the rovers chassis and bogies
         <gazebo reference="${name}_base_origin">
             <sensor name="gps" type="navsat">
                 <always_on>true</always_on>
-                <update_rate>100</update_rate>
+                <update_rate>5</update_rate>
                 <visualize>true</visualize>
                 <topic>gps/raw</topic>
                 <ignition_frame_id>${name}_base_origin</ignition_frame_id>
@@ -520,13 +526,13 @@ Urdf of the rovers chassis and bogies
                         <horizontal>
                             <noise type="gaussian">
                                 <mean>0.0</mean>
-                                <stddev>1.5e-5</stddev>   <!-- meters -->
+                                <stddev>1.5e-6</stddev>   <!-- meters -->
                             </noise>
                         </horizontal>
                         <vertical>
                             <noise type="gaussian">
                                 <mean>0.0</mean>
-                                <stddev>3.0</stddev>
+                                <stddev>1.0</stddev>
                             </noise>
                         </vertical>
                     </position_sensing>

@@ -175,7 +175,7 @@ def generate_launch_description():
 
     #RViz
     rviz_config_file = (
-        get_package_share_directory("rover_gazebo") + "/config/rviz_config.rviz"
+        get_package_share_directory("rob599_nav_gazebo") + "/config/rviz_config.rviz"
     )
     rviz_node = Node(
         package="rviz2",
@@ -355,6 +355,85 @@ def generate_launch_description():
         ]
     )
 
+    params_file = (
+        get_package_share_directory("rob599_nav_gazebo") + "/config/params.yaml"
+    )
+
+    # nav2 = Node(
+    #     package="nav2_bringup",
+    #     executable="bringup_launch.py",
+    #     name="Nav2_Stack",
+    #     parameters=[{
+    #         "use_sim_time": True,
+    #         "": params_file,
+
+    #     }],
+    #     output="screen"
+    # )
+
+    nav2 = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution([
+                FindPackageShare("nav2_bringup"),
+                "launch",
+                "bringup_launch.py"
+            ])
+        ),
+        launch_arguments={
+            "use_sim_time": "true",
+            "params_file": params_file,
+            "slam": False,
+            "use_map_server": False, 
+        }.items(),
+    )
+
+    rtabmap_parameters = {
+        'frame_id':'rover_base_origin',
+        'use_sim_time':True,
+        'subscribe_depth':False,
+        'subscribe_scan_cloud': True,
+        'use_action_for_goal':True,
+        'Reg/Force3DoF':'true',
+        'Grid/RayTracing':'true', # Fill empty space
+        'Grid/3D':'True', # Use 2D occupancy
+        'Grid/RangeMax':'3',
+        'Grid/NormalsSegmentation':'false', # Use passthrough filter to detect obstacles
+        'Grid/MaxGroundHeight':'0.05', # All points above 5 cm are obstacles
+        'Grid/MaxObstacleHeight':'0.4',  # All points over 1 meter are ignored
+        'Optimizer/GravitySigma':'0' # Disable imu constraints (we are already in 2D)
+    }
+    rtabmap_remappings = [
+        ('odom', '/odometry/local'),
+        ('rgb/image', '/camera/d455/color/image'),
+        ('rgb/camera_info', '/camera/d455/color/camera_info'),
+        ('scan_cloud', '/camera/d455/depth/color/points')
+    ]
+
+
+    rtab_map_node = Node(
+        package="rtabmap_slam",
+        executable="rtabmap",
+        name="rtabmap",
+        parameters=[rtabmap_parameters],
+        remappings=rtabmap_remappings,
+        output="screen"
+    )
+
+    rtabmap_vis_node = Node(
+        package='rtabmap_viz', executable='rtabmap_viz', output='screen',
+        parameters=[rtabmap_parameters],
+        remappings=rtabmap_remappings
+    )
+
+    rtabmap_obj_node = Node(
+        package='rtabmap_util', executable='obstacles_detection', output='screen',
+        parameters=[rtabmap_parameters],
+        remappings=[('cloud', '/camera/d455/depth/color/points'),
+                    ('obstacles', '/camera/obstacles'),
+                    ('ground', '/camera/ground')]
+    )
+    
+
     world_path = os.path.join(rover_gazebo_path, 'worlds/rubicon.sdf')   
 
     return LaunchDescription([
@@ -407,10 +486,40 @@ def generate_launch_description():
                 on_exit=[local_ekf_node],
             )
         ),
-        # RegisterEventHandler(
-        #     event_handler=OnProcessExit(
-        #         target_action=drive_controller_node,
-        #         on_exit=[global_ekf_node],
-        #     )
-        # ),
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=drive_controller_node,
+                on_exit=[global_ekf_node],
+            )
+        ),
+
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=drive_controller_node,
+                on_exit=[rtab_map_node],
+            )
+        ),
+
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=drive_controller_node,
+                on_exit=[rtabmap_obj_node],
+            )
+        ),
+
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=drive_controller_node,
+                on_exit=[rtabmap_vis_node],
+            )
+        ),
+
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=rtab_map_node,
+                on_exit=[nav2],
+            )
+        ),
+
+
     ])

@@ -100,8 +100,6 @@ def main(args=None):
     except KeyboardInterrupt:
         pass
     finally:
-        if node.ser.is_open:
-            node.ser.close()
         node.destroy_node()
         rclpy.shutdown()
 

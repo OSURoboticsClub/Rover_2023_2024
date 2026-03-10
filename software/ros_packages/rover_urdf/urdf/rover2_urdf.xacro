@@ -5,14 +5,14 @@ Urdf for the rover of the DAM Robotics Rover triple bogie system.
 -->
 
 <robot name="rover" xmlns:xacro="https://ros.org/wiki/xacro">
-    <xacro:macro name="rover" params="name attachment:=arm">
+    <xacro:macro name="rover" params="name attachment:=arm hardware_type:=main">
         <!-- Includes (material libraries, etc) -->
         <xacro:include filename="$(find rover_arm_urdf)/urdf/rover2_arm.urdf.xacro" />
         <xacro:include filename="$(find rover_urdf)/urdf/rover2_body.urdf.xacro"/>
         <xacro:include filename="$(find rover_urdf)/urdf/materials.xacro" />
 
         <!-- Link Chasis with bogies and tower -->
-        <xacro:rover_body name="rover">
+        <xacro:rover_body name="rover" hardware_type="${hardware_type}">
         </xacro:rover_body>
 
 
