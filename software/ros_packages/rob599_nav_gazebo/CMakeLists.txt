@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 project(rob599_nav_gazebo)
+set(lib_name ${PROJECT_NAME}_core)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -41,4 +42,9 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
+add_library(${lib_name} SHARED
+            src/volumetric_layer.cpp)
+include_directories(include)
+
+pluginlib_export_plugin_description_file(nav2_costmap_2d volumetriclayer.xml)
 ament_package()
