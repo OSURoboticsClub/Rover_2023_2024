@@ -61,8 +61,16 @@ void VolumetricLayer::onInitialize()
 
   auto custom_qos = rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable();
 
-  voxel_pub_ = node->create_publisher<nav2_msgs::msg::VoxelGrid>("voxel_grid", custom_qos);
-  clearing_endpoints_pub_ = node->create_publisher<sensor_msgs::msg::PointCloud2>("clearing_endpoints", custom_qos);
+  
+  if (publish_voxel_) {
+    voxel_pub_ = node->create_publisher<nav2_msgs::msg::VoxelGrid>(
+      "voxel_grid", custom_qos);
+    voxel_pub_->on_activate();
+  }
+
+  clearing_endpoints_pub_ = node->create_publisher<sensor_msgs::msg::PointCloud2>(
+    "clearing_endpoints", custom_qos);
+  clearing_endpoints_pub_->on_activate();
 
   unknown_threshold_ += (VOXEL_BITS - size_z_);
   matchSize();

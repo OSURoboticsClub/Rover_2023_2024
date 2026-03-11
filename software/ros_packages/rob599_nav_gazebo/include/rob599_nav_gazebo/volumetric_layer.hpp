@@ -108,11 +108,13 @@ protected:
     double * max_y);
 
   bool publish_voxel_;
-  rclcpp::Publisher<nav2_msgs::msg::VoxelGrid>::SharedPtr voxel_pub_;
+  rclcpp_lifecycle::LifecyclePublisher<nav2_msgs::msg::VoxelGrid>::SharedPtr voxel_pub_;
   nav2_voxel_grid::VoxelGrid voxel_grid_;
   double z_resolution_, origin_z_; double robot_height_; int robot_voxel_height_;
   int unknown_threshold_, mark_threshold_, size_z_;
-  rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr clearing_endpoints_pub_;
+  rclcpp_lifecycle::LifecyclePublisher<sensor_msgs::msg::PointCloud2>::SharedPtr
+    clearing_endpoints_pub_;
+
 
 
   /**
