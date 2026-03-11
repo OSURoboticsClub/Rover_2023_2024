@@ -388,6 +388,7 @@ def generate_launch_description():
         'subscribe_scan_cloud': True,
         'use_action_for_goal':True,
         'Reg/Force3DoF':'true',
+        'Grid/CellSize': "0.05",  # Voxel downsampling
         'Grid/RayTracing':'true', # Fill empty space
         'Grid/Sensor':'0',
         'Grid/FromDepth':'False',
@@ -398,6 +399,8 @@ def generate_launch_description():
         'Grid/MaxObstacleHeight':'1.5',  # All points over 1 meter are ignored
         'Optimizer/GravitySigma':'0', # Disable imu constraints (we are already in 2D)
         'RGBD/CreateOccupancyGrid':"True",
+        'RGBD/DepthDecimationr': "4",  # Reduces the depth image resolution before generating the point cloud
+        'RGBD/DepthMax': "3.0",  # Filter the depth image
         "delete_db_on_start": True,
     }
     rtabmap_remappings = [
