@@ -228,6 +228,11 @@ void ElevationLayer::reset()
   cloud_received_ = false;
 }
 
+bool ElevationLayer::isClearable()
+{
+  return false;
+}
+
 }  // namespace rob599_nav_gazebo
 
 PLUGINLIB_EXPORT_CLASS(
