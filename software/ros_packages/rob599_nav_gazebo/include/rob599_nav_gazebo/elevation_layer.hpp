@@ -36,6 +36,7 @@ public:
       int max_j);
 
   virtual void reset();
+  virtual bool isClearable();
 
 private:
 

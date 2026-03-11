@@ -48,6 +48,8 @@ ament_target_dependencies(${lib_name}
   nav_msgs
   sensor_msgs
   laser_geometry
+  pcl_conversions
+  pcl_ros
 )
 
 target_link_libraries(${lib_name}
