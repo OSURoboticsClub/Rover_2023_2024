@@ -1,0 +1,800 @@
+[INFO] [launch]: All log files can be found below /home/jn2/.ros/log/2026-03-10-19-43-06-559292-jn2-linux-54338
+[INFO] [launch]: Default logging verbosity is set to INFO
+GZ_SIM_RESOURCE_PATH: :/home/jn2/Rover_2023_2024/software/install/rover_urdf/share/rover_urdf/..
+rover_model_path: /home/jn2/Rover_2023_2024/software/install/rover_urdf/share/rover_urdf/..
+WARNING: Package name "AutonControlNode" does not follow the naming conventions. It should start with a lower case letter and only contain lower case letters, digits, underscores, and dashes.
+[INFO] [ign gazebo-1]: process started with pid [54340]
+[INFO] [joy_node-2]: process started with pid [54342]
+[INFO] [parameter_bridge-3]: process started with pid [54344]
+[INFO] [create-4]: process started with pid [54346]
+[INFO] [joy_to_drive-5]: process started with pid [54348]
+[INFO] [robot_state_publisher-6]: process started with pid [54351]
+[create-4] [INFO] [1773196987.546438705] [ros_gz_sim]: Requesting list of world names.
+[robot_state_publisher-6] [WARN] [1773196987.559064488] [kdl_parser]: The root link rover_base_origin has an inertia specified in the URDF, but KDL does not support a root link with an inertia.  As a workaround, you can add an extra dummy link to your URDF.
+[robot_state_publisher-6] [INFO] [1773196987.559163283] [robot_state_publisher]: got segment d455_accel_frame
+[robot_state_publisher-6] [INFO] [1773196987.559192829] [robot_state_publisher]: got segment d455_accel_optical_frame
+[robot_state_publisher-6] [INFO] [1773196987.559198670] [robot_state_publisher]: got segment d455_bottom_screw_frame
+[robot_state_publisher-6] [INFO] [1773196987.559202808] [robot_state_publisher]: got segment d455_color_frame
+[robot_state_publisher-6] [INFO] [1773196987.559206635] [robot_state_publisher]: got segment d455_color_optical_frame
+[robot_state_publisher-6] [INFO] [1773196987.559210392] [robot_state_publisher]: got segment d455_depth_frame
+[robot_state_publisher-6] [INFO] [1773196987.559214139] [robot_state_publisher]: got segment d455_depth_optical_frame
+[robot_state_publisher-6] [INFO] [1773196987.559217906] [robot_state_publisher]: got segment d455_gyro_frame
+[robot_state_publisher-6] [INFO] [1773196987.559221893] [robot_state_publisher]: got segment d455_gyro_optical_frame
+[robot_state_publisher-6] [INFO] [1773196987.559225801] [robot_state_publisher]: got segment d455_imu_optical_frame
+[robot_state_publisher-6] [INFO] [1773196987.559229738] [robot_state_publisher]: got segment d455_infra1_frame
+[robot_state_publisher-6] [INFO] [1773196987.559233715] [robot_state_publisher]: got segment d455_infra1_optical_frame
+[robot_state_publisher-6] [INFO] [1773196987.559237703] [robot_state_publisher]: got segment d455_infra2_frame
+[robot_state_publisher-6] [INFO] [1773196987.559241821] [robot_state_publisher]: got segment d455_infra2_optical_frame
+[robot_state_publisher-6] [INFO] [1773196987.559245848] [robot_state_publisher]: got segment d455_link
+[robot_state_publisher-6] [INFO] [1773196987.559249705] [robot_state_publisher]: got segment rover_back_left_link
+[robot_state_publisher-6] [INFO] [1773196987.559253683] [robot_state_publisher]: got segment rover_back_left_wheel
+[robot_state_publisher-6] [INFO] [1773196987.559257490] [robot_state_publisher]: got segment rover_back_right_link
+[robot_state_publisher-6] [INFO] [1773196987.559261257] [robot_state_publisher]: got segment rover_back_right_wheel
+[robot_state_publisher-6] [INFO] [1773196987.559265054] [robot_state_publisher]: got segment rover_base_origin
+[robot_state_publisher-6] [INFO] [1773196987.559268982] [robot_state_publisher]: got segment rover_ebox
+[robot_state_publisher-6] [INFO] [1773196987.559272799] [robot_state_publisher]: got segment rover_front_left_link
+[robot_state_publisher-6] [INFO] [1773196987.559276606] [robot_state_publisher]: got segment rover_front_left_wheel
+[robot_state_publisher-6] [INFO] [1773196987.559280323] [robot_state_publisher]: got segment rover_front_right_link
+[robot_state_publisher-6] [INFO] [1773196987.559284070] [robot_state_publisher]: got segment rover_front_right_wheel
+[robot_state_publisher-6] [INFO] [1773196987.559287747] [robot_state_publisher]: got segment rover_left_bogie
+[robot_state_publisher-6] [INFO] [1773196987.559291544] [robot_state_publisher]: got segment rover_middle_left_wheel
+[robot_state_publisher-6] [INFO] [1773196987.559295241] [robot_state_publisher]: got segment rover_middle_right_wheel
+[robot_state_publisher-6] [INFO] [1773196987.559298918] [robot_state_publisher]: got segment rover_rear_bogie
+[robot_state_publisher-6] [INFO] [1773196987.559302615] [robot_state_publisher]: got segment rover_right_bogie
+[robot_state_publisher-6] [INFO] [1773196987.559306322] [robot_state_publisher]: got segment rover_tower
+[joy_node-2] [INFO] [1773196987.677599346] [joy_node]: Opened joystick: Sony Interactive Entertainment DualSense Wireless Controller.  deadzone: 0.050000
+[create-4] [INFO] [1773196988.056981475] [ros_gz_sim]: Waiting messages on topic [/robot_description].
+[create-4] [INFO] [1773196988.059432258] [ros_gz_sim]: Requested creation of entity.
+[create-4] [INFO] [1773196988.059464528] [ros_gz_sim]: OK creation of entity.
+[INFO] [create-4]: process has finished cleanly [pid 54346]
+[INFO] [spawner-7]: process started with pid [54475]
+[spawner-7] [INFO] [1773196988.537637072] [spawner_joint_state_broadcaster]: waiting for service /controller_manager/list_controllers to become available...
+[parameter_bridge-3] [INFO] [1773196988.560610268] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/camera/d455/depth/color/points (ignition.msgs.PointCloudPacked) -> camera/d455/depth/color/points (sensor_msgs/msg/PointCloud2)] (Lazy 0)
+[parameter_bridge-3] [INFO] [1773196988.562389002] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/camera/d455/depth/color/depth_image (ignition.msgs.Image) -> camera/d455/aligned_depth_to_color/image_raw (sensor_msgs/msg/Image)] (Lazy 0)
+[parameter_bridge-3] [INFO] [1773196988.563009515] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/camera/d455/depth/color/image (ignition.msgs.Image) -> camera/d455/color/image (sensor_msgs/msg/Image)] (Lazy 0)
+[parameter_bridge-3] [INFO] [1773196988.563453577] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/camera/d455/depth/color/camera_info (ignition.msgs.CameraInfo) -> camera/d455/color/camera_info (sensor_msgs/msg/CameraInfo)] (Lazy 0)
+[parameter_bridge-3] [INFO] [1773196988.563886038] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/camera/d455/depth/color/camera_info (ignition.msgs.CameraInfo) -> camera/d455/aligned_depth_to_color/camera_info (sensor_msgs/msg/CameraInfo)] (Lazy 0)
+[parameter_bridge-3] [INFO] [1773196988.564099047] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/imu/data/raw (ignition.msgs.IMU) -> imu/data/raw (sensor_msgs/msg/Imu)] (Lazy 0)
+[parameter_bridge-3] [INFO] [1773196988.564326002] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/imu/mag/raw (ignition.msgs.Magnetometer) -> imu/mag/raw (sensor_msgs/msg/MagneticField)] (Lazy 0)
+[parameter_bridge-3] [INFO] [1773196988.564586631] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/gps/raw (ignition.msgs.NavSat) -> gps/raw (sensor_msgs/msg/NavSatFix)] (Lazy 0)
+[parameter_bridge-3] [INFO] [1773196988.564822743] [ros_gz_bridge]: Creating GZ->ROS Bridge: [/clock (ignition.msgs.Clock) -> /clock (rosgraph_msgs/msg/Clock)] (Lazy 0)
+[ign gazebo-1] libEGL warning: egl: failed to create dri2 screen
+[ign gazebo-1] libEGL warning: egl: failed to create dri2 screen
+[ign gazebo-1] [INFO] [1773196989.736840299] [GazeboSimROS2ControlPlugin]: robot_param_node is robot_state_publisher
+[ign gazebo-1] [INFO] [1773196989.736862541] [GazeboSimROS2ControlPlugin]: robot_param_node is robot_description
+[ign gazebo-1] [INFO] [1773196989.744769821] [gz_ros2_control]: connected to service!! robot_state_publisher asking for robot_description
+[ign gazebo-1] [INFO] [1773196989.745270860] [gz_ros2_control]: Received URDF from param server
+[ign gazebo-1] [INFO] [1773196989.755450639] [gz_ros2_control]: The position_proportional_gain has been set to: 0.1
+[ign gazebo-1] [INFO] [1773196989.755502366] [gz_ros2_control]: Loading joint: rover_front_left_wheel_joint
+[ign gazebo-1] [INFO] [1773196989.755513086] [gz_ros2_control]: 	State:
+[ign gazebo-1] [INFO] [1773196989.755519428] [gz_ros2_control]: 		 position
+[ign gazebo-1] [INFO] [1773196989.755528675] [gz_ros2_control]: 			 found initial value: 0.000000
+[ign gazebo-1] [INFO] [1773196989.755538774] [gz_ros2_control]: 		 velocity
+[ign gazebo-1] [INFO] [1773196989.755546318] [gz_ros2_control]: 	Command:
+[ign gazebo-1] [INFO] [1773196989.755551728] [gz_ros2_control]: 		 velocity
+[ign gazebo-1] [INFO] [1773196989.755572648] [gz_ros2_control]: Loading joint: rover_middle_left_wheel_joint
+[ign gazebo-1] [INFO] [1773196989.755577607] [gz_ros2_control]: 	State:
+[ign gazebo-1] [INFO] [1773196989.755582135] [gz_ros2_control]: 		 position
+[ign gazebo-1] [INFO] [1773196989.755586343] [gz_ros2_control]: 			 found initial value: 0.000000
+[ign gazebo-1] [INFO] [1773196989.755597965] [gz_ros2_control]: 		 velocity
+[ign gazebo-1] [INFO] [1773196989.755602634] [gz_ros2_control]: 	Command:
+[ign gazebo-1] [INFO] [1773196989.755606721] [gz_ros2_control]: 		 velocity
+[ign gazebo-1] [INFO] [1773196989.755642829] [gz_ros2_control]: Loading joint: rover_back_left_wheel_joint
+[ign gazebo-1] [INFO] [1773196989.755648840] [gz_ros2_control]: 	State:
+[ign gazebo-1] [INFO] [1773196989.755656394] [gz_ros2_control]: 		 position
+[ign gazebo-1] [INFO] [1773196989.755663969] [gz_ros2_control]: 			 found initial value: 0.000000
+[ign gazebo-1] [INFO] [1773196989.755672705] [gz_ros2_control]: 		 velocity
+[ign gazebo-1] [INFO] [1773196989.755680419] [gz_ros2_control]: 	Command:
+[ign gazebo-1] [INFO] [1773196989.755687743] [gz_ros2_control]: 		 velocity
+[ign gazebo-1] [INFO] [1773196989.755700477] [gz_ros2_control]: Loading joint: rover_front_right_wheel_joint
+[ign gazebo-1] [INFO] [1773196989.755705777] [gz_ros2_control]: 	State:
+[ign gazebo-1] [INFO] [1773196989.755710015] [gz_ros2_control]: 		 position
+[ign gazebo-1] [INFO] [1773196989.755713902] [gz_ros2_control]: 			 found initial value: 0.000000
+[ign gazebo-1] [INFO] [1773196989.755718701] [gz_ros2_control]: 		 velocity
+[ign gazebo-1] [INFO] [1773196989.755722679] [gz_ros2_control]: 	Command:
+[ign gazebo-1] [INFO] [1773196989.755726696] [gz_ros2_control]: 		 velocity
+[ign gazebo-1] [INFO] [1773196989.755736364] [gz_ros2_control]: Loading joint: rover_middle_right_wheel_joint
+[ign gazebo-1] [INFO] [1773196989.755743277] [gz_ros2_control]: 	State:
+[ign gazebo-1] [INFO] [1773196989.755750160] [gz_ros2_control]: 		 position
+[ign gazebo-1] [INFO] [1773196989.755757243] [gz_ros2_control]: 			 found initial value: 0.000000
+[ign gazebo-1] [INFO] [1773196989.755764898] [gz_ros2_control]: 		 velocity
+[ign gazebo-1] [INFO] [1773196989.755771941] [gz_ros2_control]: 	Command:
+[ign gazebo-1] [INFO] [1773196989.755778694] [gz_ros2_control]: 		 velocity
+[ign gazebo-1] [INFO] [1773196989.755790756] [gz_ros2_control]: Loading joint: rover_back_right_wheel_joint
+[ign gazebo-1] [INFO] [1773196989.755798210] [gz_ros2_control]: 	State:
+[ign gazebo-1] [INFO] [1773196989.755802388] [gz_ros2_control]: 		 position
+[ign gazebo-1] [INFO] [1773196989.755806275] [gz_ros2_control]: 			 found initial value: 0.000000
+[ign gazebo-1] [INFO] [1773196989.755810824] [gz_ros2_control]: 		 velocity
+[ign gazebo-1] [INFO] [1773196989.755815212] [gz_ros2_control]: 	Command:
+[ign gazebo-1] [INFO] [1773196989.755819149] [gz_ros2_control]: 		 velocity
+[ign gazebo-1] [INFO] [1773196989.755936229] [gz_ros2_control]: Loading sensor: imu_sensor
+[ign gazebo-1] [INFO] [1773196989.755947029] [gz_ros2_control]: 	State:
+[ign gazebo-1] [INFO] [1773196989.756043470] [resource_manager]: Initialize hardware 'rover_drive' 
+[ign gazebo-1] [INFO] [1773196989.756087512] [resource_manager]: Successful initialization of hardware 'rover_drive'
+[ign gazebo-1] [INFO] [1773196989.756111958] [resource_manager]: 'configure' hardware 'rover_drive' 
+[ign gazebo-1] [INFO] [1773196989.756115074] [gz_ros2_control]: System Successfully configured!
+[ign gazebo-1] [INFO] [1773196989.756124672] [resource_manager]: Successful 'configure' of hardware 'rover_drive'
+[ign gazebo-1] [INFO] [1773196989.756131605] [resource_manager]: 'activate' hardware 'rover_drive' 
+[ign gazebo-1] [INFO] [1773196989.756136715] [resource_manager]: Successful 'activate' of hardware 'rover_drive'
+[ign gazebo-1] [INFO] [1773196989.756234227] [gz_ros2_control]: The position_proportional_gain has been set to: 0.1
+[ign gazebo-1] [WARN] [1773196989.756246831] [gz_ros2_control]: Skipping joint in the URDF named 'rover_front_left_link_joint' which is not in the gazebo model.
+[ign gazebo-1] [WARN] [1773196989.756272920] [gz_ros2_control]: Skipping joint in the URDF named 'rover_back_left_link_joint' which is not in the gazebo model.
+[ign gazebo-1] [WARN] [1773196989.756281376] [gz_ros2_control]: Skipping joint in the URDF named 'rover_front_left_bogie_joint' which is not in the gazebo model.
+[ign gazebo-1] [WARN] [1773196989.756288349] [gz_ros2_control]: Skipping joint in the URDF named 'rover_front_right_link_joint' which is not in the gazebo model.
+[ign gazebo-1] [WARN] [1773196989.756295512] [gz_ros2_control]: Skipping joint in the URDF named 'rover_back_right_link_joint' which is not in the gazebo model.
+[ign gazebo-1] [WARN] [1773196989.756302505] [gz_ros2_control]: Skipping joint in the URDF named 'rover_front_right_bogie_joint' which is not in the gazebo model.
+[ign gazebo-1] [INFO] [1773196989.756314999] [gz_ros2_control]: Loading joint: rover_rear_bogie_joint
+[ign gazebo-1] [INFO] [1773196989.756322312] [gz_ros2_control]: 	State:
+[ign gazebo-1] [INFO] [1773196989.756329356] [gz_ros2_control]: 		 position
+[ign gazebo-1] [INFO] [1773196989.756335998] [gz_ros2_control]: 			 found initial value: 0.000000
+[ign gazebo-1] [INFO] [1773196989.756343713] [gz_ros2_control]: 	Command:
+[ign gazebo-1] [INFO] [1773196989.756354653] [gz_ros2_control]: Loading sensor: imu_sensor
+[ign gazebo-1] [INFO] [1773196989.756361837] [gz_ros2_control]: 	State:
+[ign gazebo-1] [INFO] [1773196989.756369050] [resource_manager]: Initialize hardware 'rover_drive_passive' 
+[ign gazebo-1] [INFO] [1773196989.756378177] [resource_manager]: Successful initialization of hardware 'rover_drive_passive'
+[ign gazebo-1] [INFO] [1773196989.756385110] [resource_manager]: 'configure' hardware 'rover_drive_passive' 
+[ign gazebo-1] [INFO] [1773196989.756388917] [gz_ros2_control]: System Successfully configured!
+[ign gazebo-1] [INFO] [1773196989.756397313] [resource_manager]: Successful 'configure' of hardware 'rover_drive_passive'
+[ign gazebo-1] [INFO] [1773196989.756401641] [resource_manager]: 'activate' hardware 'rover_drive_passive' 
+[ign gazebo-1] [INFO] [1773196989.756406120] [resource_manager]: Successful 'activate' of hardware 'rover_drive_passive'
+[ign gazebo-1] [INFO] [1773196989.756410247] [gz_ros2_control]: Loading controller_manager
+[ign gazebo-1] [INFO] [1773196989.790773231] [controller_manager]: Loading controller 'joint_state_broadcaster'
+[spawner-7] [INFO] [1773196989.797085151] [spawner_joint_state_broadcaster]: [94mLoaded [1mjoint_state_broadcaster[0m
+[ign gazebo-1] [INFO] [1773196989.797581661] [controller_manager]: Configuring controller 'joint_state_broadcaster'
+[ign gazebo-1] [INFO] [1773196989.797671389] [joint_state_broadcaster]: 'joints' or 'interfaces' parameter is empty. All available state interfaces will be published
+[ign gazebo-1] [1;36mDbg[0m ODE Heightfield AABB: min = {-18.7134, -18.7134, -0.05} max = {18.7134, 18.7134, 5}
+[ign gazebo-1] libEGL warning: egl: failed to create dri2 screen
+[ign gazebo-1] libEGL warning: egl: failed to create dri2 screen
+[ign gazebo-1] [INFO] [1773196990.370908960] [gz_ros2_control]: IMU imu_sensor has a topic name: imu/data/raw
+[ign gazebo-1] [INFO] [1773196990.371092794] [gz_ros2_control]: IMU imu_sensor has a topic name: imu/data/raw
+[spawner-7] [INFO] [1773196990.372341665] [spawner_joint_state_broadcaster]: [92mConfigured and activated [1mjoint_state_broadcaster[0m
+[INFO] [spawner-7]: process has finished cleanly [pid 54475]
+[INFO] [spawner-8]: process started with pid [54686]
+[ign gazebo-1] [INFO] [1773196990.911286644] [controller_manager]: Loading controller 'drive_controller'
+[spawner-8] [INFO] [1773196997.453533311] [spawner_drive_controller]: [94mLoaded [1mdrive_controller[0m
+[ign gazebo-1] [INFO] [1773196997.454281734] [controller_manager]: Configuring controller 'drive_controller'
+[ign gazebo-1] [WARN] [1773196997.460101081] [drive_controller]: Can't accept new commands. subscriber is inactive
+[spawner-8] [INFO] [1773196997.479759997] [spawner_drive_controller]: [92mConfigured and activated [1mdrive_controller[0m
+[INFO] [spawner-8]: process has finished cleanly [pid 54686]
+[INFO] [component_container_isolated-9]: process started with pid [54727]
+[INFO] [rtabmap_viz-10]: process started with pid [54729]
+[INFO] [obstacles_detection-11]: process started with pid [54731]
+[INFO] [rtabmap-12]: process started with pid [54733]
+[INFO] [ekf_node-13]: process started with pid [54735]
+[INFO] [ekf_node-14]: process started with pid [54737]
+[INFO] [imu_node-15]: process started with pid [54739]
+[INFO] [gps_node-16]: process started with pid [54741]
+[INFO] [navsat_transform_node-17]: process started with pid [54743]
+[INFO] [rviz2-18]: process started with pid [54745]
+[component_container_isolated-9] [INFO] [1773196998.117051814] [nav2_container]: Load Library: /opt/ros/humble/lib/libmap_server_core.so
+[component_container_isolated-9] [INFO] [1773196998.154819250] [nav2_container]: Found class: rclcpp_components::NodeFactoryTemplate<nav2_map_server::CostmapFilterInfoServer>
+[component_container_isolated-9] [INFO] [1773196998.155536184] [nav2_container]: Found class: rclcpp_components::NodeFactoryTemplate<nav2_map_server::MapSaver>
+[component_container_isolated-9] [INFO] [1773196998.156051770] [nav2_container]: Found class: rclcpp_components::NodeFactoryTemplate<nav2_map_server::MapServer>
+[component_container_isolated-9] [INFO] [1773196998.156062591] [nav2_container]: Instantiate class: rclcpp_components::NodeFactoryTemplate<nav2_map_server::MapServer>
+[component_container_isolated-9] [INFO] [1773196998.162388717] [map_server]: 
+[component_container_isolated-9] 	map_server lifecycle node launched. 
+[component_container_isolated-9] 	Waiting on external lifecycle transitions to activate
+[component_container_isolated-9] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[component_container_isolated-9] [INFO] [1773196998.162458849] [map_server]: Creating
+[INFO] [launch_ros.actions.load_composable_nodes]: Loaded node '/map_server' in container '/nav2_container'
+[component_container_isolated-9] [INFO] [1773196998.165637436] [nav2_container]: Load Library: /opt/ros/humble/lib/libamcl_core.so
+[component_container_isolated-9] [INFO] [1773196998.170663356] [nav2_container]: Found class: rclcpp_components::NodeFactoryTemplate<nav2_amcl::AmclNode>
+[component_container_isolated-9] [INFO] [1773196998.170717778] [nav2_container]: Instantiate class: rclcpp_components::NodeFactoryTemplate<nav2_amcl::AmclNode>
+[component_container_isolated-9] [INFO] [1773196998.179684434] [amcl]: 
+[component_container_isolated-9] 	amcl lifecycle node launched. 
+[component_container_isolated-9] 	Waiting on external lifecycle transitions to activate
+[component_container_isolated-9] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[component_container_isolated-9] [INFO] [1773196998.181801061] [amcl]: Creating
+[INFO] [launch_ros.actions.load_composable_nodes]: Loaded node '/amcl' in container '/nav2_container'
+[component_container_isolated-9] [INFO] [1773196998.188628067] [nav2_container]: Load Library: /opt/ros/humble/lib/libnav2_lifecycle_manager_core.so
+[component_container_isolated-9] [INFO] [1773196998.189454396] [nav2_container]: Found class: rclcpp_components::NodeFactoryTemplate<nav2_lifecycle_manager::LifecycleManager>
+[component_container_isolated-9] [INFO] [1773196998.189480635] [nav2_container]: Instantiate class: rclcpp_components::NodeFactoryTemplate<nav2_lifecycle_manager::LifecycleManager>
+[component_container_isolated-9] [INFO] [1773196998.196837173] [lifecycle_manager_localization]: Creating
+[INFO] [launch_ros.actions.load_composable_nodes]: Loaded node '/lifecycle_manager_localization' in container '/nav2_container'
+[component_container_isolated-9] [INFO] [1773196998.200368151] [lifecycle_manager_localization]: [34m[1mCreating and initializing lifecycle service clients[0m[0m
+[component_container_isolated-9] [INFO] [1773196998.201183880] [nav2_container]: Load Library: /opt/ros/humble/lib/libcontroller_server_core.so
+[component_container_isolated-9] [INFO] [1773196998.204114923] [nav2_container]: Found class: rclcpp_components::NodeFactoryTemplate<nav2_controller::ControllerServer>
+[component_container_isolated-9] [INFO] [1773196998.204156471] [nav2_container]: Instantiate class: rclcpp_components::NodeFactoryTemplate<nav2_controller::ControllerServer>
+[component_container_isolated-9] [INFO] [1773196998.205302950] [lifecycle_manager_localization]: [34m[1mStarting managed nodes bringup...[0m[0m
+[component_container_isolated-9] [INFO] [1773196998.205400633] [lifecycle_manager_localization]: [34m[1mConfiguring map_server[0m[0m
+[component_container_isolated-9] [INFO] [1773196998.205536618] [map_server]: Configuring
+[component_container_isolated-9] [ERROR] [1773196998.205647135] [map_server]: Caught exception in callback for transition 10
+[component_container_isolated-9] [ERROR] [1773196998.205660811] [map_server]: Original error: parameter 'yaml_filename' is not initialized
+[component_container_isolated-9] [WARN] [1773196998.205694674] [map_server]: Callback returned ERROR during the transition: configure
+[component_container_isolated-9] [FATAL] [1773196998.205709252] [map_server]: Lifecycle node map_server does not have error state implemented
+[component_container_isolated-9] [ERROR] [1773196998.205894318] [lifecycle_manager_localization]: Failed to change state for node: map_server
+[component_container_isolated-9] [ERROR] [1773196998.205908806] [lifecycle_manager_localization]: Failed to bring up all requested nodes. Aborting bringup.
+[component_container_isolated-9] [INFO] [1773196998.213348129] [controller_server]: 
+[component_container_isolated-9] 	controller_server lifecycle node launched. 
+[component_container_isolated-9] 	Waiting on external lifecycle transitions to activate
+[component_container_isolated-9] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[component_container_isolated-9] [INFO] [1773196998.242327604] [controller_server]: Creating controller server
+[component_container_isolated-9] [INFO] [1773196998.267330997] [local_costmap.local_costmap]: 
+[component_container_isolated-9] 	local_costmap lifecycle node launched. 
+[component_container_isolated-9] 	Waiting on external lifecycle transitions to activate
+[component_container_isolated-9] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[component_container_isolated-9] [INFO] [1773196998.274118558] [local_costmap.local_costmap]: Creating Costmap
+[component_container_isolated-9] [INFO] [1773196998.276417156] [local_costmap.local_costmap]: Destroying
+[obstacles_detection-11] [INFO] [1773196998.331310621] [obstacles_detection]: obstacles_detection: Setting parameter "Grid/MaxGroundHeight"="0.2"
+[obstacles_detection-11] [INFO] [1773196998.331570849] [obstacles_detection]: obstacles_detection: Setting parameter "Grid/MaxObstacleHeight"="1.5"
+[obstacles_detection-11] [INFO] [1773196998.331951542] [obstacles_detection]: obstacles_detection: Setting parameter "Grid/NormalsSegmentation"="false"
+[obstacles_detection-11] [INFO] [1773196998.332087006] [obstacles_detection]: obstacles_detection: Setting parameter "Grid/RangeMax"="5"
+[obstacles_detection-11] [INFO] [1773196998.332217601] [obstacles_detection]: obstacles_detection: Setting parameter "Grid/RayTracing"="true"
+[obstacles_detection-11] [INFO] [1773196998.332402097] [obstacles_detection]: obstacles_detection: Setting parameter "Grid/Sensor"="0"
+[rtabmap-12] [INFO] [1773196998.355968316] [rtabmap]: rtabmap(maps): latch                      = true
+[rtabmap-12] [INFO] [1773196998.356118768] [rtabmap]: rtabmap(maps): map_filter_radius          = 0.000000
+[rtabmap-12] [INFO] [1773196998.356140499] [rtabmap]: rtabmap(maps): map_filter_angle           = 30.000000
+[rtabmap-12] [INFO] [1773196998.356149245] [rtabmap]: rtabmap(maps): map_cleanup                = true
+[rtabmap-12] [INFO] [1773196998.356158212] [rtabmap]: rtabmap(maps): map_always_update          = false
+[rtabmap-12] [INFO] [1773196998.356164504] [rtabmap]: rtabmap(maps): map_empty_ray_tracing      = true
+[rtabmap-12] [INFO] [1773196998.356170695] [rtabmap]: rtabmap(maps): cloud_output_voxelized     = true
+[rtabmap-12] [INFO] [1773196998.356176947] [rtabmap]: rtabmap(maps): cloud_subtract_filtering   = false
+[rtabmap-12] [INFO] [1773196998.356183058] [rtabmap]: rtabmap(maps): cloud_subtract_filtering_min_neighbors = 2
+[rtabmap-12] [INFO] [1773196998.356250405] [rtabmap]: rtabmap(maps): octomap_tree_depth         = 16
+[rtabmap-12] [INFO] [1773196998.382187247] [rtabmap]: rtabmap: frame_id      = rover_base_origin
+[rtabmap-12] [INFO] [1773196998.382228244] [rtabmap]: rtabmap: map_frame_id  = map
+[rtabmap-12] [INFO] [1773196998.382239605] [rtabmap]: rtabmap: log_to_rosout_level  = 4
+[rtabmap-12] [INFO] [1773196998.382249073] [rtabmap]: rtabmap: initial_pose  = 
+[rtabmap-12] [INFO] [1773196998.382257529] [rtabmap]: rtabmap: use_action_for_goal  = true
+[rtabmap-12] [INFO] [1773196998.382265925] [rtabmap]: rtabmap: tf_delay      = 0.050000
+[rtabmap-12] [INFO] [1773196998.382278959] [rtabmap]: rtabmap: tf_tolerance  = 0.100000
+[rtabmap-12] [INFO] [1773196998.382288196] [rtabmap]: rtabmap: odom_sensor_sync   = false
+[rtabmap-12] [INFO] [1773196998.382303745] [rtabmap]: rtabmap: pub_loc_pose_only_when_localizing = false
+[rtabmap-12] [INFO] [1773196998.382312261] [rtabmap]: rtabmap: wait_for_transform = 0.200000
+[rtabmap-12] [INFO] [1773196998.382321278] [rtabmap]: rtabmap: gen_scan  = false
+[rtabmap-12] [INFO] [1773196998.382329774] [rtabmap]: rtabmap: gen_depth  = false
+[rtabmap-12] [INFO] [1773196998.382337769] [rtabmap]: rtabmap: scan_cloud_max_points = 0
+[rtabmap-12] [INFO] [1773196998.382346415] [rtabmap]: rtabmap: scan_cloud_is_2d = false
+[component_container_isolated-9] [INFO] [1773196998.391960976] [controller_server]: Destroying
+[rtabmap-12] [INFO] [1773196998.398208204] [rtabmap]: Setting RTAB-Map parameter "Grid/3D"="true" (rosparam)
+[rtabmap-12] [INFO] [1773196998.399547775] [rtabmap]: Setting RTAB-Map parameter "Grid/MaxGroundHeight"="0.2" (rosparam)
+[rtabmap-12] [INFO] [1773196998.399656279] [rtabmap]: Setting RTAB-Map parameter "Grid/MaxObstacleHeight"="1.5" (rosparam)
+[rtabmap-12] [INFO] [1773196998.400099760] [rtabmap]: Setting RTAB-Map parameter "Grid/NormalsSegmentation"="false" (rosparam)
+[rtabmap-12] [INFO] [1773196998.400258898] [rtabmap]: Setting RTAB-Map parameter "Grid/RangeMax"="5" (rosparam)
+[rtabmap-12] [INFO] [1773196998.400391296] [rtabmap]: Setting RTAB-Map parameter "Grid/RayTracing"="true" (rosparam)
+[rtabmap-12] [INFO] [1773196998.400597873] [rtabmap]: Setting RTAB-Map parameter "Grid/Sensor"="0" (rosparam)
+[rtabmap-12] [INFO] [1773196998.410007720] [rtabmap]: Setting RTAB-Map parameter "Optimizer/GravitySigma"="0" (rosparam)
+[rtabmap-12] [INFO] [1773196998.411276478] [rtabmap]: Setting RTAB-Map parameter "RGBD/CreateOccupancyGrid"="True" (rosparam)
+[rtabmap-12] [INFO] [1773196998.413841215] [rtabmap]: Setting RTAB-Map parameter "Reg/Force3DoF"="true" (rosparam)
+[component_container_isolated-9] [ERROR] [1773196998.419859815] [nav2_container]: Component constructor threw an exception: parameter 'height' has invalid type: Wrong parameter type, parameter {height} is of type {integer}, setting it to {double} is not allowed.
+[ERROR] [launch_ros.actions.load_composable_nodes]: Failed to load node 'controller_server' of type 'nav2_controller::ControllerServer' in container '/nav2_container': Component constructor threw an exception: parameter 'height' has invalid type: Wrong parameter type, parameter {height} is of type {integer}, setting it to {double} is not allowed.
+[rtabmap-12] [INFO] [1773196998.425885168] [rtabmap]: Setting "Icp/PointToPlaneRadius" parameter to 0 (default 0.000000) as "subscribe_scan_cloud" is true.
+[rtabmap-12] [INFO] [1773196998.426046491] [rtabmap]: RTAB-Map detection rate = 1.000000 Hz
+[component_container_isolated-9] [INFO] [1773196998.427682848] [nav2_container]: Load Library: /opt/ros/humble/lib/libsmoother_server_core.so
+[component_container_isolated-9] [INFO] [1773196998.429255906] [nav2_container]: Found class: rclcpp_components::NodeFactoryTemplate<nav2_smoother::SmootherServer>
+[component_container_isolated-9] [INFO] [1773196998.429281564] [nav2_container]: Instantiate class: rclcpp_components::NodeFactoryTemplate<nav2_smoother::SmootherServer>
+[rtabmap-12] [INFO] [1773196998.445160996] [rtabmap]: rtabmap: Deleted database "/home/jn2/.ros/rtabmap.db" (--delete_db_on_start or -d are set).
+[rtabmap-12] [INFO] [1773196998.445236929] [rtabmap]: rtabmap: Using database from "/home/jn2/.ros/rtabmap.db" (0 MB).
+[component_container_isolated-9] [INFO] [1773196998.454113015] [smoother_server]: 
+[component_container_isolated-9] 	smoother_server lifecycle node launched. 
+[component_container_isolated-9] 	Waiting on external lifecycle transitions to activate
+[component_container_isolated-9] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[component_container_isolated-9] [INFO] [1773196998.466785877] [smoother_server]: Creating smoother server
+[INFO] [launch_ros.actions.load_composable_nodes]: Loaded node '/smoother_server' in container '/nav2_container'
+[component_container_isolated-9] [INFO] [1773196998.471347727] [nav2_container]: Load Library: /opt/ros/humble/lib/libplanner_server_core.so
+[component_container_isolated-9] [INFO] [1773196998.472153758] [nav2_container]: Found class: rclcpp_components::NodeFactoryTemplate<nav2_planner::PlannerServer>
+[component_container_isolated-9] [INFO] [1773196998.472182171] [nav2_container]: Instantiate class: rclcpp_components::NodeFactoryTemplate<nav2_planner::PlannerServer>
+[component_container_isolated-9] [INFO] [1773196998.492893459] [planner_server]: 
+[component_container_isolated-9] 	planner_server lifecycle node launched. 
+[component_container_isolated-9] 	Waiting on external lifecycle transitions to activate
+[component_container_isolated-9] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[rtabmap-12] [INFO] [1773196998.506923515] [rtabmap]: rtabmap: Database version = "0.22.1".
+[rtabmap-12] [INFO] [1773196998.506984930] [rtabmap]: rtabmap: SLAM mode (Mem/IncrementalMemory=true)
+[component_container_isolated-9] [INFO] [1773196998.509564164] [planner_server]: Creating
+[component_container_isolated-9] [INFO] [1773196998.534304164] [global_costmap.global_costmap]: 
+[component_container_isolated-9] 	global_costmap lifecycle node launched. 
+[component_container_isolated-9] 	Waiting on external lifecycle transitions to activate
+[component_container_isolated-9] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[component_container_isolated-9] [INFO] [1773196998.540119513] [global_costmap.global_costmap]: Creating Costmap
+[INFO] [launch_ros.actions.load_composable_nodes]: Loaded node '/planner_server' in container '/nav2_container'
+[component_container_isolated-9] [INFO] [1773196998.558496186] [nav2_container]: Load Library: /opt/ros/humble/lib/libbehavior_server_core.so
+[rtabmap-12] [INFO] [1773196998.561598290] [rtabmap]: Setup callbacks
+[rtabmap-12] [INFO] [1773196998.561730418] [rtabmap]: rtabmap: subscribe_depth = false
+[rtabmap-12] [INFO] [1773196998.561749794] [rtabmap]: rtabmap: subscribe_rgb = true
+[rtabmap-12] [INFO] [1773196998.561759622] [rtabmap]: rtabmap: subscribe_stereo = false
+[rtabmap-12] [INFO] [1773196998.561768689] [rtabmap]: rtabmap: subscribe_rgbd = false (rgbd_cameras=1)
+[rtabmap-12] [INFO] [1773196998.561778257] [rtabmap]: rtabmap: subscribe_sensor_data = false
+[rtabmap-12] [INFO] [1773196998.561814175] [rtabmap]: rtabmap: subscribe_odom_info = false
+[rtabmap-12] [INFO] [1773196998.561825596] [rtabmap]: rtabmap: subscribe_user_data = false
+[rtabmap-12] [INFO] [1773196998.561833972] [rtabmap]: rtabmap: subscribe_scan = false
+[rtabmap-12] [INFO] [1773196998.561842748] [rtabmap]: rtabmap: subscribe_scan_cloud = true
+[rtabmap-12] [INFO] [1773196998.561851134] [rtabmap]: rtabmap: subscribe_scan_descriptor = false
+[rtabmap-12] [INFO] [1773196998.561859980] [rtabmap]: rtabmap: topic_queue_size = 10
+[rtabmap-12] [INFO] [1773196998.561871131] [rtabmap]: rtabmap: sync_queue_size  = 10
+[rtabmap-12] [INFO] [1773196998.561879537] [rtabmap]: rtabmap: qos_image       = 0
+[rtabmap-12] [INFO] [1773196998.561887622] [rtabmap]: rtabmap: qos_camera_info = 0
+[rtabmap-12] [INFO] [1773196998.561896369] [rtabmap]: rtabmap: qos_scan        = 0
+[rtabmap-12] [INFO] [1773196998.561904303] [rtabmap]: rtabmap: qos_odom        = 0
+[rtabmap-12] [INFO] [1773196998.561912258] [rtabmap]: rtabmap: qos_user_data   = 0
+[rtabmap-12] [INFO] [1773196998.561919612] [rtabmap]: rtabmap: approx_sync     = true
+[rtabmap-12] [INFO] [1773196998.561937406] [rtabmap]: Setup rgb-only callback
+[component_container_isolated-9] [INFO] [1773196998.565108098] [nav2_container]: Found class: rclcpp_components::NodeFactoryTemplate<behavior_server::BehaviorServer>
+[component_container_isolated-9] [INFO] [1773196998.565172860] [nav2_container]: Instantiate class: rclcpp_components::NodeFactoryTemplate<behavior_server::BehaviorServer>
+[rtabmap-12] [INFO] [1773196998.571753523] [rtabmap]: 
+[rtabmap-12] rtabmap subscribed to (approx sync):
+[rtabmap-12]    /odometry/local \
+[rtabmap-12]    /camera/d455/color/image \
+[rtabmap-12]    /camera/d455/color/camera_info \
+[rtabmap-12]    /camera/d455/depth/color/points
+[component_container_isolated-9] [INFO] [1773196998.574562388] [behavior_server]: 
+[component_container_isolated-9] 	behavior_server lifecycle node launched. 
+[component_container_isolated-9] 	Waiting on external lifecycle transitions to activate
+[component_container_isolated-9] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[INFO] [launch_ros.actions.load_composable_nodes]: Loaded node '/behavior_server' in container '/nav2_container'
+[component_container_isolated-9] [INFO] [1773196998.591957180] [nav2_container]: Load Library: /opt/ros/humble/lib/libbt_navigator_core.so
+[component_container_isolated-9] [INFO] [1773196998.593740633] [nav2_container]: Found class: rclcpp_components::NodeFactoryTemplate<nav2_bt_navigator::BtNavigator>
+[component_container_isolated-9] [INFO] [1773196998.593776821] [nav2_container]: Instantiate class: rclcpp_components::NodeFactoryTemplate<nav2_bt_navigator::BtNavigator>
+[component_container_isolated-9] [INFO] [1773196998.603336218] [bt_navigator]: 
+[component_container_isolated-9] 	bt_navigator lifecycle node launched. 
+[component_container_isolated-9] 	Waiting on external lifecycle transitions to activate
+[component_container_isolated-9] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[component_container_isolated-9] [INFO] [1773196998.603420025] [bt_navigator]: Creating
+[INFO] [launch_ros.actions.load_composable_nodes]: Loaded node '/bt_navigator' in container '/nav2_container'
+[component_container_isolated-9] [INFO] [1773196998.608825837] [nav2_container]: Load Library: /opt/ros/humble/lib/libwaypoint_follower_core.so
+[component_container_isolated-9] [INFO] [1773196998.609660471] [nav2_container]: Found class: rclcpp_components::NodeFactoryTemplate<nav2_waypoint_follower::WaypointFollower>
+[component_container_isolated-9] [INFO] [1773196998.609696719] [nav2_container]: Instantiate class: rclcpp_components::NodeFactoryTemplate<nav2_waypoint_follower::WaypointFollower>
+[component_container_isolated-9] [INFO] [1773196998.618979477] [waypoint_follower]: 
+[component_container_isolated-9] 	waypoint_follower lifecycle node launched. 
+[component_container_isolated-9] 	Waiting on external lifecycle transitions to activate
+[component_container_isolated-9] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[component_container_isolated-9] [INFO] [1773196998.621903377] [waypoint_follower]: Creating
+[INFO] [launch_ros.actions.load_composable_nodes]: Loaded node '/waypoint_follower' in container '/nav2_container'
+[component_container_isolated-9] [INFO] [1773196998.625938610] [nav2_container]: Load Library: /opt/ros/humble/lib/libvelocity_smoother_core.so
+[component_container_isolated-9] [INFO] [1773196998.626660263] [nav2_container]: Found class: rclcpp_components::NodeFactoryTemplate<nav2_velocity_smoother::VelocitySmoother>
+[component_container_isolated-9] [INFO] [1773196998.626711800] [nav2_container]: Instantiate class: rclcpp_components::NodeFactoryTemplate<nav2_velocity_smoother::VelocitySmoother>
+[component_container_isolated-9] [INFO] [1773196998.635682323] [velocity_smoother]: 
+[component_container_isolated-9] 	velocity_smoother lifecycle node launched. 
+[component_container_isolated-9] 	Waiting on external lifecycle transitions to activate
+[component_container_isolated-9] 	See https://design.ros2.org/articles/node_lifecycle.html for more information.
+[INFO] [launch_ros.actions.load_composable_nodes]: Loaded node '/velocity_smoother' in container '/nav2_container'
+[component_container_isolated-9] [INFO] [1773196998.639596118] [nav2_container]: Found class: rclcpp_components::NodeFactoryTemplate<nav2_lifecycle_manager::LifecycleManager>
+[component_container_isolated-9] [INFO] [1773196998.639632136] [nav2_container]: Instantiate class: rclcpp_components::NodeFactoryTemplate<nav2_lifecycle_manager::LifecycleManager>
+[component_container_isolated-9] [INFO] [1773196998.651471886] [lifecycle_manager_navigation]: Creating
+[component_container_isolated-9] [INFO] [1773196998.653203272] [lifecycle_manager_navigation]: [34m[1mCreating and initializing lifecycle service clients[0m[0m
+[INFO] [launch_ros.actions.load_composable_nodes]: Loaded node '/lifecycle_manager_navigation' in container '/nav2_container'
+[rtabmap_viz-10] [INFO] [1773196998.697782995] [rtabmap_viz]: rtabmap_viz: Using configuration from "/home/jn2/.ros/rtabmapGUI.ini"
+[gps_node-16] [INFO] [1773196998.727119179] [gps_node]: Calling SetDatum with lat=44.56458096339274, lon=-123.26210872381304, alt=74.12534261530564
+[rviz2-18] [INFO] [1773196998.849764408] [rviz2]: Stereo is NOT SUPPORTED
+[rviz2-18] [INFO] [1773196998.849907186] [rviz2]: OpenGl version: 4.6 (GLSL 4.6)
+[gps_node-16] [INFO] [1773196998.875252940] [gps_node]: Calling SetDatum with lat=44.56458221657965, lon=-123.26210933793, alt=76.70445208135631
+[rviz2-18] [INFO] [1773196998.949877937] [rviz2]: Stereo is NOT SUPPORTED
+[gps_node-16] [INFO] [1773196999.102599347] [gps_node]: Calling SetDatum with lat=44.56458164507296, lon=-123.26211121702102, alt=73.31887396463937
+[gps_node-16] [INFO] [1773196999.311117054] [gps_node]: Calling SetDatum with lat=44.56458365049357, lon=-123.26211103380798, alt=74.94304910548065
+[gps_node-16] [INFO] [1773196999.493368913] [gps_node]: Calling SetDatum with lat=44.56457976279264, lon=-123.26210879756377, alt=74.04828672754944
+[rtabmap_viz-10] libpng warning: iCCP: known incorrect sRGB profile
+[rtabmap_viz-10] libpng warning: iCCP: known incorrect sRGB profile
+[rtabmap_viz-10] libpng warning: iCCP: known incorrect sRGB profile
+[gps_node-16] [INFO] [1773196999.696883623] [gps_node]: Calling SetDatum with lat=44.564580978845385, lon=-123.26211152910022, alt=75.84050983934449
+[rtabmap_viz-10] [INFO] [1773196999.715873004] [rtabmap_viz]: Reading parameters from the ROS server...
+[rtabmap_viz-10] [INFO] [1773196999.774110858] [rtabmap_viz]: Parameters read = 387
+[rtabmap_viz-10] [INFO] [1773196999.774162394] [rtabmap_viz]: Parameters successfully read.
+[gps_node-16] [INFO] [1773196999.912091380] [gps_node]: Calling SetDatum with lat=44.56458073972599, lon=-123.2621114169536, alt=73.11543466901459
+[gps_node-16] [INFO] [1773197000.119743616] [gps_node]: Calling SetDatum with lat=44.56458167274125, lon=-123.26211075776918, alt=74.36156662645259
+[gps_node-16] [INFO] [1773197000.338473314] [gps_node]: Calling SetDatum with lat=44.56458234419746, lon=-123.26210769624007, alt=75.33563666911124
+[rtabmap-12] [INFO] [1773197000.349110691] [rtabmap]: rtabmap (1): Rate=1.00s, Limit=0.000s, Conversion=0.0134s, RTAB-Map=0.3907s, Maps update=0.0229s pub=0.0002s delay=0.8000s (local map=1, WM=1)
+[rtabmap_viz-10] [INFO] [1773197000.552361739] [rtabmap_viz]: rtabmap_viz: subscribe_depth = false
+[rtabmap_viz-10] [INFO] [1773197000.552399490] [rtabmap_viz]: rtabmap_viz: subscribe_rgb = false
+[rtabmap_viz-10] [INFO] [1773197000.552406703] [rtabmap_viz]: rtabmap_viz: subscribe_stereo = false
+[rtabmap_viz-10] [INFO] [1773197000.552411672] [rtabmap_viz]: rtabmap_viz: subscribe_rgbd = false (rgbd_cameras=1)
+[rtabmap_viz-10] [INFO] [1773197000.552416872] [rtabmap_viz]: rtabmap_viz: subscribe_sensor_data = false
+[rtabmap_viz-10] [INFO] [1773197000.552421661] [rtabmap_viz]: rtabmap_viz: subscribe_odom_info = false
+[rtabmap_viz-10] [INFO] [1773197000.552426570] [rtabmap_viz]: rtabmap_viz: subscribe_user_data = false
+[rtabmap_viz-10] [INFO] [1773197000.552434205] [rtabmap_viz]: rtabmap_viz: subscribe_scan = false
+[rtabmap_viz-10] [INFO] [1773197000.552438593] [rtabmap_viz]: rtabmap_viz: subscribe_scan_cloud = true
+[rtabmap_viz-10] [INFO] [1773197000.552442821] [rtabmap_viz]: rtabmap_viz: subscribe_scan_descriptor = false
+[rtabmap_viz-10] [INFO] [1773197000.552447550] [rtabmap_viz]: rtabmap_viz: topic_queue_size = 10
+[rtabmap_viz-10] [INFO] [1773197000.552452228] [rtabmap_viz]: rtabmap_viz: sync_queue_size  = 10
+[rtabmap_viz-10] [INFO] [1773197000.552456486] [rtabmap_viz]: rtabmap_viz: qos_image       = 0
+[rtabmap_viz-10] [INFO] [1773197000.552461015] [rtabmap_viz]: rtabmap_viz: qos_camera_info = 0
+[rtabmap_viz-10] [INFO] [1773197000.552465423] [rtabmap_viz]: rtabmap_viz: qos_scan        = 0
+[rtabmap_viz-10] [INFO] [1773197000.552469761] [rtabmap_viz]: rtabmap_viz: qos_odom        = 0
+[rtabmap_viz-10] [INFO] [1773197000.552473979] [rtabmap_viz]: rtabmap_viz: qos_user_data   = 0
+[rtabmap_viz-10] [INFO] [1773197000.552480101] [rtabmap_viz]: rtabmap_viz: approx_sync     = false
+[rtabmap_viz-10] [INFO] [1773197000.552500158] [rtabmap_viz]: Setup scan callback
+[rtabmap_viz-10] [INFO] [1773197000.553306960] [rtabmap_viz]: 
+[rtabmap_viz-10] rtabmap_viz subscribed to (exact sync):
+[rtabmap_viz-10]    /odometry/local \
+[rtabmap_viz-10]    /camera/d455/depth/color/points
+[rtabmap_viz-10] [INFO] [1773197000.554915395] [rtabmap_viz]: rtabmap_viz started.
+[rviz2-18] [INFO] [1773197000.585362301] [rviz2]: Trying to create a map of size 126 x 123 using 1 swatches
+[gps_node-16] [INFO] [1773197000.625617740] [gps_node]: Calling SetDatum with lat=44.5645839415091, lon=-123.2621103873282, alt=74.10364497191344
+[component_container_isolated-9] [INFO] [1773197000.654167811] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[gps_node-16] [INFO] [1773197000.894976181] [gps_node]: Calling SetDatum with lat=44.564583186933156, lon=-123.2621125535318, alt=74.1940439085106
+[gps_node-16] [INFO] [1773197001.011730861] [gps_node]: SetDatum service call successful - datum has been set
+[gps_node-16] [INFO] [1773197001.012454648] [gps_node]: SetDatum service call successful - datum has been set
+[gps_node-16] [INFO] [1773197001.013029625] [gps_node]: SetDatum service call successful - datum has been set
+[gps_node-16] [INFO] [1773197001.013583443] [gps_node]: SetDatum service call successful - datum has been set
+[gps_node-16] [INFO] [1773197001.014096735] [gps_node]: SetDatum service call successful - datum has been set
+[gps_node-16] [INFO] [1773197001.014591142] [gps_node]: SetDatum service call successful - datum has been set
+[gps_node-16] [INFO] [1773197001.015079998] [gps_node]: SetDatum service call successful - datum has been set
+[gps_node-16] [INFO] [1773197001.015604060] [gps_node]: SetDatum service call successful - datum has been set
+[gps_node-16] [INFO] [1773197001.016062650] [gps_node]: SetDatum service call successful - datum has been set
+[gps_node-16] [INFO] [1773197001.016523263] [gps_node]: SetDatum service call successful - datum has been set
+[navsat_transform_node-17] [INFO] [1773197001.043739624] [navsat_transform]: Datum (latitude, longitude, altitude) is (44.56, -123.26, 74.19)
+[navsat_transform_node-17] [INFO] [1773197001.044136598] [navsat_transform]: Datum UTM coordinate is (10T, 479185.66, 4934616.37)
+[navsat_transform_node-17] [INFO] [1773197001.044289374] [navsat_transform]: Corrected for magnetic declination of 0, user-specified offset of 0 and meridian convergence of -0.00321016. Transform heading factor is now -0.00353971
+[rtabmap-12] [INFO] [1773197001.895617298] [rtabmap]: rtabmap (2): Rate=1.00s, Limit=0.000s, Conversion=0.0130s, RTAB-Map=0.3958s, Maps update=0.0207s pub=0.0079s delay=0.7900s (local map=1, WM=1)
+[component_container_isolated-9] [INFO] [1773197002.654394108] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[rtabmap-12] [INFO] [1773197003.833101111] [rtabmap]: rtabmap (3): Rate=1.00s, Limit=0.000s, Conversion=0.0061s, RTAB-Map=0.4013s, Maps update=0.0191s pub=0.0200s delay=0.7200s (local map=1, WM=1)
+[component_container_isolated-9] [INFO] [1773197004.654580913] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[rtabmap-12] [INFO] [1773197005.349087342] [rtabmap]: rtabmap (4): Rate=1.00s, Limit=0.000s, Conversion=0.0091s, RTAB-Map=0.4227s, Maps update=0.0173s pub=0.0098s delay=0.7300s (local map=1, WM=1)
+[component_container_isolated-9] [INFO] [1773197006.654883165] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[rtabmap-12] [INFO] [1773197007.674791645] [rtabmap]: rtabmap (5): Rate=1.00s, Limit=0.000s, Conversion=0.0121s, RTAB-Map=0.3835s, Maps update=0.0205s pub=0.0088s delay=0.7800s (local map=1, WM=1)
+[component_container_isolated-9] [INFO] [1773197008.655460694] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[rtabmap-12] [INFO] [1773197008.769217460] [rtabmap]: rtabmap (6): Rate=1.00s, Limit=0.000s, Conversion=0.0099s, RTAB-Map=0.3720s, Maps update=0.0173s pub=0.0072s delay=0.8200s (local map=1, WM=1)
+[rviz2-18] [INFO] [1773197009.530130803] [rviz2]: Message Filter dropping message: frame 'd455_depth_frame' at time 1.330 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[rviz2-18] [INFO] [1773197009.695601588] [rviz2]: Message Filter dropping message: frame 'd455_depth_frame' at time 1.390 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[component_container_isolated-9] [INFO] [1773197010.655785221] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[rtabmap-12] [INFO] [1773197011.036247861] [rtabmap]: rtabmap (7): Rate=1.00s, Limit=0.000s, Conversion=0.0115s, RTAB-Map=0.3654s, Maps update=0.0150s pub=0.0079s delay=0.7200s (local map=1, WM=1)
+[rtabmap-12] [INFO] [1773197012.125319570] [rtabmap]: rtabmap (8): Rate=1.00s, Limit=0.000s, Conversion=0.0051s, RTAB-Map=0.3830s, Maps update=0.0139s pub=0.0067s delay=0.6600s (local map=1, WM=1)
+[component_container_isolated-9] [INFO] [1773197012.656610016] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[rtabmap-12] [INFO] [1773197013.262526537] [rtabmap]: rtabmap (9): Rate=1.00s, Limit=0.000s, Conversion=0.0079s, RTAB-Map=0.3643s, Maps update=0.0142s pub=0.0089s delay=0.7100s (local map=1, WM=1)
+[component_container_isolated-9] [INFO] [1773197014.656835949] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[rtabmap-12] [INFO] [1773197014.829293584] [rtabmap]: rtabmap (10): Rate=1.00s, Limit=0.000s, Conversion=0.0058s, RTAB-Map=0.4007s, Maps update=0.0144s pub=0.0076s delay=0.7200s (local map=1, WM=1)
+[rtabmap-12] [INFO] [1773197016.242662000] [rtabmap]: rtabmap (11): Rate=1.00s, Limit=0.000s, Conversion=0.0143s, RTAB-Map=0.3722s, Maps update=0.0108s pub=0.0069s delay=0.6600s (local map=1, WM=1)
+[WARNING] [launch]: user interrupted with ctrl-c (SIGINT)
+[navsat_transform_node-17] [INFO] [1773197016.482201703] [rclcpp]: signal_handler(signum=2)
+[INFO] [parameter_bridge-3]: process has finished cleanly [pid 54344]
+[INFO] [navsat_transform_node-17]: process has finished cleanly [pid 54743]
+[INFO] [ekf_node-14]: process has finished cleanly [pid 54737]
+[INFO] [obstacles_detection-11]: process has finished cleanly [pid 54731]
+[ERROR] [imu_node-15]: process has died [pid 54739, exit code 1, cmd '/home/jn2/Rover_2023_2024/software/install/rover_gazebo/lib/rover_gazebo/imu_node --ros-args -r __node:=imu_node'].
+[INFO] [robot_state_publisher-6]: process has finished cleanly [pid 54351]
+[INFO] [ekf_node-13]: process has finished cleanly [pid 54735]
+[INFO] [joy_node-2]: process has finished cleanly [pid 54342]
+[INFO] [rviz2-18]: process has finished cleanly [pid 54745]
+[ERROR] [gps_node-16]: process has died [pid 54741, exit code 1, cmd '/home/jn2/Rover_2023_2024/software/install/rover_gazebo/lib/rover_gazebo/gps_node --ros-args -r __node:=gps_node'].
+[rviz2-18] [INFO] [1773197016.482199519] [rclcpp]: signal_handler(signum=2)
+[rtabmap-12] [INFO] [1773197016.482215659] [rclcpp]: signal_handler(signum=2)
+[obstacles_detection-11] [INFO] [1773197016.482221089] [rclcpp]: signal_handler(signum=2)
+[component_container_isolated-9] [INFO] [1773197016.482271674] [rclcpp]: signal_handler(signum=2)
+[component_container_isolated-9] [INFO] [1773197016.482442684] [velocity_smoother]: Running Nav2 LifecycleNode rcl preshutdown (velocity_smoother)
+[ekf_node-13] [INFO] [1773197016.482217242] [rclcpp]: signal_handler(signum=2)
+[ekf_node-14] [INFO] [1773197016.482216541] [rclcpp]: signal_handler(signum=2)
+[robot_state_publisher-6] [INFO] [1773197016.482452613] [rclcpp]: signal_handler(signum=2)
+[component_container_isolated-9] [INFO] [1773197016.483003796] [velocity_smoother]: Destroying bond (velocity_smoother) to lifecycle manager.
+[component_container_isolated-9] [INFO] [1773197016.483030236] [waypoint_follower]: Running Nav2 LifecycleNode rcl preshutdown (waypoint_follower)
+[component_container_isolated-9] [INFO] [1773197016.483048600] [waypoint_follower]: Destroying bond (waypoint_follower) to lifecycle manager.
+[component_container_isolated-9] [INFO] [1773197016.483060312] [bt_navigator]: Running Nav2 LifecycleNode rcl preshutdown (bt_navigator)
+[component_container_isolated-9] [INFO] [1773197016.483074839] [bt_navigator]: Destroying bond (bt_navigator) to lifecycle manager.
+[component_container_isolated-9] [INFO] [1773197016.483085309] [behavior_server]: Running Nav2 LifecycleNode rcl preshutdown (behavior_server)
+[component_container_isolated-9] [INFO] [1773197016.483105557] [behavior_server]: Destroying bond (behavior_server) to lifecycle manager.
+[component_container_isolated-9] [INFO] [1773197016.483118932] [smoother_server]: Running Nav2 LifecycleNode rcl preshutdown (smoother_server)
+[component_container_isolated-9] [INFO] [1773197016.483135784] [smoother_server]: Destroying bond (smoother_server) to lifecycle manager.
+[component_container_isolated-9] [INFO] [1773197016.483149129] [lifecycle_manager_localization]: Running Nav2 LifecycleManager rcl preshutdown (lifecycle_manager_localization)
+[component_container_isolated-9] [INFO] [1773197016.497412934] [lifecycle_manager_navigation]: Running Nav2 LifecycleManager rcl preshutdown (lifecycle_manager_navigation)
+[component_container_isolated-9] [INFO] [1773197016.497462898] [amcl]: Running Nav2 LifecycleNode rcl preshutdown (amcl)
+[component_container_isolated-9] [INFO] [1773197016.497489167] [amcl]: Destroying bond (amcl) to lifecycle manager.
+[component_container_isolated-9] [INFO] [1773197016.497502101] [planner_server]: Running Nav2 LifecycleNode rcl preshutdown (planner_server)
+[component_container_isolated-9] [INFO] [1773197016.497516057] [planner_server]: Destroying bond (planner_server) to lifecycle manager.
+[component_container_isolated-9] [INFO] [1773197016.497525395] [map_server]: Running Nav2 LifecycleNode rcl preshutdown (map_server)
+[component_container_isolated-9] [INFO] [1773197016.497537538] [map_server]: Destroying bond (map_server) to lifecycle manager.
+[component_container_isolated-9] [INFO] [1773197016.497589275] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] 
+[component_container_isolated-9] >>> [rcutils|error_handling.c:108] rcutils_set_error_state()
+[component_container_isolated-9] This error state is being overwritten:
+[component_container_isolated-9] 
+[component_container_isolated-9]   'rcl node's context is invalid, at ./src/rcl/node.c:428'
+[component_container_isolated-9] 
+[component_container_isolated-9] with this new error message:
+[component_container_isolated-9] 
+[component_container_isolated-9]   'publisher's context is invalid, at ./src/rcl/publisher.c:389'
+[component_container_isolated-9] 
+[component_container_isolated-9] rcutils_reset_error() should be called after error handling to avoid this.
+[component_container_isolated-9] <<<
+[component_container_isolated-9] Failed to publish log message to rosout: publisher's context is invalid, at ./src/rcl/publisher.c:389
+[component_container_isolated-9] [INFO] [1773197016.497618730] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] 
+[component_container_isolated-9] >>> [rcutils|error_handling.c:108] rcutils_set_error_state()
+[component_container_isolated-9] This error state is being overwritten:
+[component_container_isolated-9] 
+[component_container_isolated-9]   'rcl node's context is invalid, at ./src/rcl/node.c:428'
+[component_container_isolated-9] 
+[component_container_isolated-9] with this new error message:
+[component_container_isolated-9] 
+[component_container_isolated-9]   'publisher's context is invalid, at ./src/rcl/publisher.c:389'
+[component_container_isolated-9] 
+[component_container_isolated-9] rcutils_reset_error() should be called after error handling to avoid this.
+[component_container_isolated-9] <<<
+[component_container_isolated-9] Failed to publish log message to rosout: publisher's context is invalid, at ./src/rcl/publisher.c:389
+[component_container_isolated-9] [INFO] [1773197016.497680395] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197016.547800358] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197016.597892849] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197016.647989217] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197016.698085586] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197016.748179510] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197016.798274686] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197016.848371565] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197016.898465008] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197016.948565203] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197016.998700545] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197017.048838041] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197017.099012055] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197017.149120656] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197017.199194272] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197017.249271615] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197017.299388382] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197017.349512513] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197017.399633938] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197017.449761135] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197017.499872451] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197017.549966966] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197017.600059478] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197017.650147791] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[rtabmap_viz-10] [INFO] [1773197016.482513437] [rtabmap_viz]: rtabmap_viz stopping spinner...
+[rtabmap_viz-10] [INFO] [1773197016.487897088] [rtabmap_viz]: rtabmap_viz: All done! Closing...
+[parameter_bridge-3] [INFO] [1773197016.482537252] [rclcpp]: signal_handler(signum=2)
+[joy_to_drive-5] Traceback (most recent call last):
+[joy_to_drive-5]   File "/home/jn2/Rover_2023_2024/software/install/rover2_control/lib/rover2_control/joy_to_drive", line 33, in <module>
+[joy_to_drive-5]     sys.exit(load_entry_point('rover2-control', 'console_scripts', 'joy_to_drive')())
+[joy_to_drive-5]   File "/home/jn2/Rover_2023_2024/software/build/rover2_control/rover2_control/joy_to_drive.py", line 91, in main
+[joy_to_drive-5]     rclpy.spin(node)
+[joy_to_drive-5]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/__init__.py", line 229, in spin
+[joy_to_drive-5]     executor.spin_once()
+[joy_to_drive-5]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 751, in spin_once
+[joy_to_drive-5]     self._spin_once_impl(timeout_sec)
+[joy_to_drive-5]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 740, in _spin_once_impl
+[joy_to_drive-5]     handler, entity, node = self.wait_for_ready_callbacks(timeout_sec=timeout_sec)
+[joy_to_drive-5]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 723, in wait_for_ready_callbacks
+[joy_to_drive-5]     return next(self._cb_iter)
+[joy_to_drive-5]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 620, in _wait_for_ready_callbacks
+[joy_to_drive-5]     wait_set.wait(timeout_nsec)
+[joy_to_drive-5] KeyboardInterrupt
+[joy_node-2] [INFO] [1773197016.482959924] [rclcpp]: signal_handler(signum=2)
+[rtabmap-12] [INFO] [1773197016.533210772] [rtabmap]: Parameters are not saved (No configuration file provided...)
+[ign gazebo-1] [INFO] [1773197016.803895511] [rclcpp]: signal_handler(signum=2)
+[ign gazebo-1] [INFO] [1773197016.831225567] [controller_manager]: Shutdown request received....
+[ign gazebo-1] [INFO] [1773197016.831344871] [controller_manager]: Shutting down all controllers in the controller manager.
+[ign gazebo-1] [INFO] [1773197016.831386299] [controller_manager]: Deactivating controller 'joint_state_broadcaster'
+[ign gazebo-1] [INFO] [1773197016.831440250] [controller_manager]: Shutting down controller 'joint_state_broadcaster'
+[ign gazebo-1] [INFO] [1773197016.831509990] [controller_manager]: Deactivating controller 'drive_controller'
+[ign gazebo-1] [INFO] [1773197016.831565404] [controller_manager]: Shutting down controller 'drive_controller'
+[ign gazebo-1] [INFO] [1773197016.831609567] [resource_manager]: 'deactivate' hardware 'rover_drive_passive' 
+[ign gazebo-1] [INFO] [1773197016.831630617] [resource_manager]: Successful 'deactivate' of hardware 'rover_drive_passive'
+[ign gazebo-1] [INFO] [1773197016.831640345] [resource_manager]: 'shutdown' hardware 'rover_drive_passive' 
+[ign gazebo-1] [INFO] [1773197016.831651305] [resource_manager]: Successful 'shutdown' of hardware 'rover_drive_passive'
+[ign gazebo-1] [INFO] [1773197016.831662386] [resource_manager]: 'deactivate' hardware 'rover_drive' 
+[ign gazebo-1] [INFO] [1773197016.831673497] [resource_manager]: Successful 'deactivate' of hardware 'rover_drive'
+[ign gazebo-1] [INFO] [1773197016.831720675] [resource_manager]: 'shutdown' hardware 'rover_drive' 
+[ign gazebo-1] [INFO] [1773197016.831732117] [resource_manager]: Successful 'shutdown' of hardware 'rover_drive'
+[ign gazebo-1] [INFO] [1773197016.831741394] [controller_manager]: Shutting down the controller manager.
+[gps_node-16] Traceback (most recent call last):
+[gps_node-16]   File "/home/jn2/Rover_2023_2024/software/install/rover_gazebo/lib/rover_gazebo/gps_node", line 33, in <module>
+[gps_node-16]     sys.exit(load_entry_point('rover-gazebo', 'console_scripts', 'gps_node')())
+[gps_node-16]   File "/home/jn2/Rover_2023_2024/software/build/rover_gazebo/rover_gazebo/GPSNode.py", line 104, in main
+[gps_node-16]     rclpy.shutdown()
+[gps_node-16]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/__init__.py", line 130, in shutdown
+[gps_node-16]     _shutdown(context=context)
+[gps_node-16]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/utilities.py", line 58, in shutdown
+[gps_node-16]     return context.shutdown()
+[gps_node-16]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/context.py", line 102, in shutdown
+[gps_node-16]     self.__context.shutdown()
+[gps_node-16] rclpy._rclpy_pybind11.RCLError: failed to shutdown: rcl_shutdown already called on the given context, at ./src/rcl/init.c:241
+[imu_node-15] Traceback (most recent call last):
+[imu_node-15]   File "/home/jn2/Rover_2023_2024/software/install/rover_gazebo/lib/rover_gazebo/imu_node", line 33, in <module>
+[imu_node-15]     sys.exit(load_entry_point('rover-gazebo', 'console_scripts', 'imu_node')())
+[imu_node-15]   File "/home/jn2/Rover_2023_2024/software/build/rover_gazebo/rover_gazebo/imu.py", line 111, in main
+[imu_node-15]     rclpy.shutdown()
+[imu_node-15]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/__init__.py", line 130, in shutdown
+[imu_node-15]     _shutdown(context=context)
+[imu_node-15]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/utilities.py", line 58, in shutdown
+[imu_node-15]     return context.shutdown()
+[imu_node-15]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/context.py", line 102, in shutdown
+[imu_node-15]     self.__context.shutdown()
+[imu_node-15] rclpy._rclpy_pybind11.RCLError: failed to shutdown: rcl_shutdown already called on the given context, at ./src/rcl/init.c:241
+[component_container_isolated-9] [INFO] [1773197017.700240814] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[ERROR] [joy_to_drive-5]: process has died [pid 54348, exit code -2, cmd '/home/jn2/Rover_2023_2024/software/install/rover2_control/lib/rover2_control/joy_to_drive --ros-args -r __node:=joy_to_drive'].
+[ERROR] [rtabmap_viz-10]: process has died [pid 54729, exit code 255, cmd '/opt/ros/humble/lib/rtabmap_viz/rtabmap_viz --ros-args --params-file /tmp/launch_params_mxdxtgqq -r odom:=/odometry/local -r rgb/image:=/camera/d455/color/image -r rgb/camera_info:=/camera/d455/color/camera_info -r scan_cloud:=/camera/d455/depth/color/points'].
+[component_container_isolated-9] [INFO] [1773197017.750337703] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197017.800470641] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197017.850684499] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197017.900820402] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197017.951018401] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197018.001121312] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197018.051220306] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197018.101311235] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[ERROR] [ign gazebo-1]: process has died [pid 54340, exit code -2, cmd 'ruby /usr/bin/ign gazebo /home/jn2/Rover_2023_2024/software/install/rover_gazebo/share/rover_gazebo/worlds/rubicon_model.sdf -r -v 1 --force-version 6'].
+[INFO] [launch]: process[ign gazebo-1] was required: shutting down launched system
+[ERROR] [launch]: Caught exception in launch (see debug for traceback): Cannot shutdown a ROS adapter that is not running
+[component_container_isolated-9] [INFO] [1773197018.151403957] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197018.201536984] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197018.251658821] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197018.302354002] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197018.352528788] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197018.402711328] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197018.452890202] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197018.503004845] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197018.553213865] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197018.603368593] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197018.653526558] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197018.703684052] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197018.754034767] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197018.804390632] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197018.854586117] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197018.904747728] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197018.954897297] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197019.005030265] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197019.055157261] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197019.105284959] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197019.155414109] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[rtabmap-12] [33m[ WARN] (2026-03-10 19:43:23.793) Rtabmap.cpp:4603::process() Republishing data of requested node(s) 1 (Rtabmap/MaxRepublished=2)[0m
+[rtabmap-12] rtabmap: Saving database/long-term memory... (located at /home/jn2/.ros/rtabmap.db)
+[rtabmap-12] rtabmap: 2D occupancy grid map saved.
+[rtabmap-12] rtabmap: Saving database/long-term memory...done! (located at /home/jn2/.ros/rtabmap.db, 75 MB)
+[component_container_isolated-9] [INFO] [1773197019.205542579] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[INFO] [rtabmap-12]: process has finished cleanly [pid 54733]
+[component_container_isolated-9] [INFO] [1773197019.255642725] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197019.305837038] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197019.355982529] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197019.406134572] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197019.456288199] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197019.506432829] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197019.556581997] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197019.606693153] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197019.656836721] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197019.706972775] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197019.757182396] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197019.807319101] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197019.857451567] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197019.907573414] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197019.957708296] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197020.007903610] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197020.058064761] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197020.108477884] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197020.158654865] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197020.208821806] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197020.258999588] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197020.309559977] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197020.360116960] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197020.410372027] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197020.460528319] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197020.510683328] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197020.560841493] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197020.610999127] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197020.661157152] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197020.711313103] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197020.761507185] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197020.811734320] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197020.861890261] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197020.912766112] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197020.963095508] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197021.013298367] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197021.063870949] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197021.114046036] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197021.164234869] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197021.214381954] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197021.264542704] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197021.314701270] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197021.365093154] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197021.415272118] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197021.465388405] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197021.515479144] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197021.565587907] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197021.615727227] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197021.665875955] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197021.716024192] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197021.766169163] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197021.816308904] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197021.866565113] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197021.916725222] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197021.966881985] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197022.017447524] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197022.067907466] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197022.118945732] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197022.169117693] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197022.219261712] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197022.269378580] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197022.319530024] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197022.369619410] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197022.419709068] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197022.469792543] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197022.519877261] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197022.569960897] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197022.620081202] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197022.670190737] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[ERROR] [component_container_isolated-9]: process[component_container_isolated-9] failed to terminate '5' seconds after receiving 'SIGINT', escalating to 'SIGTERM'
+[INFO] [component_container_isolated-9]: sending signal 'SIGTERM' to process[component_container_isolated-9]
+[component_container_isolated-9] [INFO] [1773197022.691858080] [rclcpp]: signal_handler(signum=15)
+[component_container_isolated-9] [INFO] [1773197022.720284953] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197022.770369891] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197022.820451644] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197022.870517015] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197022.920608677] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197022.970699917] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197023.020784385] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197023.070867500] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197023.120949954] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197023.171033510] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197023.221123058] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197023.271204890] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197023.321348840] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197023.371672516] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197023.422228898] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197023.472799928] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197023.523012565] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197023.573192322] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197023.623586561] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197023.673716524] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197023.723819646] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197023.773922418] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197023.824027766] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197023.874124326] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197023.924222800] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197023.974318920] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197024.024420530] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197024.074526368] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197024.124629581] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197024.174726823] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197024.224823454] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197024.274918342] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197024.325015504] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197024.375128055] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197024.425235937] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197024.475335022] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197024.525451450] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197024.575595159] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197024.625714433] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197024.675878730] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197024.726026748] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197024.776178582] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197024.826676094] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197024.876827138] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197024.927029867] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197024.977240021] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197025.027396604] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197025.078271514] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197025.128452634] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197025.179057317] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197025.229237805] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197025.279451686] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197025.329563235] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197025.379678241] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197025.429852908] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197025.480068643] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197025.530177667] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197025.580323300] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197025.630451050] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197025.680572247] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197025.730738679] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197025.780891325] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197025.831048921] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197025.881203691] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197025.931350957] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197025.981514934] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197026.031668132] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197026.081823223] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197026.131977853] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197026.182134387] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197026.232353428] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197026.282556519] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197026.333183003] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197026.383387447] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197026.433535364] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197026.483674816] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197026.533885070] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197026.584107868] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197026.634701060] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197026.685300494] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197026.735461246] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197026.785640983] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197026.835802496] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197026.885948019] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197026.936126424] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197026.986299969] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197027.036501328] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197027.086678280] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197027.136847227] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197027.187005835] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197027.237159784] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197027.287313162] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197027.337469015] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197027.387628454] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197027.437788475] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197027.487924180] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197027.538480132] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197027.589070479] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197027.639751356] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[component_container_isolated-9] [INFO] [1773197027.689941042] [lifecycle_manager_navigation]: Waiting for service controller_server/get_state...
+[ERROR] [component_container_isolated-9]: process[component_container_isolated-9] failed to terminate '10.0' seconds after receiving 'SIGTERM', escalating to 'SIGKILL'
+[INFO] [component_container_isolated-9]: sending signal 'SIGKILL' to process[component_container_isolated-9]
+[ERROR] [component_container_isolated-9]: process has died [pid 54727, exit code -9, cmd '/opt/ros/humble/lib/rclcpp_components/component_container_isolated --ros-args --log-level info --ros-args -r __node:=nav2_container --params-file /tmp/launch_params_0t1sbmqd --params-file /tmp/launch_params_ngvk_s48 -r /tf:=tf -r /tf_static:=tf_static'].

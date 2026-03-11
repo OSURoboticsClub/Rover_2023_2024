@@ -15,6 +15,8 @@
 #include <cmath>
 
 #define VOXEL_BITS 16
+#include "pluginlib/class_list_macros.hpp"
+PLUGINLIB_EXPORT_CLASS(rob599_nav_gazebo::VolumetricLayer, nav2_costmap_2d::Layer)
 
 using nav2_costmap_2d::NO_INFORMATION;
 using nav2_costmap_2d::LETHAL_OBSTACLE;
@@ -28,22 +30,22 @@ void VolumetricLayer::onInitialize()
 {
   ObstacleLayer::onInitialize();
 
-  declareParameter("enabled", rclcpp::ParameterValue(true));
-  declareParameter("footprint_clearing_enabled", rclcpp::ParameterValue(true));
-  declareParameter("max_obstacle_height", rclcpp::ParameterValue(2.0));
+  auto node = node_.lock();
+  if (!node) {
+    throw std::runtime_error{"Failed to lock node"};
+  }
+
+  //declareParameter("enabled", rclcpp::ParameterValue(true));
+  //declareParameter("footprint_clearing_enabled", rclcpp::ParameterValue(true));
+  //declareParameter("max_obstacle_height", rclcpp::ParameterValue(2.0));
   declareParameter("z_voxels", rclcpp::ParameterValue(10));
   declareParameter("origin_z", rclcpp::ParameterValue(0.0));
   declareParameter("z_resolution", rclcpp::ParameterValue(0.2));
   declareParameter("unknown_threshold", rclcpp::ParameterValue(15));
   declareParameter("mark_threshold", rclcpp::ParameterValue(0));
-  declareParameter("combination_method", rclcpp::ParameterValue(1));
+  //declareParameter("combination_method", rclcpp::ParameterValue(1));
   declareParameter("publish_voxel_map", rclcpp::ParameterValue(false));
   declareParameter("robot_height", rclcpp::ParameterValue(2.0));
-
-  auto node = node_.lock();
-  if (!node) {
-    throw std::runtime_error{"Failed to lock node"};
-  }
 
   node->get_parameter(name_ + "." + "enabled", enabled_);
   node->get_parameter(name_ + "." + "footprint_clearing_enabled", footprint_clearing_enabled_);
@@ -57,7 +59,7 @@ void VolumetricLayer::onInitialize()
   node->get_parameter(name_ + "." + "publish_voxel_map", publish_voxel_);
   node->get_parameter(name_ + "." + "robot_height", robot_height_);
 
-  robot_voxel_height_ = static_cast<int>((robot_height_ - origin_z_) / z_resolution_);
+  robot_voxel_height_ = std::min(size_z_ - 1, static_cast<int>((robot_height_ - origin_z_) / z_resolution_));
 
   auto custom_qos = rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable();
 
@@ -65,7 +67,7 @@ void VolumetricLayer::onInitialize()
   if (publish_voxel_) {
     voxel_pub_ = node->create_publisher<nav2_msgs::msg::VoxelGrid>(
       "voxel_grid", custom_qos);
-    voxel_pub_->on_activate();
+      voxel_pub_->on_activate();
   }
 
   clearing_endpoints_pub_ = node->create_publisher<sensor_msgs::msg::PointCloud2>(
@@ -80,6 +82,8 @@ void VolumetricLayer::onInitialize()
     std::bind(
       &VolumetricLayer::dynamicParametersCallback,
       this, std::placeholders::_1));
+
+  RCLCPP_INFO(logger_, "VolumetricLayer successfully initialized!");
 }
 
 VolumetricLayer::~VolumetricLayer()
@@ -525,6 +529,3 @@ VolumetricLayer::dynamicParametersCallback(
 }
 
 }  // namespace rob599_nav_gazebo
-
-#include "pluginlib/class_list_macros.hpp"
-PLUGINLIB_EXPORT_CLASS(rob599_nav_gazebo::VolumetricLayer, nav2_costmap_2d::Layer)
