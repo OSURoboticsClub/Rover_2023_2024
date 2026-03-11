@@ -32,6 +32,20 @@
     </collision>
   </link>
 
+  <link name="unilidar_imu_initial">
+    <visual> 
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.005" length="0.01"/>
+      </geometry>
+    </visual>
+  </link>
+  <joint name="lidar_joint" type="fixed">
+    <parent link="rover_base_origin"/>
+    <child link="unilidar_imu_initial"/>
+    <origin rpy="0 0 0" xyz=".1524 0 .37"/>
+  </joint>
+  
   <link name="imu_link">
     <visual> 
       <origin rpy="0 0 0" xyz="0 0 0"/>
