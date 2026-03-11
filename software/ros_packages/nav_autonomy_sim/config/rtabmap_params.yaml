@@ -14,10 +14,13 @@ rtabmap:
     depth_topic: /camera_depth/depth/image_raw
     #Rtabmap/PublishGrid: True
     #RGBD/PublishCloud: True
+    RGBD/DepthDecimation: 4  # Reduces the depth image resolution before generating the point cloud
+    RGBD/DepthMax: 3.0  # Filter the depth image
     Reg/Force3DoF: True
     Grid/RayTracing: True # Fill empty space
     #Grid/FromDepth: True
     Grid/3D: False # Use 2D occupancy
+    Grid/CellSize: 0.05  # Voxel downsampling
     Grid/RangeMax: 3
     Grid/NormalsSegmentation: False # Use passthrough filter to detect obstacles
     Grid/MaxGroundHeight: 0.05 # All points above 5 cm are obstacles
