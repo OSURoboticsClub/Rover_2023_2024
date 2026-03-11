@@ -266,23 +266,31 @@ class YoloServer(Node):
                             (255, 255, 0),
                             2,
                         )
+                        # Lock in best detection
+                        self.best_boxes = boxes_xyxy[best_idx]
+                        self.xc, self.yc, _, _ = result.boxes.xywh[
+                            best_idx
+                        ].tolist()
 
                         if total_mean >= self.stop_threshold:
-                            # Lock in best detection and exit loop
-                            self.best_boxes = boxes_xyxy[best_idx]
-                            self.xc, self.yc, _, _ = result.boxes.xywh[
-                                best_idx
-                            ].tolist()
                             # Show final frame before breaking
                             cv2.imshow("YOLO Detection", display_frame)
                             cv2.waitKey(1)
                             break
 
+
+                        center, top_left, bottom_right = self.get_points()
                         feedback = YoloFind.Feedback()
                         feedback.confidence = current_conf
                         feedback.frame_id = frame_id
                         feedback.detected = True
+                        feedback.total_conf = total_mean
+                        feedback.recent_conf = recent_mean
+                        feedback.center = center
+                        feedback.top_left = top_left
+                        feedback.bottom_right = bottom_right
                         goal_handle.publish_feedback(feedback)
+
 
                     else:
                         # No detections - publish feedback with no detection
@@ -309,22 +317,7 @@ class YoloServer(Node):
                 # ==============================
                 if not self.quit:
                     if self.xc and self.yc:
-                        center = Point()
-                        center.x = self.xc
-                        center.y = self.yc
-                        center.z = 0.0
-
-                        x1, y1, x2, y2 = self.best_boxes
-
-                        top_left = Point()
-                        top_left.x = x1
-                        top_left.y = y1
-                        top_left.z = 0.0
-
-                        bottom_right = Point()
-                        bottom_right.x = x2
-                        bottom_right.y = y2
-                        bottom_right.z = 0.0
+                        center, top_left, bottom_right = self.get_points() 
 
                         self.get_logger().info("Yolo search completed")
                         goal_handle.succeed()
@@ -345,6 +338,29 @@ class YoloServer(Node):
             result.ack = YoloFind.Result.CANCELED
             self.busy = False
             return result
+
+
+    async def get_points():
+        center = Point()
+        center.x = self.xc
+        center.y = self.yc
+        center.z = 0.0
+
+        x1, y1, x2, y2 = self.best_boxes
+
+        top_left = Point()
+        top_left.x = x1
+        top_left.y = y1
+        top_left.z = 0.0
+
+        bottom_right = Point()
+        bottom_right.x = x2
+        bottom_right.y = y2
+        bottom_right.z = 0.0
+        
+        return center, top_left, bottom_right
+
+
 
     async def do_aruco(self, goal_handle):
         print("[INFO] detecting '{}' tags...".format(self.ARUCO_size))
