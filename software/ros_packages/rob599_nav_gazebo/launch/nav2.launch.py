@@ -356,20 +356,12 @@ def generate_launch_description():
     )
 
     params_file = (
-        get_package_share_directory("rob599_nav_gazebo") + "/config/params.yaml"
+        get_package_share_directory("rob599_nav_gazebo") + "/config/default_nav2_params.yaml"
     )
 
-    # nav2 = Node(
-    #     package="nav2_bringup",
-    #     executable="bringup_launch.py",
-    #     name="Nav2_Stack",
-    #     parameters=[{
-    #         "use_sim_time": True,
-    #         "": params_file,
-
-    #     }],
-    #     output="screen"
-    # )
+    map_file = (
+        get_package_share_directory("rob599_nav_gazebo") + "/config/map.yaml"
+    )
 
     nav2 = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -382,8 +374,10 @@ def generate_launch_description():
         launch_arguments={
             "use_sim_time": "true",
             "params_file": params_file,
-            "slam": False,
-            "use_map_server": False, 
+            "slam": "False",
+            "use_map_server": "False", 
+            "autostart": "True",
+            "map":map_file,
         }.items(),
     )
 
@@ -395,13 +389,15 @@ def generate_launch_description():
         'use_action_for_goal':True,
         'Reg/Force3DoF':'true',
         'Grid/RayTracing':'true', # Fill empty space
-        'Grid/Sensor':'true',
-        'Grid/3D':'True', # Use 2D occupancy
-        'Grid/RangeMax':'3',
+        'Grid/Sensor':'0',
+        'Grid/FromDepth':'False',
+        'Grid/3D': 'true', # Use 2D occupancy
+        'Grid/RangeMax':'5',
         'Grid/NormalsSegmentation':'false', # Use passthrough filter to detect obstacles
-        'Grid/MaxGroundHeight':'0.05', # All points above 5 cm are obstacles
-        'Grid/MaxObstacleHeight':'0.4',  # All points over 1 meter are ignored
+        'Grid/MaxGroundHeight':'0.2', # All points above 5 cm are obstacles
+        'Grid/MaxObstacleHeight':'1.5',  # All points over 1 meter are ignored
         'Optimizer/GravitySigma':'0', # Disable imu constraints (we are already in 2D)
+        'RGBD/CreateOccupancyGrid':"True",
         "delete_db_on_start": True,
     }
     rtabmap_remappings = [
@@ -436,7 +432,7 @@ def generate_launch_description():
     )
     
 
-    world_path = os.path.join(rover_gazebo_path, 'worlds/rubicon.sdf')   
+    # world_path = os.path.join(rover_gazebo_path, 'worlds/rubicon.sdf')   
 
     return LaunchDescription([
         use_sim_time_arg,
@@ -518,7 +514,7 @@ def generate_launch_description():
 
         RegisterEventHandler(
             event_handler=OnProcessExit(
-                target_action=rtab_map_node,
+                target_action=drive_controller_node,
                 on_exit=[nav2],
             )
         ),

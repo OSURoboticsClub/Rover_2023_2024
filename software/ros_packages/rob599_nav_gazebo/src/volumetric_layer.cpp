@@ -214,10 +214,10 @@ void VolumetricLayer::updateBounds(
     }
   }
 
-  unsigned int center_x = size_x_ / 2;
-  unsigned int center_y = size_y_ / 2;
-  unsigned int center_index = getIndex(center_x, center_y);
-  costmap_[center_index] = nav2_costmap_2d::LETHAL_OBSTACLE;
+  //unsigned int center_x = size_x_ / 2;
+  //unsigned int center_y = size_y_ / 2;
+  //unsigned int center_index = getIndex(center_x, center_y);
+  //costmap_[center_index] = nav2_costmap_2d::LETHAL_OBSTACLE;
 
   if (publish_voxel_) {
     auto grid_msg = std::make_unique<nav2_msgs::msg::VoxelGrid>();
