@@ -143,7 +143,7 @@ def generate_launch_description():
       joint_state_broadcaster_spawner,
       drive_control,
       imu,
-#      arm,
+      arm,
       status,
 #      cameras,
       nav_autonomy,

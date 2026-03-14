@@ -32,7 +32,7 @@ drive_controller:
     #topmost frame of the robot
     odom_frame_id: odom
     base_frame_id: rover_base_origin
-
+    enable_odom_tf: false
     use_stamped_velocities: true
 
     # Velocity and acceleration limits for the robot
