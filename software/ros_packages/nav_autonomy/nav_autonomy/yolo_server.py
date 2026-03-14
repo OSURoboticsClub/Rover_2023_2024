@@ -3,10 +3,15 @@ from rclpy.node import Node
 from rclpy.action import ActionServer, CancelResponse, GoalResponse
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
+from rcl_interfaces.msg import ParameterDescriptor
+
+
 
 from std_msgs.msg import Header
 
 from nav_autonomy_interface.action import YoloFind
+
+
 
 # YOLO specific
 from ultralytics import YOLO
@@ -112,7 +117,7 @@ class YoloServer(Node):
         # Frame Storage
         self.max_frames = self.get_parameter("max_frames").value
         self.check_frames = self.get_parameter("check_frames").value
-
+       
     def goal_callback(self, goal_request):
         """Accept or reject a client request to begin an action."""
         self.get_logger().info(
@@ -187,6 +192,10 @@ class YoloServer(Node):
 
         self.xc = None
         self.yc = None
+        
+        cap = None  # Declare here so except block can access it
+
+
         try:
             # ==============================
             # Look for object
@@ -208,8 +217,8 @@ class YoloServer(Node):
             else:
                 cap = cv2.VideoCapture(self.source, cv2.CAP_V4L2)
 
-                camera_stacks = [[] for _ in range(self.num_cameras)]
-
+                camera_stacks = [deque(maxlen=self.max_frames) for _ in range(self.num_cameras)]
+               
                 # Start searching in camera stream for object(s)
                 current_cam = self.cam_queue.popleft()
                 self.cam_queue.append(current_cam)
@@ -244,11 +253,9 @@ class YoloServer(Node):
                         display_frame = self._draw_detections(
                             frame, boxes_xyxy, conf_scores, best_idx
                         )
+                        
+                        camera_stacks[current_cam].append(current_conf)
 
-                        # Store obj conf from last N frames for this cam
-                        if len(camera_stacks[current_cam]) >= self.max_frames:
-                            camera_stacks[current_cam].pop(0)  # remove oldest
-                        camera_stacks[current_cam].append(current_conf)  # add newest
 
                         # Grab average of list and check against thresholds
                         total_mean = sum(camera_stacks[current_cam]) / self.max_frames
@@ -340,7 +347,7 @@ class YoloServer(Node):
             return result
 
 
-    async def get_points():
+    def get_points(self):
         center = Point()
         center.x = self.xc
         center.y = self.yc
@@ -363,7 +370,7 @@ class YoloServer(Node):
 
 
     async def do_aruco(self, goal_handle):
-        print("[INFO] detecting '{}' tags...".format(self.ARUCO_size))
+        print("[INFO] detecting '{}' tags...".format(cv2.aruco.DICT_4X4_50))
         arucoDict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
         arucoParams = cv2.aruco.DetectorParameters_create()
         cap = cv2.VideoCapture(self.source)

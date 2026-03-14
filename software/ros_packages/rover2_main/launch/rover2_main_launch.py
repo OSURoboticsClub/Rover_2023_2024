@@ -55,7 +55,7 @@ def generate_launch_description():
       state_publisher,
       drive_control,
       imu,
-      arm,
+      # arm,
       status,
 #      cameras,
       nav_autonomy,
