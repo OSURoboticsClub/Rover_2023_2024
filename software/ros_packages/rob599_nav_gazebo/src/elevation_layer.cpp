@@ -28,12 +28,23 @@ ElevationLayer::~ElevationLayer()
 void ElevationLayer::onInitialize()
 {
   auto node = node_.lock();
+  if (!node)
+  {
+    throw std::runtime_error("Failed to lock node");
+  }
 
   cloud_ = pcl::PointCloud<pcl::PointXYZ>::Ptr(
       new pcl::PointCloud<pcl::PointXYZ>());
 
+  declareParameter(
+      "pointcloud_topic",
+      rclcpp::ParameterValue(std::string("/camera/d455/depth/color/points")));
+
+  std::string pointcloud_topic;
+  node->get_parameter(name_ + "." + "pointcloud_topic", pointcloud_topic);
+
   cloud_sub_ = node->create_subscription<sensor_msgs::msg::PointCloud2>(
-      "/points",
+      pointcloud_topic,
       rclcpp::SensorDataQoS(),
       std::bind(&ElevationLayer::pointCloudCallback, this, std::placeholders::_1));
 
