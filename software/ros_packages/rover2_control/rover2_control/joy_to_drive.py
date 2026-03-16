@@ -2,6 +2,7 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Joy
 from geometry_msgs.msg import Twist, TwistStamped
+from std_srvs.srv import Trigger
 from rover2_control_interface.msg import DriveCommandMessage
 import time
 import math
@@ -16,7 +17,7 @@ class JoyToDriveNode(Node):
         super().__init__('joy_to_drive')
 
         # Publisher Drive Commands
-        self.wheel_pub = self.create_publisher(TwistStamped, '/drive_controller/cmd_vel', 1)
+        self.wheel_pub = self.create_publisher(Twist, '/drive_controller/cmd_vel_unstamped', 1)
 
         # Drive Command Subscribers
         self.groundstation_sub = self.create_subscription(
@@ -38,6 +39,9 @@ class JoyToDriveNode(Node):
             1
         )
 
+        self.start_drive_service = self.create_service(Trigger, "start_teleop_drive", self.start_teleop_cb)
+        self.stop_drive_service = self.create_service(Trigger, "stop_teleop_drive", self.stop_teleop_cb)
+
         #Drive Control Loop
         self.timer = self.create_timer(0.03, self.timer_callback) 
 
@@ -48,20 +52,36 @@ class JoyToDriveNode(Node):
         self.max_ang_vel = 4.0  # Max angular velocity (rad/s)
         #Watchdog Timer
         self.last_message_time = time.time()
+        self.publish_msgs = True
 
     def timer_callback(self):
-        #Watchdog
-        if time.time() >= self.last_message_time+2:    
-            self.linear_velocity = 0.0  
-            self.angular_velocity = 0.0  
+        if self.publish_msgs:
+            #Watchdog
+            if time.time() >= self.last_message_time+2:    
+                self.linear_velocity = 0.0  
+                self.angular_velocity = 0.0  
 
-        #Publish current velocity commands 
-        twist = TwistStamped()
-        twist.header.stamp = self.get_clock().now().to_msg()
-        twist.header.frame_id = 'rover_base_origin'
-        twist.twist.linear.x = self.linear_velocity * self.max_vel
-        twist.twist.angular.z = self.angular_velocity * self.max_ang_vel 
+            #Publish current velocity commands 
+            twist = Twist()
+            twist.linear.x = self.linear_velocity * self.max_vel
+            twist.angular.z = self.angular_velocity * self.max_ang_vel 
+            self.wheel_pub.publish(twist)
+
+    def start_teleop_cb(self, reqest, response):
+        self.publish_msgs = True
+        response.success = True
+        response.message = "Started Teleop Drive"
+        return response
+    
+    def stop_teleop_cb(self, reqest, response):
+        self.publish_msgs = False
+        twist = Twist()
+        twist.linear.x = 0.0
+        twist.angular.z = 0.0
         self.wheel_pub.publish(twist)
+        response.success = True
+        response.message = "Started Teleop Drive"
+        return response
 
     def joy_callback(self, msg):
         # Map joystick axes to wheel velocities

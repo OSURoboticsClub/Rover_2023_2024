@@ -1,6 +1,6 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
-from launch.actions import IncludeLaunchDescription, RegisterEventHandler
+from launch.actions import IncludeLaunchDescription, RegisterEventHandler, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.event_handlers import OnProcessStart, OnProcessExit
 from launch.substitutions import Command, FindExecutable, PathJoinSubstitution, TextSubstitution
@@ -37,10 +37,10 @@ def generate_launch_description():
         'respawn': True
     }
 
-    use_sim_time = LaunchConfiguration('use_sim_time', default='false')
+    use_sim_time = LaunchConfiguration('use_sim_time', default='true')
     use_sim_time_arg = DeclareLaunchArgument(
             'use_sim_time',
-            default_value='false',
+            default_value='true',
             description='Use simulation (Gazebo) clock if true'
     )
 
@@ -186,7 +186,7 @@ def generate_launch_description():
     )
 
 
-      # 5. NavSat Transform - converts GPS to map frame
+    # 5. NavSat Transform - converts GPS to map frame
     navsat_transform_node = Node(
         package='robot_localization',
         executable='navsat_transform_node',
@@ -363,12 +363,15 @@ def generate_launch_description():
         get_package_share_directory("rob599_nav_gazebo") + "/config/map.yaml"
     )
 
+    print(map_file)
+
     nav2 = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution([
-                FindPackageShare("nav2_bringup"),
+                FindPackageShare("rob599_nav_gazebo"),
                 "launch",
-                "bringup_launch.py"
+                # "bringup_launch.py",
+                "nav2_launch.py",
             ])
         ),
         launch_arguments={
@@ -377,7 +380,7 @@ def generate_launch_description():
             "slam": "False",
             "use_map_server": "False", 
             "autostart": "True",
-            "map":map_file,
+            # "map":map_file,
         }.items(),
     )
 
@@ -433,7 +436,6 @@ def generate_launch_description():
                     ('obstacles', '/camera/obstacles'),
                     ('ground', '/camera/ground')]
     )
-    
 
     # world_path = os.path.join(rover_gazebo_path, 'worlds/rubicon.sdf')   
 
@@ -518,9 +520,11 @@ def generate_launch_description():
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=drive_controller_node,
-                on_exit=[nav2],
+                on_exit=[TimerAction(
+                    period=2.0,
+                    actions=[nav2],
+                )],
             )
         ),
-
 
     ])

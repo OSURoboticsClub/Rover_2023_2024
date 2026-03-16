@@ -23,8 +23,8 @@ find_package(nav_msgs REQUIRED)
 find_package(nav2_voxel_grid REQUIRED)
 find_package(laser_geometry REQUIRED)
 find_package(PCL REQUIRED)
-#find_package(pcl_conversions REQUIRED)
-#find_package(pcl_ros REQUIRED)
+find_package(pcl_conversions REQUIRED)
+find_package(pcl_ros REQUIRED)
 
 # Include headers
 include_directories(
@@ -36,7 +36,7 @@ include_directories(
 add_library(${lib_name} SHARED
   src/volumetric_layer.cpp
   src/elevation_layer.cpp
-  src/clearance_layer.cpp
+  # src/clearance_layer.cpp
 )
 
 ament_target_dependencies(${lib_name}
@@ -59,7 +59,7 @@ target_link_libraries(${lib_name}
 # Export plugins
 pluginlib_export_plugin_description_file(nav2_costmap_2d volumetriclayer.xml)
 pluginlib_export_plugin_description_file(nav2_costmap_2d elevationlayer.xml)
-pluginlib_export_plugin_description_file(nav2_costmap_2d clearancelayer.xml)
+# pluginlib_export_plugin_description_file(nav2_costmap_2d clearancelayer.xml)
 
 # Install launch + configs
 install(DIRECTORY launch/
@@ -79,7 +79,7 @@ install(DIRECTORY include/
 install(FILES
   volumetriclayer.xml
   elevationlayer.xml
-  clearancelayer.xml
+  # clearancelayer.xml
   DESTINATION share/${PROJECT_NAME}
 )
 

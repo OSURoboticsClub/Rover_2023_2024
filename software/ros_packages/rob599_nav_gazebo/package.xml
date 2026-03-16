@@ -35,7 +35,7 @@
   <export>
     <costmap_2d plugin="${prefix}/volumetriclayer.xml"/>
     <costmap_2d plugin="${prefix}/elevationlayer.xml"/>
-    <costmap_2d plugin="${prefix}/clearance.xml"/>
+    <!-- <costmap_2d plugin="${prefix}/clearance.xml"/> -->
     <build_type>ament_cmake</build_type>
   </export>
 </package>

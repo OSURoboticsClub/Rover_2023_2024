@@ -193,7 +193,7 @@
       <parent link="${name}_base_link"/>
       <child link="${name}_shoulder"/>
       <axis xyz="0.0 0.0 -1.0"/>
-      <limit upper="1.570796" lower="-1.570796" effort="100" velocity="100"/>
+      <limit upper="1.570796" lower="-1.570796" effort="100" velocity="0.565478"/>
     </joint>
 
     <joint name="${name}_shoulder_joint" type="revolute">
@@ -201,7 +201,7 @@
       <parent link="${name}_shoulder"/>
       <child link="${name}_long_arm"/>
       <axis xyz="1.0 0.0 0.0"/>
-      <limit upper="1.570796" lower="-1.570796" effort="100" velocity="100"/>
+      <limit upper="1.570796" lower="-1.570796" effort="100" velocity="0.353429"/>
     </joint>
 
     <joint name="${name}_elbow_pitch_joint" type="revolute">
@@ -209,7 +209,7 @@
       <parent link="${name}_long_arm"/>
       <child link="${name}_elbow_roll"/>
       <axis xyz="1.0 0.0 0.0"/>
-      <limit upper="3.141593" lower="-3.141593" effort="100" velocity="100"/>
+      <limit upper="3.141593" lower="-3.141593" effort="100" velocity="0.604799"/>
     </joint>
 
     <joint name="${name}_elbow_roll_joint" type="revolute">
@@ -217,7 +217,7 @@
       <parent link="${name}_elbow_roll"/>
       <child link="${name}_short_arm"/>
       <axis xyz="0.0 0.0 -1.0"/>
-      <limit upper="3.141593" lower="-3.141593" effort="100" velocity="100"/>
+      <limit upper="3.141593" lower="-3.141593" effort="100" velocity="1.884956"/>
     </joint>
 
     <joint name="${name}_wrist_pitch_joint" type="revolute">
@@ -225,7 +225,7 @@
       <parent link="${name}_short_arm"/>
       <child link="${name}_wrist_roll"/>
       <axis xyz="1.0 0.0 0.0"/>
-      <limit upper="3.141593" lower="-3.141593" effort="100" velocity="100"/>
+      <limit upper="3.141593" lower="-3.141593" effort="100" velocity="0.611337"/>
     </joint>
 
     <joint name="${name}_wrist_roll_joint" type="continuous">
@@ -233,6 +233,7 @@
       <parent link="${name}_wrist_roll"/>
       <child link="${name}_tool0"/>
       <axis xyz="0.0 0.0 1.0"/>
+      <limit effort="100" velocity="2.261947"/>
     </joint>
 
     <joint name="${name}_gripper_joint" type="fixed">

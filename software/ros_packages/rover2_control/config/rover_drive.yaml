@@ -34,7 +34,7 @@ drive_controller:
     base_frame_id: rover_base_origin
     enable_odom_tf: False
 
-    use_stamped_velocities: true
+    use_stamped_vel: False
 
     # Velocity and acceleration limits for the robot
     linear:
