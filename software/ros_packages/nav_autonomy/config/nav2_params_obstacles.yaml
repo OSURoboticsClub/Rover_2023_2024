@@ -95,19 +95,19 @@ controller_server:
     #  stateful: True
     general_goal_checker:
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.5
-      yaw_goal_tolerance: 0.4
+      xy_goal_tolerance: 0.7
+      yaw_goal_tolerance: 6.28
       stateful: True
       
     # DWB parameters
     FollowPath:
       plugin: "dwb_core::DWBLocalPlanner"
       debug_trajectory_details: True
-      xy_goal_tolerance: 0.5
+      xy_goal_tolerance: 0.7
 
       # Speed limits
       min_vel_x: 0.0
-      max_vel_x: 0.5
+      max_vel_x: 1.0
       min_vel_y: 0.0
       max_vel_y: 0.0
       min_vel_theta: -1.0
@@ -213,7 +213,7 @@ local_costmap:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: True
         cost_scaling_factor: 5.0
-        inflation_radius: 0.7
+        inflation_radius: 0.9
 
 
 global_costmap:
@@ -230,8 +230,8 @@ global_costmap:
       always_send_full_costmap: False
       
       rolling_window: True
-      width: 50
-      height: 50
+      width: 1000
+      height: 1000
       # origin_x: -25.0 # center on rover
       # origin_y: -25.0
 
@@ -279,7 +279,7 @@ global_costmap:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: True
         cost_scaling_factor: 3.0
-        inflation_radius: 0.7
+        inflation_radius: 0.9
       
 # map_server:
   #ros__parameters:
@@ -338,8 +338,8 @@ waypoint_follower:
     waypoint_task_executor_plugin: "wait_at_waypoint"
     wait_at_waypoint:
       plugin: "nav2_waypoint_follower::WaitAtWaypoint"
-      enabled: True
-      waypoint_pause_duration: 1000
+      enabled: False
+      waypoint_pause_duration: 100
 
 velocity_smoother:
  ros__parameters:
@@ -347,8 +347,8 @@ velocity_smoother:
    smoothing_frequency: 20.0
    scale_velocities: False
    feedback: "OPEN_LOOP"
-   min_velocity: [-0.5, 0.0, -0.8] # backward, strafe, rotation
-   max_velocity: [0.5, 0.0, 0.8]  # forward, strafe, rotation
+   min_velocity: [-1.0, 0.0, -0.8] # backward, strafe, rotation
+   max_velocity: [1.0, 0.0, 0.8]  # forward, strafe, rotation
    max_decel: [-0.5, 0.0, -1.0]
    max_accel: [0.5, 0.0, 1.0]
    odom_topic: /odometry/local
