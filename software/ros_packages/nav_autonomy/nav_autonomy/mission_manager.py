@@ -191,20 +191,8 @@ class MissionManager(Node):
             self.get_logger().info('Starting mission execution')
             req = goal_handle.request
 
-            # Convert waypoints
             waypoints = self.waypoints
-            for gps in req.nav_waypoints:
-                wp = self.gps_to_map_pose(gps.latitude, gps.longitude)
-                self.get_logger().info(f'Waypoint: lat={gps.latitude}, lon={gps.longitude} -> map=({wp.pose.position.x}, {wp.pose.position.y})')
-                if wp is None:
-                    self.get_logger().error(f'Failed to convert GPS ({gps.latitude}, {gps.longitude}) to map pose')
-                    goal_handle.abort()
-                    result = Mission.Result()
-                    result.ack = Mission.Result.CANCELLED
-                    return result
-                waypoints.append(wp)
                 
-
             # ==============================
             # Call Yolo Action Server
             # ==============================
