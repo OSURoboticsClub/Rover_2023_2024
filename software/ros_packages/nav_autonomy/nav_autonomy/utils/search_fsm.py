@@ -70,6 +70,7 @@ class SearchFSM:
         self.path_to_start = start_path  #TODO: handle getting to search start_points
         self.state = SearchState.MOVING_TO_START
         self.active = True
+        self.navigator.followWaypoints(self.path_to_start)
         self.node.get_logger().info(f'Search started with pattern: {self.pattern.name}')
         self._publish()
 
@@ -161,9 +162,9 @@ class SearchFSM:
         self.node.get_logger().debug('State: MOVING_TO_START')
         if not self.navigator.isTaskComplete():
             return
+        self._to_success()
         #self.node.get_logger().info(f'Would be moving to start {pose.position}')
 
-        self.navigator.followWaypoints(self.path_to_start)
 
 
     def _state_searching(self):
