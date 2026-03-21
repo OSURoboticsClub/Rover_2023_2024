@@ -1,3 +1,15 @@
+"""
+Joy to Drive
+DAM Robotics
+Authors: Jared Northrop
+Year: 2526
+
+This node takes drive commands from either a the groundstation, taranis, or joy node and converts them to 
+twists messages to be sent to the ros2 control diff drive controller. This node hard codes the max 
+acceleration and velocity instead of pulling from the ros2 control config file. Twist messages are published
+at a consistent rate with a zero twist message sent when there is no operator input. Two service calls exist 
+to start and stop the node for autonomous control.
+"""
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Joy

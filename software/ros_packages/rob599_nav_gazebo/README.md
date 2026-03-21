@@ -1,5 +1,5 @@
 # rob599_nav_gazebo
-`rob599_nav_gazebo` is a ros2 package for ROB599 Mobile Robots Timber Tracks Project. This package integrates the Nav2 stack with the mars rover's gazebo sim. 
+`rob599_nav_gazebo` is a ros2 package for ROB599 Mobile Robots Timber Tracks Project. This package integrates the Nav2 stack with the mars rover's gazebo sim. This package contains two custom Nav2 costmap plugins: `clearance_layer` and `eleveation_layer`. 
 
 ## Installation
 - Clone the git repository to the desired directory.
