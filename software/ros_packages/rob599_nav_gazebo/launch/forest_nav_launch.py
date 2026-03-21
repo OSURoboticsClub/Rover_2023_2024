@@ -97,13 +97,19 @@ def generate_launch_description():
             "--controller-manager",
             "/controller_manager",
         ],
+        parameters=[{
+                "use_sim_time": use_sim_time
+        }],
     )
     
     drive_controller_node = Node(
         package='controller_manager',
         executable='spawner',
         arguments=['drive_controller', "-c", "/controller_manager"],
-        output='screen'
+        output='screen',
+        parameters=[{
+                "use_sim_time": use_sim_time
+        }],
     )
 
     tf2_node = Node(
@@ -183,6 +189,10 @@ def generate_launch_description():
         name="rviz2",
         output="log",
         arguments=["-d", rviz_config_file],
+        parameters=[{
+                "use_sim_time": use_sim_time
+        }],
+
     )
 
 
@@ -391,14 +401,14 @@ def generate_launch_description():
         'subscribe_scan_cloud': True,
         'use_action_for_goal':True,
         'Reg/Force3DoF':'true',
-        'Grid/CellSize': "0.05",  # Voxel downsampling
+        'Grid/CellSize': "0.2",  # Voxel downsampling
         'Grid/RayTracing':'true', # Fill empty space
         'Grid/Sensor':'0',
         'Grid/FromDepth':'False',
         'Grid/3D': 'true', # Use 2D occupancy
         'Grid/RangeMax':'5',
         'Grid/NormalsSegmentation':'false', # Use passthrough filter to detect obstacles
-        'Grid/MaxGroundHeight':'0.2', # All points above 5 cm are obstacles
+        'Grid/MaxGroundHeight':'0.5', # All points above 5 cm are obstacles
         'Grid/MaxObstacleHeight':'1.5',  # All points over 1 meter are ignored
         'Optimizer/GravitySigma':'0', # Disable imu constraints (we are already in 2D)
         'RGBD/CreateOccupancyGrid':"True",

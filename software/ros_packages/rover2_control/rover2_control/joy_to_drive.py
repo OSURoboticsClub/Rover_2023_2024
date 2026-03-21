@@ -51,13 +51,13 @@ class JoyToDriveNode(Node):
         self.max_vel = 1.1684  # Max linear velocity (m/s)
         self.max_ang_vel = 4.0  # Max angular velocity (rad/s)
         #Watchdog Timer
-        self.last_message_time = time.time()
+        self.last_message_time = self.get_clock().now().nanoseconds * 1e-9
         self.publish_msgs = True
 
     def timer_callback(self):
         if self.publish_msgs:
             #Watchdog
-            if time.time() >= self.last_message_time+2:    
+            if self.get_clock().now().nanoseconds * 1e-9 >= self.last_message_time+2:    
                 self.linear_velocity = 0.0  
                 self.angular_velocity = 0.0  
 
@@ -88,14 +88,14 @@ class JoyToDriveNode(Node):
         # Assume left stick y-axis for forward/backward and right stick x-axis for turning
         self.linear_velocity = msg.axes[1]   # Left joystick vertical axis (forward/backward)
         self.angular_velocity = msg.axes[3]  # Right joystick horizontal axis (turning)
-        self.last_message_time = time.time()
+        self.last_message_time = self.get_clock().now().nanoseconds * 1e-9
 
     def groundstation_drive_command_callback(self, msg):
         # Map joystick axes to wheel velocities
         # Assume left stick y-axis for forward/backward and right stick x-axis for turning
         self.linear_velocity = msg.drive_twist.linear.x  # Left joystick vertical axis (forward/backward)
         self.angular_velocity = msg.drive_twist.angular.z  # Right joystick horizontal axis (turning)
-        self.last_message_time = time.time()
+        self.last_message_time = self.get_clock().now().nanoseconds * 1e-9
 
     def iris_drive_command_callback(self, msg):
         # Map joystick axes to wheel velocities
@@ -103,7 +103,7 @@ class JoyToDriveNode(Node):
         if msg.controller_present:
             self.linear_velocity = msg.drive_twist.linear.x  # Left joystick vertical axis (forward/backward)
             self.angular_velocity = msg.drive_twist.angular.z  # Right joystick horizontal axis (turning)
-            self.last_message_time = time.time()
+            self.last_message_time = self.get_clock().now().nanoseconds * 1e-9
 
 def main(args=None):
     rclpy.init(args=args)

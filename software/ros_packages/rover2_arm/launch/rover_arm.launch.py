@@ -40,6 +40,13 @@ def generate_launch_description():
         description="Ros2 Control Hardware Interface Type [main, sim]",
     )
 
+    use_sim_time = LaunchConfiguration('use_sim_time', default='false')
+    use_sim_time_arg = DeclareLaunchArgument(
+        'use_sim_time',
+        default_value='false',
+        description="Use simulation time"
+    )
+
     controller_type= DeclareLaunchArgument(
         "controller_type",
         default_value="xbox",
@@ -300,28 +307,31 @@ def generate_launch_description():
     robot_state_publisher_node = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
-        parameters=[{
-            'use_sim_time': "false",
-            "robot_description": moveit_config.robot_description
-        }],
+        parameters=[
+            moveit_config.robot_description,
+            {
+            'use_sim_time': use_sim_time,
+            }
+        ],
         output="screen",
         condition=IfCondition(launch_ros2_control)
     )
 
     return LaunchDescription(
         [
+            use_sim_time_arg,
             launch_ros2_control_arg,
             ros2_control_hardware_type, 
             controller_type,
-            rviz_node,
-            container,
             move_group_node,
             ros2_control_node,
+            robot_state_publisher_node,
+            container,
             joint_state_broadcaster_spawner,
             rover_arm_controller_spawner,
             moveit_arm_controller_spawner,
             controller_switcher_node,
-            robot_state_publisher_node,
+            rviz_node,
             #d405_node,
             #d455_node,
         ]

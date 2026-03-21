@@ -6,12 +6,12 @@ global_costmap:
       use_sim_time: true
       global_frame: map
       robot_base_frame: rover_base_origin
-      robot_radius: 0.85
-      resolution: 0.05
+      robot_radius: 0.42
+      resolution: 0.1
       height: 100
       width: 100
       track_unknown_space: false
-      rolling_window: false
+      rolling_window: true
       plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
@@ -24,44 +24,7 @@ global_costmap:
         observation_sources: pointcloud
         pointcloud:
           topic: /camera/d455/depth/color/points
-          max_obstacle_height: 2.0
-          sensor_frame: d455_depth_frame
-          clearing: True
-          marking: True
-          data_type: "PointCloud2"
-      inflation_layer:
-        plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 3.0
-        inflation_radius: 0.55
-      always_send_full_costmap: True
-
-local_costmap:
-  local_costmap:
-    ros__parameters:
-      update_frequency: 5.0
-      use_sim_time: true
-      publish_frequency: 2.0
-      global_frame: odom
-      robot_base_frame: rover_base_origin
-      rolling_window: true
-      width: 3
-      height: 3
-      resolution: 0.05
-      robot_radius: 0.85
-      plugins: ["voxel_layer", "inflation_layer"]
-      voxel_layer:
-        plugin: "nav2_costmap_2d::VoxelLayer"
-        enabled: True
-        publish_voxel_map: True
-        origin_z: 0.0
-        z_resolution: 0.05
-        z_voxels: 16
-        max_obstacle_height: 2.0
-        mark_threshold: 0
-        observation_sources: pointcloud
-        pointcloud:
-          topic: /camera/d455/depth/color/points
-          max_obstacle_height: 2.0
+          max_obstacle_height: 1.5
           sensor_frame: d455_depth_frame
           clearing: True
           marking: True
@@ -70,6 +33,45 @@ local_costmap:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
         inflation_radius: 1.0
+      always_send_full_costmap: True
+
+
+local_costmap:
+  local_costmap:
+    ros__parameters:
+      update_frequency: 2.0
+      use_sim_time: true
+      publish_frequency: 1.0
+      global_frame: odom
+      robot_base_frame: rover_base_origin
+      rolling_window: true
+      width: 8
+      height: 8
+      resolution: 0.05
+      robot_radius: 0.42
+      plugins: ["voxel_layer", "inflation_layer"]
+      voxel_layer:
+        plugin: "nav2_costmap_2d::VoxelLayer"
+        enabled: True
+        publish_voxel_map: True
+        origin_z: 0.0
+        z_resolution: 0.1
+        z_voxels: 16
+        max_obstacle_height: 1.5
+        min_obstacle_height: 0.5
+        mark_threshold: 0
+        observation_sources: pointcloud
+        pointcloud:
+          topic: /camera/d455/depth/color/points
+          max_obstacle_height: 1.5
+          sensor_frame: d455_depth_frame
+          clearing: True
+          marking: True
+          data_type: "PointCloud2"
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        cost_scaling_factor: 5.0
+        inflation_radius: 0.55
       always_send_full_costmap: True
 
 
@@ -139,7 +141,7 @@ controller_server:
     general_goal_checker:
       plugin: "nav2_controller::SimpleGoalChecker"
       xy_goal_tolerance: 0.75
-      yaw_goal_tolerance: 0.4
+      yaw_goal_tolerance: 6.28
       stateful: True
       
     # DWB parameters
@@ -152,17 +154,17 @@ controller_server:
       min_vel_y: 0.0
       max_vel_x: 0.5
       max_vel_y: 0.0
-      max_vel_theta: 0.2 #rads/s
+      max_vel_theta: 1.0 #rads/s
       min_speed_xy: 0.0
       max_speed_xy: 0.8
       min_speed_theta: 0.0
       # Acceleration
       acc_lim_x: 0.5
       acc_lim_y: 0.0
-      acc_lim_theta: 0.15
+      acc_lim_theta: 0.4
       decel_lim_x: -0.5
       decel_lim_y: 0.0
-      decel_lim_theta: -0.15
+      decel_lim_theta: -0.4
       # Trajectory
       vx_samples: 15
       vy_samples: 1
