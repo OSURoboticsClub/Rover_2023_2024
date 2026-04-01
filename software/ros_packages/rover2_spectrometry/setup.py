@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'publisher'
+package_name = 'rover2_spectrometry'
 
 setup(
     name=package_name,
@@ -26,9 +26,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'talker = publisher.rgb_publisher:main',
-            'listener = publisher.rgb_sub:main',
-            'client = publisher.rgb_client:main',
+            'spectrometry_publisher = rover2_spectrometry.spectrometry_publisher:main'
 
         ],
     },
