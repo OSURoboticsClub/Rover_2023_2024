@@ -154,8 +154,8 @@ def generate_launch_description():
 #        ir_camera_node,
 #        main_nav_node,
 #        gripper_rgb_node,
-        chassis_right_cam_node,
-        chassis_left_cam_node,
-        muxing_node
+        # chassis_right_cam_node,
+        # chassis_left_cam_node,
+        # muxing_node
     ])
 

@@ -35,3 +35,8 @@ SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6015", ATTRS{seria
 SUBSYSTEM=="tty", ATTRS{idVendor}=="1234", ATTRS{idProduct}=="5678", ATTRS{serial}=="ABC123", SYMLINK+="ttyIRIS"
 SUBSYSTEM=="tty", ATTRS{idVendor}=="1234", ATTRS{idProduct}=="5678", ATTRS{serial}=="DEF456", SYMLINK+="ttyARMLEFT"
 SUBSYSTEM=="tty", ATTRS{idVendor}=="1234", ATTRS{idProduct}=="5678", ATTRS{serial}=="GHI789", SYMLINK+="ttyARMRIGHT"
+
+
+# Match u-blox GNSS receiver
+SUBSYSTEM=="tty", ENV{ID_VENDOR}=="u-blox_AG_-_www.u-blox.com", ENV{ID_MODEL}=="u-blox_GNSS_receiver", SYMLINK+="ttyGPS"
+

@@ -260,19 +260,19 @@ class YoloServer(Node):
                         # Grab average of list and check against thresholds
                         total_mean = sum(camera_stacks[current_cam]) / self.max_frames
 
-                        recent_stack = camera_stacks[current_cam][-self.check_frames :]
-                        recent_mean = sum(recent_stack) / self.check_frames
+                        # recent_stack = camera_stacks[current_cam][-self.check_frames :]:
+                        # recent_mean = sum(recent_stack) / self.check_frames
 
-                        # Overlay stats on display frame
-                        cv2.putText(
-                            display_frame,
-                            f"Total Mean: {total_mean:.2f}  Recent Mean: {recent_mean:.2f}",
-                            (10, 30),
-                            cv2.FONT_HERSHEY_SIMPLEX,
-                            0.6,
-                            (255, 255, 0),
-                            2,
-                        )
+                        # # Overlay stats on display frame
+                        # cv2.putText(
+                        #     display_frame,
+                        #     f"Total Mean: {total_mean:.2f}  Recent Mean: {recent_mean:.2f}",
+                        #     (10, 30),
+                        #     cv2.FONT_HERSHEY_SIMPLEX,
+                        #     0.6,
+                        #     (255, 255, 0),
+                        #     2,
+                        # )
                         # Lock in best detection
                         self.best_boxes = boxes_xyxy[best_idx]
                         self.xc, self.yc, _, _ = result.boxes.xywh[
@@ -292,7 +292,7 @@ class YoloServer(Node):
                         feedback.frame_id = frame_id
                         feedback.detected = True
                         feedback.total_conf = total_mean
-                        feedback.recent_conf = recent_mean
+                        # feedback.recent_conf = recent_mean
                         feedback.center = center
                         feedback.top_left = top_left
                         feedback.bottom_right = bottom_right
