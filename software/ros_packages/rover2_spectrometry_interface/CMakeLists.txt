@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(rover2_spectrometry_interfaces)
+project(rover2_spectrometry_interface)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -26,7 +26,7 @@ if(BUILD_TESTING)
 endif()
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "srv/Spectrometry_interface.srv"
+  "srv/SpectrometryInterface.srv"
 )
 
 ament_export_dependencies(rosidl_default_runtime)

@@ -1,30 +1,28 @@
 from cv_bridge import CvBridge
 import matplotlib
 matplotlib.use("Agg")
-from image_transport_py import ImageTransport
+# from image_transport_py import ImageTransport
 import rclpy
+from sensor_msgs.msg import Image
 from rclpy.node import Node
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-from rgb_interfaces.srv import Rgb
+from rover2_spectrometry_interface.srv import SpectrometryInterface
 
 
 # IMPORTANT NOTE: THIS CODE MUST BE UPDATED TO ACCOMODATE THE ACTUAL DESIGN
 
-class RGB_Publisher(Node):
+class Spectrometry_Publisher(Node):
     """
     On service call, starts a feed reading science data from Benedict's and Ninhydrin reactions.
     Gets image, puts it on a chart showing average RGB values per pixel on the x-axis.
     Publishes all in a batch every 10 seconds from startup of node.
     """
     def __init__(self):
-        super().__init__('RGB_Publisher')
+        super().__init__('Spectrometry_Publisher')
 
-        self.image_transport = ImageTransport(
-            'imagetransport_pub', image_transport='compressed'
-        )
-        self.img_pub = self.image_transport.advertise('camera/image', 10)
+        self.img_pub = self.create_publisher(Image, 'camera/image', 10)
 
         self.bridge = CvBridge()
         # [Top_Left_X, Top_Left_Y, Width, Height]
@@ -42,7 +40,7 @@ class RGB_Publisher(Node):
         self.timer_period = .1
         self.timer = self.create_timer(self.timer_period, self.timer_callback)
 
-        self.srv = self.create_service(Rgb, 'rgb_chart', self.start_graph_feed)
+        self.srv = self.create_service(SpectrometryInterface, 'rgb_chart', self.start_graph_feed)
 
         self.reaction_type = {}
         self.start_times = {}
@@ -174,7 +172,7 @@ class RGB_Publisher(Node):
         # plt.suptitle(f"Average Intensity by X-Axis | Time: {elapsed}s", fontsize=16)
         plt.suptitle(f"{title} | Time: {elapsed}s", fontsize=16)
 
-        rgb = RGB_Publisher.fig_to_numpy(figs)
+        rgb = Spectrometry_Publisher.fig_to_numpy(figs)
         return rgb
 
 
@@ -196,7 +194,7 @@ class RGB_Publisher(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = RGB_Publisher()
+    node = Spectrometry_Publisher()
 
     try:
         rclpy.spin(node)
