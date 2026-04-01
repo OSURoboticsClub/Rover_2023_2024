@@ -210,8 +210,8 @@ class YoloServer(Node):
                         # Grab average of list and check against thresholds
                         total_mean = sum(camera_stacks[current_cam]) / self.max_frames
 
-                        recent_stack = camera_stacks[current_cam][-self.check_frames :]
-                        recent_mean = sum(recent_stack) / self.check_frames
+                        # recent_stack = camera_stacks[current_cam][-self.check_frames :]:
+                        # recent_mean = sum(recent_stack) / self.check_frames
 
                         # Overlay stats on display frame
 #                        cv2.putText(
@@ -237,7 +237,7 @@ class YoloServer(Node):
                         feedback.frame_id = frame_id
                         feedback.detected = True
                         feedback.total_conf = total_mean
-                        feedback.recent_conf = recent_mean
+                        # feedback.recent_conf = recent_mean
                         feedback.center = center
                         feedback.top_left = top_left
                         feedback.bottom_right = bottom_right
