@@ -1,0 +1,5 @@
+int64 camera_id
+int64 reaction_type
+---
+bool success
+
