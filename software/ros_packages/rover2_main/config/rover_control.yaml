@@ -1,17 +1,13 @@
 controller_manager:
   ros__parameters:
-    update_rate: 250
-
+    update_rate: 100
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
-
     drive_controller:
       type: diff_drive_controller/DiffDriveController
-
     rover_arm_controller:
       type: position_controllers/JointGroupPositionController
       #type: joint_trajectory_controller/JointTrajectoryController
-    
     rover_arm_controller_moveit:
       type: joint_trajectory_controller/JointTrajectoryController
 
@@ -47,7 +43,6 @@ rover_arm_controller_moveit:
       - position
       - velocity
 
-
 drive_controller:
   ros__parameters:
     publish_rate: 100.0
@@ -59,33 +54,27 @@ drive_controller:
       - rover_front_right_wheel_joint
       - rover_middle_right_wheel_joint
       - rover_back_right_wheel_joint
-    
     wheel_radius: 0.146
     wheel_separation: 0.85
-
-    #odometry covariance values, Untuned 2/8/2025
+    # odometry covariance values, Untuned 2/8/2025
     pose_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]
     twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]
-
-    #topmost frame of the robot
+    # topmost frame of the robot
     odom_frame_id: odom
     base_frame_id: rover_base_origin
-
     use_stamped_velocities: true
-
-    # Velocity and acceleration limits for the robot
     linear:
       x:
         has_velocity_limits: true
-        max_velocity: 1.1684              # m/s
-        min_velocity: -1.1684             # m/s
+        max_velocity: 1.1684
+        min_velocity: -1.1684
         has_acceleration_limits: true
-        max_acceleration: 4.0          # m/s^2
+        max_acceleration: 4.0
     angular:
       z:
         has_velocity_limits: true
-        max_velocity: 11.684              # rad/s
-        min_velocity: -11.684             # rad/s
+        max_velocity: 11.684
+        min_velocity: -11.684
         has_acceleration_limits: true
-        max_acceleration: 40.0          # rad/s^2
+        max_acceleration: 40.0
         min_acceleration: -40.0

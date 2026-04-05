@@ -50,7 +50,7 @@ def generate_launch_description():
     launch_ros2_control_arg = DeclareLaunchArgument(
             'launch_ros2_control',
             default_value='true',
-            description='Launch drivetrain with indendent ros2 control[default:true]'
+            description='Launch arm with indendent ros2 control[default:true]'
     )
 
 
@@ -301,7 +301,7 @@ def generate_launch_description():
         package="robot_state_publisher",
         executable="robot_state_publisher",
         parameters=[{
-            'use_sim_time': "false",
+            'use_sim_time': "False",
             "robot_description": moveit_config.robot_description
         }],
         output="screen",

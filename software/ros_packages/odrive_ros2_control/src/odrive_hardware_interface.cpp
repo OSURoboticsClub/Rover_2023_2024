@@ -110,6 +110,12 @@ CallbackReturn ODriveHardwareInterface::on_init(const hardware_interface::Hardwa
     if (hardware_interface::SystemInterface::on_init(info) != CallbackReturn::SUCCESS) {
         return CallbackReturn::ERROR;
     }
+    RCLCPP_ERROR(
+        rclcpp::get_logger("ODriveHardwareInterface"),
+        "INIT CALLED: this=%p, can=%s",
+        static_cast<void*>(this),
+        info.hardware_parameters.at("can").c_str()
+    );
 
     can_intf_name_ = info_.hardware_parameters["can"];
 
