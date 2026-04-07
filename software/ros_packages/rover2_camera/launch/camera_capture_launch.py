@@ -98,7 +98,7 @@ def generate_launch_description():
             'stream_width': 640,
             'stream_height': 480,
             'fec_percentage': 30,
-            'udp_host': '192.168.1.1',
+            'udp_host': '192.168.1.100',
             'udp_port': 42067,
             'mux_port': 20001
         }],
@@ -141,7 +141,7 @@ def generate_launch_description():
             'stream_width': 640,
             'stream_height': 480,
             'fec_percentage': 30,
-            'udp_host': '192.168.1.1',
+            'udp_host': '192.168.1.100',
             'udp_port': 42069,
             'mux_port': 20002
         }],
@@ -162,7 +162,7 @@ def generate_launch_description():
             'stream_width': 640,
             'stream_height': 480,
             'fec_percentage': 100,
-            'udp_host': '192.168.1.1',
+            'udp_host': '192.168.1.100',
             'udp_port': 42070,
             'mux_port': 20003
         }],
@@ -181,7 +181,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         realsense_launch_nav,
-#        ir_camera_node,
+        ir_camera_node,
 #        main_nav_node,
 #        gripper_rgb_node,
         chassis_right_cam_node,

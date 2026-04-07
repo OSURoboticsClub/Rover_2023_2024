@@ -20,10 +20,10 @@ class JoyToDriveNode(Node):
 
         # Drive Command Subscribers
         self.groundstation_sub = self.create_subscription(
-            DriveCommandMessage,
-            '/command_control/ground_station_drive',  # Topic where joy messages are published
+            Twist,
+            '/cmd_vel',  # Topic where twist messages are published
             self.groundstation_drive_command_callback,
-            1
+            10
         )
         self.iris_sub = self.create_subscription(
             DriveCommandMessage,
@@ -31,12 +31,12 @@ class JoyToDriveNode(Node):
             self.iris_drive_command_callback,
             1
         )
-        self.joy_sub = self.create_subscription(
-            Joy,
-            '/joy',  # Topic where joy messages are published
-            self.joy_callback,
-            1
-        )
+        # self.joy_sub = self.create_subscription(
+        #     Joy,
+        #     '/joy',  # Topic where joy messages are published
+        #     self.joy_callback,
+        #     1
+        # )
 
         #Drive Control Loop
         self.timer = self.create_timer(0.03, self.timer_callback) 
@@ -73,9 +73,10 @@ class JoyToDriveNode(Node):
     def groundstation_drive_command_callback(self, msg):
         # Map joystick axes to wheel velocities
         # Assume left stick y-axis for forward/backward and right stick x-axis for turning
-        self.linear_velocity = msg.drive_twist.linear.x  # Left joystick vertical axis (forward/backward)
-        self.angular_velocity = msg.drive_twist.angular.z  # Right joystick horizontal axis (turning)
-        self.last_message_time = time.time()
+        #Update the desired velocities
+        self.linear_velocity = msg.linear.x  # Left joystick vertical axis (forward/backward)
+        self.angular_velocity = msg.angular.z  # Right joystick horizontal axis (turning)                     
+        self.last_message_time = time.time() #Only update the watchdog timer if we recieve a message and a controller is present
 
     def iris_drive_command_callback(self, msg):
         # Map joystick axes to wheel velocities
