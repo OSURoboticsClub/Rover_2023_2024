@@ -134,7 +134,7 @@ class MissionManager(Node):
             self.get_logger().info('Rejecting new goal - already executing a mission')
             return GoalResponse.REJECT
         if len(goal_request.nav_waypoints) == 0:
-            self.get_logger().warn('Rejecting goal - no waypoints provided'
+            self.get_logger().warn('Rejecting goal - no waypoints provided')
             return GoalResponse.REJECT
 
         return GoalResponse.ACCEPT
@@ -153,21 +153,21 @@ class MissionManager(Node):
 
             map_wps = [self.gps_to_map_pose(gps.latitude, gps.longitude) for gps in req.nav_waypoints]
 
-            start_waypoints = []
+            transit_waypoints = []
             search_input_waypoints = []
             search_pattern = SearchPattern.NONE
 
             if req.search_pattern == Mission.Goal.SPIRAL:
-                start_waypoints = map_wps[:-1] # last waypoint is center of spiral
+                transit_waypoints = map_wps[:-1] # last waypoint is center of spiral
                 search_input_waypoints = [map_wps[-1]]
                 search_pattern = SearchPattern.SPIRAL
             elif req.search_pattern == Mission.Goal.LAWNMOWER:
                 if len(map_wps) >= 4:
-                    start_waypoints = map_wps[:-4] # last 4 waypoints are corners of lawnmower
+                    transit_waypoints = map_wps[:-4] # last 4 waypoints are corners of lawnmower
                     search_input_waypoints = map_wps[-4:]
                 search_pattern = SearchPattern.LAWNMOWER
             else:
-                start_waypoints = map_wps
+                transit_waypoints = map_wps
 
             # ==============================
             # Call Yolo Action Server
