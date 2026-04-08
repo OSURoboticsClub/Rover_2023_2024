@@ -64,7 +64,7 @@ class YoloServer(Node):
         )
         self.declare_parameter(
             "source",
-            "/dev/rover/camera_infrared",
+            "/dev/video64",
             ParameterDescriptor(
                 description="Camera source, default to normal camera - change to muxing node"
             ),
@@ -133,6 +133,7 @@ class YoloServer(Node):
             YoloFind.Goal.BOTTLE,
             YoloFind.Goal.OG_HAMMER,
             YoloFind.Goal.ORANGE_HAMMER,
+            YoloFind.Goal.ARUCO
         ]:
             self.get_logger().warn("Rejecting goal - invalid or missing search object")
             return GoalResponse.REJECT
@@ -211,7 +212,7 @@ class YoloServer(Node):
             elif goal.search_object == YoloFind.Goal.OG_HAMMER:
                 model = YOLO("yolo_models/hammer.pt")
 
-            if goal.search_object == "ARUCO":
+            if goal.search_object == YoloFind.Goal.ARUCO:
                 await self.do_aruco(goal_handle)
                 return
             else:
@@ -369,66 +370,97 @@ class YoloServer(Node):
 
 
 
-    async def do_aruco(self, goal_handle):
+    def do_aruco(self, goal_handle):
         print("[INFO] detecting '{}' tags...".format(cv2.aruco.DICT_4X4_50))
         arucoDict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
-        arucoParams = cv2.aruco.DetectorParameters_create()
+        arucoParams = cv2.aruco.DetectorParameters()
+        
+        # Create the detector with dictionary and parameters
+        detector = cv2.aruco.ArucoDetector(arucoDict, arucoParams)
+        
         cap = cv2.VideoCapture(self.source)
-
         camera_matrix = np.array(
             [[600.0, 0.0, 320.0], [0.0, 600.0, 240.0], [0.0, 0.0, 1.0]]
         )
         dist_coeffs = np.zeros((5, 1))
-
         marker_length = 0.2  # meters
+        
+        # Define 3D object points for the ArUco marker (in marker coordinate system)
+        # Marker corners in 3D space (square centered at origin)
+        half_size = marker_length / 2.0
+        object_points = np.array([
+            [-half_size,  half_size, 0],  # Top-left
+            [ half_size,  half_size, 0],  # Top-right
+            [ half_size, -half_size, 0],  # Bottom-right
+            [-half_size, -half_size, 0]   # Bottom-left
+        ], dtype=np.float32)
 
         while rclpy.ok() and not goal_handle.is_cancel_requested:
             ret, frame = cap.read()
             if not ret:
                 break
-
+            
             display_frame = frame.copy()
-
-            (corners, ids, rejected) = cv2.aruco.detectMarkers(
-                frame, arucoDict, parameters=arucoParams
-            )
-
+            
+            # Detect markers
+            (corners, ids, rejected) = detector.detectMarkers(frame)
+            
             if ids is not None:
-                cv2.aruco.drawDetectorMarkers(display_frame, corners, ids)
-                rvecs, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(
-                    corners, marker_length, camera_matrix, dist_coeffs
+                cv2.aruco.drawDetectedMarkers(display_frame, corners, ids)
+                
+                # Process the first detected marker
+                # corners[0] is the first marker, shape: (1, 4, 2)
+                # Reshape to (4, 2) for solvePnP
+                image_points = corners[0].reshape((4, 2))
+                
+                # Estimate pose using solvePnP
+                success, rvec, tvec = cv2.solvePnP(
+                    object_points,
+                    image_points,
+                    camera_matrix,
+                    dist_coeffs,
+                    flags=cv2.SOLVEPNP_IPPE_SQUARE  # Good for square markers
                 )
-                tvec = tvecs[0][0]
-
-                # Overlay pose info on frame
-                cv2.putText(
-                    display_frame,
-                    f"X:{tvec[0]:.2f} Y:{tvec[1]:.2f} Z:{tvec[2]:.2f}",
-                    (10, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.6,
-                    (0, 255, 255),
-                    2,
-                )
-
-                feedback = YoloFind.Feedback()
-                feedback.detected = True
-                feedback.pose.position.x = float(tvec[0])
-                feedback.pose.position.y = float(tvec[1])
-                feedback.pose.position.z = float(tvec[2])
-                goal_handle.publish_feedback(feedback)
-
+                
+                if success:
+                    # Draw axis on the marker (optional, for visualization)
+                    cv2.drawFrameAxes(display_frame, camera_matrix, dist_coeffs, 
+                                    rvec, tvec, marker_length * 0.5)
+                    
+                    # Extract position from tvec
+                    tvec = tvec.flatten()  # Convert from (3,1) to (3,)
+                    
+                    # Overlay pose info on frame
+                    cv2.putText(
+                        display_frame,
+                        f"X:{tvec[0]:.2f} Y:{tvec[1]:.2f} Z:{tvec[2]:.2f}",
+                        (10, 30),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.6,
+                        (0, 255, 255),
+                        2,
+                    )
+                    
+                    feedback = YoloFind.Feedback()
+                    feedback.detected = True
+                    feedback.pose.position.x = float(tvec[0])
+                    feedback.pose.position.y = float(tvec[1])
+                    feedback.pose.position.z = float(tvec[2])
+                    goal_handle.publish_feedback(feedback)
+                else:
+                    feedback = YoloFind.Feedback()
+                    feedback.detected = False
+                    goal_handle.publish_feedback(feedback)
             else:
                 feedback = YoloFind.Feedback()
                 feedback.detected = False
                 goal_handle.publish_feedback(feedback)
-
+            
             cv2.imshow("ArUco Detection", display_frame)
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
-
-        await asyncio.sleep(0.01)
-
+            
+        
         cap.release()
         cv2.destroyAllWindows()
         goal_handle.canceled()
