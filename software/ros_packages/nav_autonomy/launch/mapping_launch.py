@@ -27,10 +27,12 @@ def generate_launch_description():
         ('rgb/image', '/camera/d455/color/image_raw'),
         ('rgb/camera_info', '/camera/d455/color/camera_info'),
         ('depth/image', '/camera/d455/aligned_depth_to_color/image_raw'),
+        ('gps/fix', 'gps/filtered'),     #gps/filtered
+        ('global_pose', 'global_ignored'),     #global_pose
         ]
         
     config_rviz = os.path.join(
-        get_package_share_directory('nav_autonomy'), 'config', 'map_display_cfg.rviz'
+        get_package_share_directory('nav_autonomy'), 'config', 'depth_nav.rviz'
     )
 
     return LaunchDescription([
@@ -49,14 +51,18 @@ def generate_launch_description():
             condition=IfCondition(LaunchConfiguration("vo")),
             parameters=parameters,
             remappings=remappings),
-
  
         # Core SLAM node
+        # Node(
+        #     package='rtabmap_slam', executable='rtabmap', output='screen',
+        #     parameters=parameters,
+        #     remappings=remappings,
+        #     arguments=['-d']), # This will delete the previous database (~/.ros/rtabmap.db)
+
+        # Converted global pose publisher
         Node(
-            package='rtabmap_slam', executable='rtabmap', output='screen',
-            parameters=parameters,
-            remappings=remappings,
-            arguments=['-d']), # This will delete the previous database (~/.ros/rtabmap.db)
+            package='nav_autonomy', 
+            executable='map_pose_publisher'),
 
         # Visualization:
         Node(
@@ -64,7 +70,25 @@ def generate_launch_description():
             condition=IfCondition(LaunchConfiguration("viz")),
             parameters=parameters,
             remappings=remappings),
-            
+
+        # Custom point cloud publishing for local map
+        Node(
+            package='rtabmap_util', executable='point_cloud_xyz', output='screen',
+            parameters=[{'decimation': 2,
+                         'min_depth': 0.5,
+                         'max_depth': 6.0, #3.0,
+                         'voxel_size': 0.05 # match nav2 local_costmap resolution
+                        }],
+            remappings=[('depth/image', '/camera/d455/aligned_depth_to_color/image_raw'),
+                        ('depth/camera_info', '/camera/d455/color/camera_info'),
+                        ('cloud', '/camera/cloud')]),
+        Node(
+            package='rtabmap_util', executable='obstacles_detection', output='screen',
+            parameters=[parameters],
+            remappings=[('cloud', '/unilidar/cloud'),
+                        ('obstacles', '/camera/obstacles'),
+                        ('ground', '/camera/ground')]),
+
         Node(
             package='rviz2', executable='rviz2', name="rviz2", output='screen',
             condition=IfCondition(LaunchConfiguration("viz")),

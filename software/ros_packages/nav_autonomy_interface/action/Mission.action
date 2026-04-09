@@ -1,0 +1,39 @@
+# Goal
+std_msgs/Header header
+
+uint16 search_object
+uint16 NO_OBJECT=0
+uint16 BOTTLE=1
+uint16 OG_HAMMER=2
+uint16 ORANGE_HAMMER=3
+uint16 ARUCO=4
+
+uint16 search_pattern
+uint16 NO_PATTERN=0
+uint16 SPIRAL=1
+uint16 LAWNMOWER=2
+
+GPSWaypoint[] nav_waypoints 
+
+---
+# Result
+std_msgs/Header header
+
+uint16 ack
+uint16 CANCELED=0
+uint16 SUCCESS=1
+
+---
+# Feedback
+std_msgs/Header header
+
+uint16 current_action
+uint16 NO_ACTION=0
+uint16 NAVIGATING=1
+uint16 SEARCHING=2
+
+uint16 completion_status 
+uint16 NOT_STARTED=0
+uint16 IN_PROGRESS=1
+uint16 COMPLETED=2
+uint16 FAILED=3

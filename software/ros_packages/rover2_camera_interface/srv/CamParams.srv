@@ -1,0 +1,7 @@
+uint8 preset_level
+uint64 bitrate
+int16 stream_width
+int16 stream_height
+uint8 fec_percentage
+---
+string ack

@@ -6,6 +6,8 @@ from rclpy.node import Node
 from rcl_interfaces.msg import SetParametersResult
 from gi.repository import Gst, GLib
 
+from rover2_camera_interface.srv import CamParams
+
 gi.require_version('Gst', '1.0')
 Gst.init(sys.argv)
 
@@ -15,6 +17,7 @@ class CameraCaptureNode(Node):
         super().__init__('camera_capture_node')
         self.get_logger().info('Infrared Stream Node has started!')
 
+        # Declare default parameters
         self.declare_parameter('device', '/dev/rover/camera_infrared')
         self.declare_parameter('cap_width', 1920)
         self.declare_parameter('cap_height', 1080)
@@ -26,24 +29,42 @@ class CameraCaptureNode(Node):
         self.declare_parameter('fec_percentage', 30)
         self.declare_parameter('udp_host', '192.168.1.1')
         self.declare_parameter('udp_port', 42067)
+        self.declare_parameter('mux_port', 20000)
 
         self.pipeline = None
         self.loop = None
         self.gst_thread = None
 
-        self.add_on_set_parameters_callback(self.camera_param_update)
 
         self.start_pipeline()
 
-    def camera_param_update(self, params):
-        self.get_logger().info("Parameter update detected, restarting pipeline...")
+        device_name = self.get_parameter('device').value
+        service_name = f'{device_name.replace("/", "_")}_cam_params'
+        self.create_service(CamParams, service_name, self.cam_params_callback)
+        self.get_logger().info(f'CamParams service available at: {service_name}')
+
+
+    def cam_params_callback(self, request, response):
+        self.get_logger().info("CamParams service received, updating pipeline...")
+        self.set_parameters([
+            self.get_parameter_or('preset_level', request.preset_level),
+            self.get_parameter_or('bitrate', request.bitrate),
+            self.get_parameter_or('stream_width', request.stream_width),
+            self.get_parameter_or('stream_height', request.stream_height),
+            self.get_parameter_or('fec_percentage', request.fec_percentage),
+        ])
+        self.restart_pipeline()
+        response.ack = "Pipeline restarted with new parameters"
+        return response
+
+    def restart_pipeline(self):
         if self.loop and self.loop.is_running():
             self.loop.quit()
         self.stop_pipeline()
         self.start_pipeline()
-        return SetParametersResult(successful=True)
 
     def start_pipeline(self):
+        # Read parameters
         device = self.get_parameter('device').value
         cap_width = self.get_parameter('cap_width').value
         cap_height = self.get_parameter('cap_height').value
@@ -55,12 +76,13 @@ class CameraCaptureNode(Node):
         fec_percentage = self.get_parameter('fec_percentage').value
         udp_host = self.get_parameter('udp_host').value
         udp_port = self.get_parameter('udp_port').value
+        mux_port = self.get_parameter('mux_port').value
 
         pipeline_str = (
             f'v4l2src do-timestamp=true device={device} ! '
             f'image/jpeg,width={cap_width},height={cap_height},framerate={cap_framerate}/1 ! '
-            f'nvv4l2decoder mjpeg=1 ! nvvidconv ! video/x-raw ! tee name=t '
-            f't. ! queue ! appsink name=infrared_sink '
+            f'nvv4l2decoder mjpeg=1 ! nvvidconv ! tee name=t '
+            f't. ! queue ! rtpvrawpay ! udpsink host=127.0.0.1 port={mux_port} sync=false async=false '
             f't. ! queue ! videoscale ! '
             f'video/x-raw,width={stream_width},height={stream_height},format=I420 ! '
             f'nvvidconv ! video/x-raw(memory:NVMM),format=NV12 ! '
@@ -81,7 +103,7 @@ class CameraCaptureNode(Node):
         if ret == Gst.StateChangeReturn.FAILURE:
             raise RuntimeError("Unable to set pipeline to PLAYING")
 
-        # Create and start GLib main loop in a separate thread
+        # Run GLib main loop in a separate thread
         self.loop = GLib.MainLoop()
         self.gst_thread = threading.Thread(target=self.loop.run, daemon=True)
         self.gst_thread.start()
@@ -119,7 +141,6 @@ def main(args=None):
     node = CameraCaptureNode()
 
     try:
-        # Let ROS 2 handle parameter updates, etc.
         rclpy.spin(node)
     except KeyboardInterrupt:
         node.get_logger().info("KeyboardInterrupt: shutting down.")

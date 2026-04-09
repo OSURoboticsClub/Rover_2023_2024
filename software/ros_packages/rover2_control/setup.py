@@ -13,7 +13,7 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name, glob('launch/*launch.[pxy][yma]*')),
-        (os.path.join('share', package_name, 'rover2_control'), glob('rover2_control/*')),
+        (os.path.join('share', package_name, 'rover2_control'), glob('rover2_control/*.py')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

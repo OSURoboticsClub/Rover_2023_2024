@@ -17,7 +17,7 @@ def generate_launch_description():
     pkg_share = get_package_share_directory(package_name)
 
     twist_mux_params = os.path.join(pkg_share, 'config', 'twist_mux.yaml')
-    nav2_params = os.path.join(pkg_share, 'config', 'nav2_params.yaml')
+    nav2_params = os.path.join(pkg_share, 'config', 'nav2_params_obstacles.yaml')
 
 
     rviz_config = os.path.join(pkg_share, 'rviz', 'depth_nav.rviz')
@@ -62,6 +62,11 @@ def generate_launch_description():
         }.items()
     )
 
+    mission_manager = Node(
+            package='nav_autonomy',
+            executable='mission_manager',
+    )
+
     return LaunchDescription([
         DeclareLaunchArgument('use_sim_time', default_value='false', description='Use simulation (Gazebo) clock if true'),
         # DeclareLaunchArgument('ros2_control', default_value='true', description='Use ros2_control'),
@@ -74,4 +79,5 @@ def generate_launch_description():
         # rtabmap_point_cloud,
         # rtabmap_obstacles,
         nav2,
+#        mission_manager,
     ])

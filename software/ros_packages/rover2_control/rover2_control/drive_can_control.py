@@ -1,4 +1,4 @@
-\import rclpy
+import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float64MultiArray
 from geometry_msgs.msg import Twist
@@ -21,6 +21,8 @@ VEL_RAMP = GEAR_RATIO*RPS_FACTOR
 LEFT_NODES = [0,2,4]
 RIGHT_NODES = [1,3,5]
 NODES = [0,1,2,3,4,5]
+WHEEL_CIRCUM = 0.942478
+TRACK_WIDTH = 0.815
 
 WATCHDOG_TIMEOUT = 3.0
 
@@ -88,7 +90,7 @@ class DriveCanControlNode(Node):
                 is_extended_id=False
                 ))
             except Exception as e:
-                self.get_logger().info(f"Drive Can error: {e}")
+                self.get_logger().debug(f"Drive Can error: {e}")
                 
 
     #This callback is called as a 50hz loop, as configured on node init.
@@ -152,36 +154,36 @@ class DriveCanControlNode(Node):
                 is_extended_id=False
                 ))
         except Exception as e:
-            self.get_logger().info(f"Drive Can error: {e}")
+            self.get_logger().debug(f"Drive Can error: {e}")
 
     #Function to compute the actual Differential drive commanded speeds from the forward/angular velocity intput
     def compute_drive_sides(self):
+        #Convert angular rad/s to m/s
+        angular_linear = self.angular_velocity * (TRACK_WIDTH / 2.0)
 
         #Compute the left and right speeds from commanded values 
-        left_command = -1 * (self.linear_velocity - self.angular_velocity) 
-        right_command = (self.linear_velocity + self.angular_velocity)
-
+        left_command = -1 * (self.linear_velocity - angular_linear) 
+        right_command = (self.linear_velocity + angular_linear)
         #Otherwise Normalize the speeds
         #Copied from/Inspired by WPILib Differential Drive normalization
-        max_input = max(abs(self.linear_velocity),abs(self.angular_velocity))
-        
+        max_input = max(abs(self.linear_velocity),abs(angular_linear))
+
         #Avoids div by 0 if 0 velocity is commanded
         if (max_input != 0):
-            saturation_factor = (abs(self.linear_velocity) + abs(self.angular_velocity))/max_input
+            saturation_factor = (abs(self.linear_velocity) + abs(angular_linear))/max_input
             left_norm = left_command/saturation_factor
             right_norm = right_command/saturation_factor
-        
+
         else:
             left_norm = 0
             right_norm = 0
 
-
+        
         #Scale the Drive speeds from unity accordingly
-        left_velocity = GEAR_RATIO * left_norm
-        right_velocity = GEAR_RATIO * right_norm
+        left_velocity = GEAR_RATIO * left_norm * WHEEL_CIRCUM
+        right_velocity = GEAR_RATIO * right_norm * WHEEL_CIRCUM
 
         return left_velocity, right_velocity
-
 
 def main(args=None):
     rclpy.init(args=args)
