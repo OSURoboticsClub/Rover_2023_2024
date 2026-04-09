@@ -44,6 +44,7 @@ class SearchFSM:
         self.conf_sub = node.create_subscription(Float32, confidence_topic, self._confidence_cb, 10)
 
     def start(self, start_path: List[PoseStamped], search_inputs: List[PoseStamped], pattern: SearchPattern, param1: float, param2: float, success_threshold: float = 0.85, investigate_threshold: float = 0.50):
+
         self.success_threshold = success_threshold
         self.investigate_threshold = investigate_threshold
         
@@ -79,17 +80,20 @@ class SearchFSM:
             return
 
         # Currently navigating to waypoints, check for completion or progress
+        # FIX: Might have used non-Humble version of the followwaypoints API, see: https://api.nav2.org/actions/humble/followwaypoints.html
         if not self.navigator.isTaskComplete():
             nav_feedback = self.navigator.getFeedback()
             if nav_feedback:
+                #FIX: followWapoints and goToPose feedback is different, see: https://api.nav2.org/actions/humble/navigatetopose.html
                 self.current_index = nav_feedback.current_waypoint
                 
                 if self.state == SearchState.MOVING_TO_START and self.current_index >= self.start_length:
                     self.state = SearchState.SEARCHING
                     self._publish_state()
+
         else:
+            # waypoint task completed
             result = self.navigator.getResult()
-            
             if result == TaskResult.SUCCEEDED:
                 if self.state in (SearchState.SEARCHING, SearchState.MOVING_TO_START):
                     self._to_failed() 
