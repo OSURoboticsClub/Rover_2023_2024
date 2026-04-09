@@ -3,10 +3,10 @@ name: Build ROS Packages
 on:
   push:
     branches:
-      - nav_dev
+      - master
   pull_request:
     branches:
-      - nav_dev
+      - master
 jobs:
   build:
     runs-on: ubuntu-22.04
