@@ -73,7 +73,8 @@ class MissionManager(Node):
             node=self, 
             navigator=self.navigator, 
             confidence_topic="yolo/confidence", 
-            status_topic="search/status"
+            status_topic="search/status",
+            debug_markers=True
         )
 
         self.pose_sub = self.create_subscription(

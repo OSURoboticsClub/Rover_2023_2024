@@ -4,6 +4,8 @@ from std_msgs.msg import Float32, String
 from geometry_msgs.msg import PoseStamped
 from nav2_simple_commander.robot_navigator import TaskResult
 from nav_autonomy.utils.search_patterns import spiral, lawnmower
+from visualization_msgs.msg import Marker, MarkerArray
+
 
 class SearchPattern(Enum):
     NONE = auto()
@@ -23,7 +25,7 @@ class SearchState(Enum):
 
 
 class SearchFSM:
-    def __init__(self, node, navigator, confidence_topic, status_topic):
+    def __init__(self, node, navigator, confidence_topic, status_topic, debug_markers=False):
 
         self.node = node
         self.navigator = navigator
@@ -42,6 +44,8 @@ class SearchFSM:
 
         self.status_pub = node.create_publisher(String, status_topic, 10)
         self.conf_sub = node.create_subscription(Float32, confidence_topic, self._confidence_cb, 10)
+
+        self.debug_marker_pub = node.create_publisher(MarkerArray, 'search_waypoints_viz', 10) if debug_markers else None
 
     def start(self, start_path: List[PoseStamped], search_inputs: List[PoseStamped], pattern: SearchPattern, param1: float, param2: float, success_threshold: float = 0.85, investigate_threshold: float = 0.50):
 
@@ -68,6 +72,7 @@ class SearchFSM:
 
         self.navigator.followWaypoints(self.active_path)
         self._publish_state()
+        self._publish_dbg_waypoint_markers()
 
     def stop(self):
         self.navigator.cancelTask()
@@ -112,6 +117,13 @@ class SearchFSM:
                 pass 
             else:
                 self._to_failed()
+
+    def get_state(self):
+        return self.state
+
+    def is_active(self):
+        return self.active
+
 
     def _confidence_cb(self, msg: Float32):
         if not self.active:
@@ -162,8 +174,35 @@ class SearchFSM:
         self.status_pub.publish(msg)
         self.node.get_logger().info(f"[SearchFSM] State: {self.state.name}")
 
-    def get_state(self):
-        return self.state
+    def _publish_dbg_waypoint_markers(self):
+        if self.debug_marker_pub is None:
+            return
 
-    def is_active(self):
-        return self.active
+        marker_array = MarkerArray()
+        clear_marker = Marker()
+        clear_marker.action = Marker.DELETEALL
+        marker_array.markers.append(clear_marker)
+
+        for i, wp in enumerate(self.active_path):
+            marker = Marker()
+            marker.header.frame_id = 'map'
+            marker.header.stamp = self.node.get_clock().now().to_msg()
+            marker.ns = 'mission_waypoints'
+            marker.id = i
+            marker.type = Marker.SPHERE
+            marker.action = Marker.ADD
+            marker.pose = wp.pose
+            marker.pose.position.z = 0.25 
+            
+            marker.scale.x = 0.25
+            marker.scale.y = 0.25
+            marker.scale.z = 0.25
+            
+            marker.color.r = 0.0
+            marker.color.g = 1.0
+            marker.color.b = 0.0
+            marker.color.a = 0.8
+
+            marker_array.markers.append(marker)
+
+        self.debug_marker_pub.publish(marker_array)
