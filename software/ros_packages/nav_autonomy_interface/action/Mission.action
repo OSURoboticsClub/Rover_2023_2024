@@ -13,8 +13,10 @@ uint16 NO_PATTERN=0
 uint16 SPIRAL=1
 uint16 LAWNMOWER=2
 
-float32 search_param_1  # Spacing
-float32 search_param_2  # Radius for Spiral / Step Size for Lawnmower
+# Lane Spacing
+float32 search_param_1  
+# Radius for Spiral / Step Size for Lawnmower
+float32 search_param_2 
 
 GPSWaypoint[] nav_waypoints 
 

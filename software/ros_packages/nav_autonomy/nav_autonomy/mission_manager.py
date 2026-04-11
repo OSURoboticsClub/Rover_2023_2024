@@ -130,6 +130,16 @@ class MissionManager(Node):
     # -------------------------
 
     def goal_callback(self, goal_request):
+        self.get_logger().info(
+            f'\n=== New Mission Received ===\n'
+            f'Pattern Enum: {goal_request.search_pattern}\n'
+            f'Object Enum: {goal_request.search_object}\n'
+            f'Param 1 (Spacing): {goal_request.search_param_1:.2f}\n'
+            f'Param 2 (Step/Radius): {goal_request.search_param_2:.2f}\n'
+            f'Total Waypoints: {len(goal_request.nav_waypoints)}\n'
+            f'============================'
+        )
+
         if self.search_fsm.is_active():
             self.get_logger().info('Rejecting new goal - already executing a mission')
             return GoalResponse.REJECT
@@ -153,21 +163,21 @@ class MissionManager(Node):
 
             map_wps = [self.gps_to_map_pose(gps.latitude, gps.longitude) for gps in req.nav_waypoints]
 
-            transit_waypoints = []
+            start_waypoints = []
             search_input_waypoints = []
             search_pattern = SearchPattern.NONE
 
             if req.search_pattern == Mission.Goal.SPIRAL:
-                transit_waypoints = map_wps[:-1] # last waypoint is center of spiral
+                start_waypoints = map_wps[:-1] # last waypoint is center of spiral
                 search_input_waypoints = [map_wps[-1]]
                 search_pattern = SearchPattern.SPIRAL
             elif req.search_pattern == Mission.Goal.LAWNMOWER:
                 if len(map_wps) >= 4:
-                    transit_waypoints = map_wps[:-4] # last 4 waypoints are corners of lawnmower
+                    start_waypoints = map_wps[:-4] # last 4 waypoints are corners of lawnmower
                     search_input_waypoints = map_wps[-4:]
                 search_pattern = SearchPattern.LAWNMOWER
             else:
-                transit_waypoints = map_wps
+                start_waypoints = map_wps
 
             # ==============================
             # Call Yolo Action Server
@@ -178,8 +188,15 @@ class MissionManager(Node):
             # ==============================
             # Execute search
             # ==============================
+            self.get_logger().info(
+                f'Parsed Mission Routing:\n'
+                f'  Start Waypoints: {len(start_waypoints)}\n'
+                f'  Search Input Waypoints: {len(search_input_waypoints)}\n'
+                f'  Mapped Pattern: {search_pattern.name}'
+            )
+
             self.search_fsm.start(
-                transit_path=transit_waypoints,
+                start_path=start_waypoints,
                 search_inputs=search_input_waypoints,
                 pattern=search_pattern,
                 param1=req.search_param_1,
