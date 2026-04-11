@@ -85,7 +85,7 @@ def generate_launch_description():
         Node(
             package='rtabmap_util', executable='obstacles_detection', output='screen',
             parameters=[parameters],
-            remappings=[('cloud', '/unilidar/cloud'),
+            remappings=[('cloud', '/camera/cloud'),     # /unilidar/cloud
                         ('obstacles', '/camera/obstacles'),
                         ('ground', '/camera/ground')]),
 
