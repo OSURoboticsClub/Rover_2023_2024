@@ -51,6 +51,11 @@ Urdf for the rover of the DAM Robotics Rover triple bogie system.
       </geometry>
     </collision>
   </link>
+
+  <link name="camera_left_chassis"/>
+  <link name="camera_right_chassis"/>
+
+  <link name="camera1"/>
   <link name="rover_tower">
     <inertial>
       <origin rpy="0 0 0" xyz="-0.02062161445617676 0.47305084228515626 0.8411769104003907"/>
@@ -347,6 +352,17 @@ Urdf for the rover of the DAM Robotics Rover triple bogie system.
     <parent link="rover_base_origin"/>
     <child link="rover_tower"/>
   </joint>
+  <joint name="camera_left_chassis" type="fixed">
+    <parent link="base_link"/>
+    <child link="camera1"/>
+    <origin xyz="0.246 0 0.290" rpy="0 0 0.785"/>
+  </joint> 
+  <joint name="camera_right_chassis" type="fixed">
+    <parent link="base_link"/>
+    <child link="camera2"/>
+    <origin xyz="-0.246 0 0.290" rpy="0 0 -0.785"/>
+  </joint>
+
   <!-- Passive Joints -->
   <joint name="rover_rear_bogie_joint" type="revolute">
     <origin rpy="0 0 1.5708" xyz="-0.333874 -0.020767 0.051277"/>
