@@ -30,7 +30,10 @@ class CameraCaptureNode(Node):
         self.declare_parameter('udp_host', '192.168.1.1')
         self.declare_parameter('udp_port', 42067)
         self.declare_parameter('mux_port', 20000)
-
+        self.declare_parameter('ret', 0.0)
+        self.declare_parameter('camera_matrix', [0.0])
+        self.declare_parameter('distortion_coefficients', [0.0])
+    
         self.pipeline = None
         self.loop = None
         self.gst_thread = None

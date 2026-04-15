@@ -80,7 +80,7 @@ def generate_launch_description():
         namespace='rover2_camera',
         executable='camera_capture',
         name='chassis_left_cam',
-        parameters=[{
+        parameters=[left_calib,{
             'device': '/dev/rover/camera_left_chassis',
             'cap_width': 640,
             'cap_height': 480,
@@ -92,7 +92,7 @@ def generate_launch_description():
             'fec_percentage': 30,
             'udp_host': DRIVE_IP,
             'udp_port': 42069,
-            'mux_port': 20002
+            'mux_port': 20002,
         }],
         respawn=True
     )
@@ -101,7 +101,7 @@ def generate_launch_description():
         namespace='rover2_camera',
         executable='camera_capture',
         name='chassis_right_cam',
-        parameters=[{
+        parameters=[right_calib,{
             'device': '/dev/rover/camera_right_chassis',
             'cap_width': 640,
             'cap_height': 480,
@@ -113,7 +113,8 @@ def generate_launch_description():
             'fec_percentage': 100,
             'udp_host': DRIVE_IP,
             'udp_port': 42070,
-            'mux_port': 20003
+            'mux_port': 20003,
+            
         }],
         respawn=True
     )
