@@ -12,6 +12,8 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name, 'launch'), glob('launch/*')),
+        (os.path.join('share', package_name, 'calibration'), glob('calibration/camera_left_calibration/*')),
+        (os.path.join('share', package_name, 'calibration'), glob('calibration/camera_right_calibration/*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

@@ -9,8 +9,10 @@ from ament_index_python.packages import get_package_share_directory
 def generate_launch_description():
     # Replace these with your camera serial numbers
     # You can find them with `rs-enumerate-devices`
-
-
+    pkg_share = get_package_share_directory('rover2_camera')
+    left_calib = os.path.join(pkg_share, 'calibration', 'camera_left_chassis', 'calibration_data.yaml')
+    right_calib = os.path.join(pkg_share, 'calibration', 'camera_right_chassis', 'calibration_data.yaml')
+    
 #    realsense_launch_nav = Node(
 #        package='realsense2_camera',
 #        executable='realsense2_camera_node',
@@ -103,7 +105,7 @@ def generate_launch_description():
         namespace='rover2_camera',
         executable='camera_capture',
         name='chassis_left_cam',
-        parameters=[{
+        parameters=[left_calib,{
             'device': '/dev/rover/camera_left_chassis',
             'cap_width': 640,
             'cap_height': 480,
@@ -115,7 +117,7 @@ def generate_launch_description():
             'fec_percentage': 30,
             'udp_host': '192.168.1.1',
             'udp_port': 42069,
-            'mux_port': 20002
+            'mux_port': 20002,
         }],
         respawn=True
     )
@@ -124,7 +126,7 @@ def generate_launch_description():
         namespace='rover2_camera',
         executable='camera_capture',
         name='chassis_right_cam',
-        parameters=[{
+        parameters=[right_calib,{
             'device': '/dev/rover/camera_right_chassis',
             'cap_width': 640,
             'cap_height': 480,
@@ -136,7 +138,8 @@ def generate_launch_description():
             'fec_percentage': 100,
             'udp_host': '192.168.1.1',
             'udp_port': 42070,
-            'mux_port': 20003
+            'mux_port': 20003,
+            
         }],
         respawn=True
     )
@@ -150,12 +153,16 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        realsense_launch_nav,
+#        realsense_launch_nav,
 #        ir_camera_node,
 #        main_nav_node,
 #        gripper_rgb_node,
         chassis_right_cam_node,
         chassis_left_cam_node,
+<<<<<<< Updated upstream
         muxing_node
+=======
+        # muxing_node
+>>>>>>> Stashed changes
     ])
 

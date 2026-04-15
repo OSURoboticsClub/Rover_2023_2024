@@ -4,14 +4,16 @@ from rclpy.action import ActionServer, CancelResponse, GoalResponse
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
 from rcl_interfaces.msg import ParameterDescriptor
-
-
+from rcl_interfaces.srv import GetParameters
+from rcl_interfaces.msg import ParameterType
 
 from std_msgs.msg import Header
-
 from nav_autonomy_interface.action import YoloFind
 
-
+# TF2
+from tf2_ros import Buffer, TransformListener
+import tf2_geometry_msgs
+from geometry_msgs.msg import TransformStamped, PoseStamped
 
 # YOLO specific
 from ultralytics import YOLO
@@ -22,7 +24,6 @@ import cv2
 import torch
 
 torch.backends.cudnn.enabled = False
-# CUDNN still broken - may need to figure out for accel - benchmark difference on home pc w/ nvidia card?
 
 # ARUCO
 import asyncio
@@ -40,6 +41,19 @@ class YoloServer(Node):
 
         self.busy = False  # Is a search already being executed?
 
+        # TF2 Buffer and Listener
+        self.tf_buffer = Buffer()
+        self.tf_listener = TransformListener(self.tf_buffer, self)
+
+        # Camera intrinsics - will be populated from parameters
+        self.left_camera_matrix = None
+        self.left_dist_coeffs = None
+        self.right_camera_matrix = None
+        self.right_dist_coeffs = None
+        
+        # Get camera intrinsics from camera nodes
+        self.get_camera_intrinsics()
+
         # Action Server
         self._action_server = ActionServer(
             self,
@@ -53,11 +67,10 @@ class YoloServer(Node):
 
         self.get_logger().info("YoloServer action server ready.")
 
-        # TODO: Parameterize these as ROS2 params
         # ROS2 Parameters
         self.declare_parameter(
             "num_cameras",
-            1,
+            2,
             ParameterDescriptor(
                 description="Number of cameras carouselling through MUXing node"
             ),
@@ -99,25 +112,211 @@ class YoloServer(Node):
         )
         self.declare_parameter(
             "camera_carousel",
-            [0],
-            ParameterDescriptor(description="Array of camera numbers for input"),
+            [0, 1],
+            ParameterDescriptor(description="Array of camera numbers for input (0=left, 1=right)"),
+        )
+        self.declare_parameter(
+            "left_camera_frame",
+            "camera_left_chassis",
+            ParameterDescriptor(description="TF frame name for left camera"),
+        )
+        self.declare_parameter(
+            "right_camera_frame",
+            "camera_right_chassis",
+            ParameterDescriptor(description="TF frame name for right camera"),
+        )
+        self.declare_parameter(
+            "base_frame",
+            "base_link",
+            ParameterDescriptor(description="Base frame for rover"),
         )
 
         # Internal Parameters
         self.num_cameras = self.get_parameter("num_cameras").value
         self.source = self.get_parameter("source").value
         self.quit = False
+        
+        # Camera frame names
+        self.left_camera_frame = self.get_parameter("left_camera_frame").value
+        self.right_camera_frame = self.get_parameter("right_camera_frame").value
+        self.base_frame = self.get_parameter("base_frame").value
+        
         # Append camera carousel order
         self.cam_queue = deque()
         for cam in self.get_parameter("camera_carousel").value:
             self.cam_queue.append(cam)
+            
         # Confidence thresholds
         self.stop_threshold = self.get_parameter("stop_threshold").value
         self.check_threshold = self.get_parameter("check_threshold").value
+        
         # Frame Storage
         self.max_frames = self.get_parameter("max_frames").value
         self.check_frames = self.get_parameter("check_frames").value
-       
+
+    def get_camera_intrinsics(self):
+        """Retrieve camera intrinsics from camera nodes via parameter service"""
+        # Get left camera intrinsics
+        self.get_logger().info("Requesting left camera intrinsics...")
+        left_params = self._get_node_parameters('/rover2_camera/chassis_left_cam', 
+                                                  ['camera_matrix', 'distortion_coefficients'])
+        if left_params:
+            self.left_camera_matrix = np.array(left_params['camera_matrix']).reshape(3, 3)
+            self.left_dist_coeffs = np.array(left_params['distortion_coefficients'])
+            self.get_logger().info(f"Left camera matrix: {self.left_camera_matrix}")
+        
+        # Get right camera intrinsics
+        self.get_logger().info("Requesting right camera intrinsics...")
+        right_params = self._get_node_parameters('/rover2_camera/chassis_right_cam',
+                                                   ['camera_matrix', 'distortion_coefficients'])
+        if right_params:
+            self.right_camera_matrix = np.array(right_params['camera_matrix']).reshape(3, 3)
+            self.right_dist_coeffs = np.array(right_params['distortion_coefficients'])
+            self.get_logger().info(f"Right camera matrix: {self.right_camera_matrix}")
+
+    def _get_node_parameters(self, node_name, param_names):
+        """Helper to get parameters from another node"""
+        param_client = self.create_client(GetParameters, f'{node_name}/get_parameters')
+        
+        if not param_client.wait_for_service(timeout_sec=5.0):
+            self.get_logger().warn(f'Parameter service for {node_name} not available')
+            return None
+        
+        request = GetParameters.Request()
+        request.names = param_names
+        
+        future = param_client.call_async(request)
+        rclpy.spin_until_future_complete(self, future, timeout_sec=5.0)
+        
+        if future.result() is None:
+            self.get_logger().warn(f'Failed to get parameters from {node_name}')
+            return None
+        
+        response = future.result()
+        params = {}
+        
+        for i, name in enumerate(param_names):
+            param_value = response.values[i]
+            if param_value.type == ParameterType.PARAMETER_DOUBLE_ARRAY:
+                params[name] = list(param_value.double_array_value)
+            elif param_value.type == ParameterType.PARAMETER_DOUBLE:
+                params[name] = param_value.double_value
+        
+        return params
+
+    def pixel_to_3d_point(self, pixel_x, pixel_y, estimated_depth, camera_id):
+        """
+        Convert pixel coordinates to 3D point in camera frame
+        
+        Args:
+            pixel_x, pixel_y: Pixel coordinates
+            estimated_depth: Estimated distance from camera (meters)
+            camera_id: 0 for left, 1 for right
+        
+        Returns:
+            Point in camera frame (x, y, z)
+        """
+        # Select appropriate camera matrix
+        if camera_id == 0:
+            camera_matrix = self.left_camera_matrix
+            dist_coeffs = self.left_dist_coeffs
+        else:
+            camera_matrix = self.right_camera_matrix
+            dist_coeffs = self.right_dist_coeffs
+        
+        if camera_matrix is None:
+            self.get_logger().warn(f"Camera {camera_id} intrinsics not available")
+            return None
+        
+        # Undistort the pixel point
+        pixel_point = np.array([[[pixel_x, pixel_y]]], dtype=np.float32)
+        undistorted = cv2.undistortPoints(pixel_point, camera_matrix, dist_coeffs, P=camera_matrix)
+        undist_x, undist_y = undistorted[0][0]
+        
+        # Get camera intrinsics
+        fx = camera_matrix[0, 0]
+        fy = camera_matrix[1, 1]
+        cx = camera_matrix[0, 2]
+        cy = camera_matrix[1, 2]
+        
+        # Convert to normalized camera coordinates
+        x_norm = (undist_x - cx) / fx
+        y_norm = (undist_y - cy) / fy
+        
+        # Scale by depth to get 3D point in camera frame
+        # Camera frame: X=right, Y=down, Z=forward
+        point_camera = np.array([
+            x_norm * estimated_depth,  # X (horizontal)
+            y_norm * estimated_depth,  # Y (vertical)
+            estimated_depth            # Z (depth/forward)
+        ])
+        
+        return point_camera
+
+    def transform_to_base_frame(self, point_camera, camera_id):
+        """
+        Transform point from camera frame to base_link frame
+        
+        Args:
+            point_camera: [x, y, z] in camera frame
+            camera_id: 0 for left, 1 for right
+        
+        Returns:
+            PoseStamped in base_link frame
+        """
+        # Select appropriate camera frame
+        camera_frame = self.left_camera_frame if camera_id == 0 else self.right_camera_frame
+        
+        try:
+            # Get transform from camera to base_link
+            transform = self.tf_buffer.lookup_transform(
+                self.base_frame,
+                camera_frame,
+                rclpy.time.Time(),
+                timeout=rclpy.duration.Duration(seconds=1.0)
+            )
+            
+            # Create PoseStamped in camera frame
+            pose_camera = PoseStamped()
+            pose_camera.header.frame_id = camera_frame
+            pose_camera.header.stamp = self.get_clock().now().to_msg()
+            pose_camera.pose.position.x = float(point_camera[0])
+            pose_camera.pose.position.y = float(point_camera[1])
+            pose_camera.pose.position.z = float(point_camera[2])
+            pose_camera.pose.orientation.w = 1.0
+            
+            # Transform to base_link
+            pose_base = tf2_geometry_msgs.do_transform_pose(pose_camera, transform)
+            
+            return pose_base
+            
+        except Exception as e:
+            self.get_logger().error(f"TF transform failed: {e}")
+            return None
+
+    def estimate_depth_from_bbox(self, bbox_width, bbox_height, known_object_size=0.3):
+        """
+        Estimate depth based on bounding box size
+        This is a simple heuristic - adjust based on your objects
+        
+        Args:
+            bbox_width, bbox_height: Bounding box dimensions in pixels
+            known_object_size: Approximate real-world size of object (meters)
+        
+        Returns:
+            Estimated depth in meters
+        """
+        # Use the larger dimension
+        bbox_size = max(bbox_width, bbox_height)
+        
+        # Simple inverse relationship (tune this based on testing)
+        # focal_length can be approximated from camera matrix
+        focal_length = (self.left_camera_matrix[0, 0] + self.left_camera_matrix[1, 1]) / 2
+        
+        estimated_depth = (known_object_size * focal_length) / bbox_size
+        
+        return estimated_depth
+
     def goal_callback(self, goal_request):
         """Accept or reject a client request to begin an action."""
         self.get_logger().info(
@@ -188,19 +387,16 @@ class YoloServer(Node):
     async def action_callback(self, goal_handle):
         class ActionCanceled(Exception):
             """Custom exception to handle action cancellation"""
-
             pass
 
         self.xc = None
         self.yc = None
+        self.detected_camera_id = None
+        self.bbox_dims = None
         
-        cap = None  # Declare here so except block can access it
-
+        cap = None
 
         try:
-            # ==============================
-            # Look for object
-            # ==============================
             goal = goal_handle.request
             model = YOLO("yolo_models/mallet.pt")
 
@@ -236,7 +432,7 @@ class YoloServer(Node):
                     ret, frame = cap.read()
                     if not ret:
                         self.get_logger().warn("Failed to read frame")
-                        # break
+                        continue
 
                     # Run YOLO on frame
                     result = model(frame, device=0)[0]
@@ -257,28 +453,14 @@ class YoloServer(Node):
                         
                         camera_stacks[current_cam].append(current_conf)
 
-
                         # Grab average of list and check against thresholds
-                        total_mean = sum(camera_stacks[current_cam]) / self.max_frames
+                        total_mean = sum(camera_stacks[current_cam]) / len(camera_stacks[current_cam])
 
-                        # recent_stack = camera_stacks[current_cam][-self.check_frames :]:
-                        # recent_mean = sum(recent_stack) / self.check_frames
-
-                        # # Overlay stats on display frame
-                        # cv2.putText(
-                        #     display_frame,
-                        #     f"Total Mean: {total_mean:.2f}  Recent Mean: {recent_mean:.2f}",
-                        #     (10, 30),
-                        #     cv2.FONT_HERSHEY_SIMPLEX,
-                        #     0.6,
-                        #     (255, 255, 0),
-                        #     2,
-                        # )
                         # Lock in best detection
                         self.best_boxes = boxes_xyxy[best_idx]
-                        self.xc, self.yc, _, _ = result.boxes.xywh[
-                            best_idx
-                        ].tolist()
+                        self.xc, self.yc, w, h = result.boxes.xywh[best_idx].tolist()
+                        self.detected_camera_id = current_cam
+                        self.bbox_dims = (w, h)
 
                         if total_mean >= self.stop_threshold:
                             # Show final frame before breaking
@@ -286,19 +468,16 @@ class YoloServer(Node):
                             cv2.waitKey(1)
                             break
 
-
                         center, top_left, bottom_right = self.get_points()
                         feedback = YoloFind.Feedback()
                         feedback.confidence = current_conf
                         feedback.frame_id = frame_id
                         feedback.detected = True
                         feedback.total_conf = total_mean
-                        # feedback.recent_conf = recent_mean
                         feedback.center = center
                         feedback.top_left = top_left
                         feedback.bottom_right = bottom_right
                         goal_handle.publish_feedback(feedback)
-
 
                     else:
                         # No detections - publish feedback with no detection
@@ -321,10 +500,44 @@ class YoloServer(Node):
                 cv2.destroyAllWindows()
 
                 # ==============================
-                # Complete action
+                # Calculate 3D position
                 # ==============================
                 if not self.quit:
-                    if self.xc and self.yc:
+                    if self.xc and self.yc and self.detected_camera_id is not None:
+                        # Estimate depth from bounding box size
+                        estimated_depth = self.estimate_depth_from_bbox(
+                            self.bbox_dims[0], 
+                            self.bbox_dims[1],
+                            known_object_size=0.3  # Adjust based on your object
+                        )
+                        
+                        self.get_logger().info(f"Estimated depth: {estimated_depth:.2f}m")
+                        
+                        # Convert pixel to 3D point in camera frame
+                        point_camera = self.pixel_to_3d_point(
+                            self.xc, 
+                            self.yc, 
+                            estimated_depth,
+                            self.detected_camera_id
+                        )
+                        
+                        if point_camera is not None:
+                            self.get_logger().info(f"Point in camera frame: {point_camera}")
+                            
+                            # Transform to base_link frame
+                            pose_base = self.transform_to_base_frame(
+                                point_camera,
+                                self.detected_camera_id
+                            )
+                            
+                            if pose_base is not None:
+                                self.get_logger().info(
+                                    f"Object position in base_link: "
+                                    f"x={pose_base.pose.position.x:.2f}, "
+                                    f"y={pose_base.pose.position.y:.2f}, "
+                                    f"z={pose_base.pose.position.z:.2f}"
+                                )
+
                         center, top_left, bottom_right = self.get_points() 
 
                         self.get_logger().info("Yolo search completed")
@@ -335,10 +548,16 @@ class YoloServer(Node):
                         result.center = center
                         result.top_left = top_left
                         result.bottom_right = bottom_right
+                        
+                        # Add 3D pose if available
+                        if pose_base is not None:
+                            result.pose = pose_base.pose
+                        
                         self.busy = False
                         return result
                     else:
                         return None
+                        
         except ActionCanceled:
             self.get_logger().info("Yolo search canceled")
             result = YoloFind.Result()
@@ -346,7 +565,13 @@ class YoloServer(Node):
             result.ack = YoloFind.Result.CANCELED
             self.busy = False
             return result
-
+        except Exception as e:
+            self.get_logger().error(f"Action callback error: {e}")
+            self.busy = False
+            if cap is not None:
+                cap.release()
+            cv2.destroyAllWindows()
+            raise
 
     def get_points(self):
         center = Point()
@@ -370,7 +595,7 @@ class YoloServer(Node):
 
 
 
-    def do_aruco(self, goal_handle):
+    async def do_aruco(self, goal_handle):
         print("[INFO] detecting '{}' tags...".format(cv2.aruco.DICT_4X4_50))
         arucoDict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
         arucoParams = cv2.aruco.DetectorParameters()
@@ -379,21 +604,13 @@ class YoloServer(Node):
         detector = cv2.aruco.ArucoDetector(arucoDict, arucoParams)
         
         cap = cv2.VideoCapture(self.source)
+
         camera_matrix = np.array(
             [[600.0, 0.0, 320.0], [0.0, 600.0, 240.0], [0.0, 0.0, 1.0]]
         )
         dist_coeffs = np.zeros((5, 1))
+
         marker_length = 0.2  # meters
-        
-        # Define 3D object points for the ArUco marker (in marker coordinate system)
-        # Marker corners in 3D space (square centered at origin)
-        half_size = marker_length / 2.0
-        object_points = np.array([
-            [-half_size,  half_size, 0],  # Top-left
-            [ half_size,  half_size, 0],  # Top-right
-            [ half_size, -half_size, 0],  # Bottom-right
-            [-half_size, -half_size, 0]   # Bottom-left
-        ], dtype=np.float32)
 
         while rclpy.ok() and not goal_handle.is_cancel_requested:
             ret, frame = cap.read()
@@ -406,51 +623,30 @@ class YoloServer(Node):
             (corners, ids, rejected) = detector.detectMarkers(frame)
             
             if ids is not None:
-                cv2.aruco.drawDetectedMarkers(display_frame, corners, ids)
-                
-                # Process the first detected marker
-                # corners[0] is the first marker, shape: (1, 4, 2)
-                # Reshape to (4, 2) for solvePnP
-                image_points = corners[0].reshape((4, 2))
-                
-                # Estimate pose using solvePnP
-                success, rvec, tvec = cv2.solvePnP(
-                    object_points,
-                    image_points,
-                    camera_matrix,
-                    dist_coeffs,
-                    flags=cv2.SOLVEPNP_IPPE_SQUARE  # Good for square markers
+                cv2.aruco.drawDetectorMarkers(display_frame, corners, ids)
+                rvecs, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(
+                    corners, marker_length, camera_matrix, dist_coeffs
                 )
-                
-                if success:
-                    # Draw axis on the marker (optional, for visualization)
-                    cv2.drawFrameAxes(display_frame, camera_matrix, dist_coeffs, 
-                                    rvec, tvec, marker_length * 0.5)
-                    
-                    # Extract position from tvec
-                    tvec = tvec.flatten()  # Convert from (3,1) to (3,)
-                    
-                    # Overlay pose info on frame
-                    cv2.putText(
-                        display_frame,
-                        f"X:{tvec[0]:.2f} Y:{tvec[1]:.2f} Z:{tvec[2]:.2f}",
-                        (10, 30),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        0.6,
-                        (0, 255, 255),
-                        2,
-                    )
-                    
-                    feedback = YoloFind.Feedback()
-                    feedback.detected = True
-                    feedback.pose.position.x = float(tvec[0])
-                    feedback.pose.position.y = float(tvec[1])
-                    feedback.pose.position.z = float(tvec[2])
-                    goal_handle.publish_feedback(feedback)
-                else:
-                    feedback = YoloFind.Feedback()
-                    feedback.detected = False
-                    goal_handle.publish_feedback(feedback)
+                tvec = tvecs[0][0]
+
+                # Overlay pose info on frame
+                cv2.putText(
+                    display_frame,
+                    f"X:{tvec[0]:.2f} Y:{tvec[1]:.2f} Z:{tvec[2]:.2f}",
+                    (10, 30),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.6,
+                    (0, 255, 255),
+                    2,
+                )
+
+                feedback = YoloFind.Feedback()
+                feedback.detected = True
+                feedback.pose.position.x = float(tvec[0])
+                feedback.pose.position.y = float(tvec[1])
+                feedback.pose.position.z = float(tvec[2])
+                goal_handle.publish_feedback(feedback)
+
             else:
                 feedback = YoloFind.Feedback()
                 feedback.detected = False
