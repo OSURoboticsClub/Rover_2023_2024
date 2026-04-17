@@ -18,20 +18,20 @@ def generate_launch_description():
         package='realsense2_camera',
         executable='realsense2_camera_node',
         name='d455',
-	parameters=[{
-	    "camera_name": "d455",
-	    "serial_no": "318122302525",
-	    # "depth_module.depth_profile": "424x240x5",  
-	    # "depth_module.infra_profile": "424x240x5", 
-	    # "rgb_camera.color_profile": "424x240x5",
-        
-        # Test for better costmap clearing
-        #"depth_module.profile": "848x480x15",
-        #"rgb_camera.profile": "848x480x15",
-        # "depth_module.emitter_enabled": True, 
-        # "depth_module.laser_power": 360,
-        # "depth_module.enable_auto_exposure": True,
-        # "pointcloud.enable": False,
+        parameters=[{
+            "camera_name": "d455",
+            "serial_no": "318122302525",
+            # "depth_module.depth_profile": "424x240x5",  
+            # "depth_module.infra_profile": "424x240x5", 
+            # "rgb_camera.color_profile": "424x240x5",
+            
+            # Test for better costmap clearing
+            #"depth_module.profile": "848x480x15",
+            #"rgb_camera.profile": "848x480x15",
+            # "depth_module.emitter_enabled": True, 
+            # "depth_module.laser_power": 360,
+            # "depth_module.enable_auto_exposure": True,
+            # "pointcloud.enable": False,
 
         "depth_width": 1280,
         "depth_height": 720,
@@ -229,11 +229,11 @@ def generate_launch_description():
         respawn=True
     )
     muxing_node = Node(
-    package='rover2_camera',
-    namespace='rover2_camera',
-    executable='camera_muxing',
-    name='muxing_node',
-    respawn=True
+        package='rover2_camera',
+        namespace='rover2_camera',
+        executable='camera_muxing',
+        name='muxing_node',
+        respawn=True
     )
 
 

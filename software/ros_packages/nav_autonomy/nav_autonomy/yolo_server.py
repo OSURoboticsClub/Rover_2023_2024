@@ -22,6 +22,7 @@ import numpy as np
 from geometry_msgs.msg import Point
 import cv2
 import torch
+from std_msgs.msg import Int32
 
 torch.backends.cudnn.enabled = False
 torch.backends.cuda.matmul.allow_tf32 = True  # use TF32 instead, faster on Jetson                   
@@ -54,7 +55,12 @@ class YoloServer(Node):
         
         # Get camera intrinsics from camera nodes
         self.get_camera_intrinsics()
-
+        self.current_cam_mux_sub = self.create_subscription(
+            Int32,
+            'selected_cam_mux',
+            self.camera_callback,
+            10
+        )
         # Action Server
         self._action_server = ActionServer(
             self,
@@ -77,11 +83,6 @@ class YoloServer(Node):
         self.left_camera_frame = self.get_parameter("left_camera_frame").value
         self.right_camera_frame = self.get_parameter("right_camera_frame").value
         self.base_frame = self.get_parameter("base_frame").value
-        
-        # Append camera carousel order
-        self.cam_queue = deque()
-        for cam in self.get_parameter("camera_carousel").value:
-            self.cam_queue.append(cam)
             
         # Confidence thresholds
         self.stop_threshold = self.get_parameter("stop_threshold").value
@@ -90,6 +91,11 @@ class YoloServer(Node):
         # Frame Storage
         self.max_frames = self.get_parameter("max_frames").value
         self.check_frames = self.get_parameter("check_frames").value
+
+        self.detected_camera_id = 1
+
+    def camera_callback(self, msg):
+        self.detected_camera_id = 1 #msg.data
 
     def get_camera_intrinsics(self):
         """Retrieve camera intrinsics from camera nodes via parameter service"""
@@ -202,7 +208,7 @@ class YoloServer(Node):
             PoseStamped in base_link frame
         """
         # Select appropriate camera frame
-        camera_frame = self.left_camera_frame if camera_id == 0 else self.right_camera_frame
+        camera_frame = self.left_camera_frame if self.detected_camera_id == 0 else self.right_camera_frame
         
         try:
             # Get transform from camera to base_link
@@ -213,16 +219,16 @@ class YoloServer(Node):
                 timeout=rclpy.duration.Duration(seconds=1.0)
             )
             # Create PoseStamped in camera frame
-            pose_camera = Pose()
-
-            pose_camera.position.x = float(point_camera[0])
-            pose_camera.position.y = float(point_camera[1])
-            pose_camera.position.z = float(point_camera[2])
-            pose_camera.orientation.w = 1.0
-            print("here")
+            pose_camera = PoseStamped()
+            pose_camera.header.frame_id = camera_frame
+            pose_camera.pose.position.x = float(point_camera[2])
+            pose_camera.pose.position.y = float(-point_camera[1])
+            pose_camera.pose.position.z = 0.0
+            pose_camera.pose.orientation.w = 1.0
+            print(pose_camera)
 
             # Transform to base_link
-            pose_base = tf2_geometry_msgs.do_transform_pose(pose_camera, transform)
+            pose_base = tf2_geometry_msgs.do_transform_pose_stamped(pose_camera, transform)
             print(pose_base)
             return pose_base
             
@@ -327,7 +333,7 @@ class YoloServer(Node):
 
         self.xc = None
         self.yc = None
-        self.detected_camera_id = None
+        
         self.bbox_dims = None
         
         cap = None
@@ -350,11 +356,10 @@ class YoloServer(Node):
             else:
                 cap = cv2.VideoCapture(self.source, cv2.CAP_V4L2)
 
+                
                 camera_stacks = [deque(maxlen=self.max_frames) for _ in range(self.num_cameras)]
-               
                 # Start searching in camera stream for object(s)
-                current_cam = self.cam_queue.popleft()
-                self.cam_queue.append(current_cam)
+                
                 frame_id = 0
 
                 while cap.isOpened():
@@ -387,10 +392,10 @@ class YoloServer(Node):
                             frame, boxes_xyxy, conf_scores, best_idx
                         )
                         
-                        camera_stacks[current_cam].append(current_conf)
+                        camera_stacks[self.detected_camera_id].append(current_conf)
 
                         # Grab average of list and check against thresholds
-                        total_mean = sum(camera_stacks[current_cam]) / len(camera_stacks[current_cam])
+                        total_mean = sum(camera_stacks[self.detected_camera_id]) / len(camera_stacks[self.detected_camera_id])
 
                         # recent_stack = camera_stacks[current_cam][-self.check_frames :]:
                         # recent_mean = sum(recent_stack) / self.check_frames
@@ -454,9 +459,9 @@ class YoloServer(Node):
                                 if pose_base is not None:
                                     self.get_logger().info(
                                         f"Object position in map: "
-                                        f"x={pose_base.position.x:.2f}, "
-                                        f"y={pose_base.position.y:.2f}, "
-                                        f"z={pose_base.position.z:.2f}"
+                                        f"x={pose_base.pose.position.x:.2f}, "
+                                        f"y={pose_base.pose.position.y:.2f}, "
+                                        f"z={pose_base.pose.position.z:.2f}"
                                     )
                                     marker = Marker()
                                     marker.header.frame_id = self.base_frame  # "map"
@@ -467,7 +472,7 @@ class YoloServer(Node):
                                     marker.type = Marker.SPHERE
                                     marker.action = Marker.ADD
 
-                                    marker.pose = pose_base
+                                    marker.pose = pose_base.pose
 
                                     marker.scale.x = 0.2
                                     marker.scale.y = 0.2
