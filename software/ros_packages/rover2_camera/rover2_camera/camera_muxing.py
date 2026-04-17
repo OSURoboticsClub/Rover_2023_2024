@@ -24,11 +24,11 @@ class CameraMuxing(Node):
 
 
         self.pipeline = Gst.parse_launch(
-    f"input-selector name=sel ! "
-    f"videoconvert ! "
-    f"v4l2sink device=/dev/video64 "
-    f"udpsrc port={self.srcPorts[0]} caps = \"application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)RAW, sampling=(string)YCbCr-4:2:0, depth=(string)8, width=(string)640, height=(string)480, colorimetry=(string)BT601-5, payload=(int)96, ssrc=(uint)1103043224, timestamp-offset=(uint)1948293153, seqnum-offset=(uint)27904\" ! rtpvrawdepay ! videoconvert ! video/x-raw,format=YUY2 ! tee name=t0 ! queue ! sel.sink_0 t0. ! queue ! fakesink sync=false "
-    f"udpsrc port={self.srcPorts[1]} caps = \"application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)RAW, sampling=(string)YCbCr-4:2:0, depth=(string)8, width=(string)640, height=(string)480, colorimetry=(string)BT601-5, payload=(int)96, ssrc=(uint)1103043224, timestamp-offset=(uint)1948293153, seqnum-offset=(uint)27904\" ! rtpvrawdepay ! videoconvert ! video/x-raw,format=YUY2 ! tee name=t1 ! queue ! sel.sink_1 t1. ! queue ! fakesink sync=false "
+            f"input-selector name=sel ! "
+            f"videoconvert ! "
+            f"v4l2sink device=/dev/video64 "
+            f"udpsrc port={self.srcPorts[0]} caps = \"application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)RAW, sampling=(string)YCbCr-4:2:0, depth=(string)8, width=(string)640, height=(string)480, colorimetry=(string)BT601-5, payload=(int)96, ssrc=(uint)1103043224, timestamp-offset=(uint)1948293153, seqnum-offset=(uint)27904\" ! rtpvrawdepay ! videoconvert ! video/x-raw,format=YUY2 ! tee name=t0 ! queue ! sel.sink_0 t0. ! queue ! fakesink sync=false "
+            f"udpsrc port={self.srcPorts[1]} caps = \"application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)RAW, sampling=(string)YCbCr-4:2:0, depth=(string)8, width=(string)640, height=(string)480, colorimetry=(string)BT601-5, payload=(int)96, ssrc=(uint)1103043224, timestamp-offset=(uint)1948293153, seqnum-offset=(uint)27904\" ! rtpvrawdepay ! videoconvert ! video/x-raw,format=YUY2 ! tee name=t1 ! queue ! sel.sink_1 t1. ! queue ! fakesink sync=false "
         )
 
 
@@ -44,6 +44,7 @@ class CameraMuxing(Node):
         msg = Int32()
         msg.data = self.current_cam
         self.publisher_.publish(msg)
+        print(self.current_cam)
 
         self.current_cam += 1
         if self.current_cam >= self.num_cams:
