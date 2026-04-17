@@ -159,10 +159,7 @@ def generate_launch_description():
 #        gripper_rgb_node,
         chassis_right_cam_node,
         chassis_left_cam_node,
-<<<<<<< Updated upstream
         muxing_node
-=======
         # muxing_node
->>>>>>> Stashed changes
     ])
 

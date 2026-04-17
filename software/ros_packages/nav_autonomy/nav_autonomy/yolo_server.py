@@ -6,14 +6,14 @@ from rclpy.executors import MultiThreadedExecutor
 from rcl_interfaces.msg import ParameterDescriptor
 from rcl_interfaces.srv import GetParameters
 from rcl_interfaces.msg import ParameterType
-
+from visualization_msgs.msg import Marker
 from std_msgs.msg import Header
 from nav_autonomy_interface.action import YoloFind
 
 # TF2
 from tf2_ros import Buffer, TransformListener
 import tf2_geometry_msgs
-from geometry_msgs.msg import TransformStamped, PoseStamped
+from geometry_msgs.msg import TransformStamped, PoseStamped, Pose
 
 # YOLO specific
 from ultralytics import YOLO
@@ -66,7 +66,7 @@ class YoloServer(Node):
         )
 
         self.get_logger().info("YoloServer action server ready.")
-
+        self.marker_pub = self.create_publisher(Marker, '/visualization_marker', 10)
         # ROS2 Parameters
         self.declare_parameter(
             "num_cameras",
@@ -127,7 +127,7 @@ class YoloServer(Node):
         )
         self.declare_parameter(
             "base_frame",
-            "base_link",
+            "map",
             ParameterDescriptor(description="Base frame for rover"),
         )
 
@@ -275,19 +275,18 @@ class YoloServer(Node):
                 rclpy.time.Time(),
                 timeout=rclpy.duration.Duration(seconds=1.0)
             )
-            
             # Create PoseStamped in camera frame
-            pose_camera = PoseStamped()
-            pose_camera.header.frame_id = camera_frame
-            pose_camera.header.stamp = self.get_clock().now().to_msg()
-            pose_camera.pose.position.x = float(point_camera[0])
-            pose_camera.pose.position.y = float(point_camera[1])
-            pose_camera.pose.position.z = float(point_camera[2])
-            pose_camera.pose.orientation.w = 1.0
-            
+            pose_camera = Pose()
+
+            pose_camera.position.x = float(point_camera[0])
+            pose_camera.position.y = float(point_camera[1])
+            pose_camera.position.z = float(point_camera[2])
+            pose_camera.orientation.w = 1.0
+            print("here")
+
             # Transform to base_link
             pose_base = tf2_geometry_msgs.do_transform_pose(pose_camera, transform)
-            
+            print(pose_base)
             return pose_base
             
         except Exception as e:
@@ -313,7 +312,7 @@ class YoloServer(Node):
         # focal_length can be approximated from camera matrix
         focal_length = (self.left_camera_matrix[0, 0] + self.left_camera_matrix[1, 1]) / 2
         
-        estimated_depth = (known_object_size * focal_length) / bbox_size
+        estimated_depth = ((known_object_size * focal_length) / bbox_size)/2
         
         return estimated_depth
 
@@ -399,7 +398,7 @@ class YoloServer(Node):
         try:
             goal = goal_handle.request
             model = YOLO("yolo_models/mallet.pt")
-
+            
             # Define model from action request
             if goal.search_object == YoloFind.Goal.BOTTLE:
                 model = YOLO("yolo_models/bottle.pt")
@@ -407,7 +406,7 @@ class YoloServer(Node):
                 model = YOLO("yolo_models/mallet.pt")
             elif goal.search_object == YoloFind.Goal.OG_HAMMER:
                 model = YOLO("yolo_models/hammer.pt")
-
+            model.overrides['verbose'] = False
             if goal.search_object == YoloFind.Goal.ARUCO:
                 await self.do_aruco(goal_handle)
                 return
@@ -479,6 +478,65 @@ class YoloServer(Node):
                         feedback.bottom_right = bottom_right
                         goal_handle.publish_feedback(feedback)
 
+
+                        if self.xc and self.yc and self.detected_camera_id is not None:
+                            # Estimate depth from bounding box size
+                            estimated_depth = self.estimate_depth_from_bbox(
+                                self.bbox_dims[0], 
+                                self.bbox_dims[1],
+                                known_object_size=0.3  # Adjust based on your object
+                            )
+                            
+                            self.get_logger().info(f"Estimated depth: {estimated_depth:.2f}m")
+                            
+                            # Convert pixel to 3D point in camera frame
+                            point_camera = self.pixel_to_3d_point(
+                                self.xc, 
+                                self.yc, 
+                                estimated_depth,
+                                self.detected_camera_id
+                            )
+                            
+                            if point_camera is not None:
+                                self.get_logger().info(f"Point in camera frame: {point_camera}")
+                                
+                                # Transform to base_link frame
+                                pose_base = self.transform_to_base_frame(
+                                    point_camera,
+                                    self.detected_camera_id
+                                )
+                                
+                                if pose_base is not None:
+                                    self.get_logger().info(
+                                        f"Object position in map: "
+                                        f"x={pose_base.position.x:.2f}, "
+                                        f"y={pose_base.position.y:.2f}, "
+                                        f"z={pose_base.position.z:.2f}"
+                                    )
+                                    marker = Marker()
+                                    marker.header.frame_id = self.base_frame  # "map"
+                                    marker.header.stamp = self.get_clock().now().to_msg()
+
+                                    marker.ns = "yolo"
+                                    marker.id = 0
+                                    marker.type = Marker.SPHERE
+                                    marker.action = Marker.ADD
+
+                                    marker.pose = pose_base
+
+                                    marker.scale.x = 0.2
+                                    marker.scale.y = 0.2
+                                    marker.scale.z = 0.2
+
+                                    marker.color.r = 1.0
+                                    marker.color.g = 0.0
+                                    marker.color.b = 0.0
+                                    marker.color.a = 1.0
+
+                                    self.marker_pub.publish(marker)
+
+                            
+
                     else:
                         # No detections - publish feedback with no detection
                         feedback = YoloFind.Feedback()
@@ -502,61 +560,7 @@ class YoloServer(Node):
                 # ==============================
                 # Calculate 3D position
                 # ==============================
-                if not self.quit:
-                    if self.xc and self.yc and self.detected_camera_id is not None:
-                        # Estimate depth from bounding box size
-                        estimated_depth = self.estimate_depth_from_bbox(
-                            self.bbox_dims[0], 
-                            self.bbox_dims[1],
-                            known_object_size=0.3  # Adjust based on your object
-                        )
-                        
-                        self.get_logger().info(f"Estimated depth: {estimated_depth:.2f}m")
-                        
-                        # Convert pixel to 3D point in camera frame
-                        point_camera = self.pixel_to_3d_point(
-                            self.xc, 
-                            self.yc, 
-                            estimated_depth,
-                            self.detected_camera_id
-                        )
-                        
-                        if point_camera is not None:
-                            self.get_logger().info(f"Point in camera frame: {point_camera}")
-                            
-                            # Transform to base_link frame
-                            pose_base = self.transform_to_base_frame(
-                                point_camera,
-                                self.detected_camera_id
-                            )
-                            
-                            if pose_base is not None:
-                                self.get_logger().info(
-                                    f"Object position in base_link: "
-                                    f"x={pose_base.pose.position.x:.2f}, "
-                                    f"y={pose_base.pose.position.y:.2f}, "
-                                    f"z={pose_base.pose.position.z:.2f}"
-                                )
-
-                        center, top_left, bottom_right = self.get_points() 
-
-                        self.get_logger().info("Yolo search completed")
-                        goal_handle.succeed()
-                        result = YoloFind.Result()
-                        result.header = Header()
-                        result.ack = YoloFind.Result.SUCCESS
-                        result.center = center
-                        result.top_left = top_left
-                        result.bottom_right = bottom_right
-                        
-                        # Add 3D pose if available
-                        if pose_base is not None:
-                            result.pose = pose_base.pose
-                        
-                        self.busy = False
-                        return result
-                    else:
-                        return None
+                    
                         
         except ActionCanceled:
             self.get_logger().info("Yolo search canceled")
