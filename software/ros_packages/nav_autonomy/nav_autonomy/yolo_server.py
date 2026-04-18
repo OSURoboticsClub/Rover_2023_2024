@@ -452,7 +452,7 @@ class YoloServer(Node):
                         feedback.center = center
                         feedback.top_left = top_left
                         feedback.bottom_right = bottom_right
-                        feedback.pose = None
+                        feedback.pose = PoseStamped()
 
                         if self.xc and self.yc and self.detected_camera_id is not None:
                             # Estimate depth from bounding box size
@@ -520,7 +520,6 @@ class YoloServer(Node):
                         feedback.confidence = 0.0
                         feedback.frame_id = frame_id
                         feedback.detected = False
-                        feedback.pose = None
                         goal_handle.publish_feedback(feedback)
 
                     # Display the frame (with or without detections)
