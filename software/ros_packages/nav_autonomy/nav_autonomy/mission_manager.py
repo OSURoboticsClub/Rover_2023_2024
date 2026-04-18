@@ -74,7 +74,7 @@ class MissionManager(Node):
             navigator=self.navigator, 
             confidence_topic="yolo/confidence", 
             status_topic="search/status",
-            target_pose_topic="/visualization_marker",
+            target_pose_topic="/yolo_target_pose",
             debug_markers=True
         )
 

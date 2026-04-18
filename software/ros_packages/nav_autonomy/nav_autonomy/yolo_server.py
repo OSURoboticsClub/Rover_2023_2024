@@ -73,6 +73,8 @@ class YoloServer(Node):
 
         self.get_logger().info("YoloServer action server ready.")
         self.marker_pub = self.create_publisher(Marker, '/visualization_marker', 10)
+        self.target_pose_pub = self.create_publisher(PoseStamped, '/yolo_target_pose', 10)
+
         # ROS2 Parameters
         self.declare_parameter(
             "num_cameras",
@@ -534,8 +536,7 @@ class YoloServer(Node):
                                     marker.color.a = 1.0
 
                                     self.marker_pub.publish(marker)
-
-                            
+                                    self.target_pose_pub.publish(pose_base)
 
                     else:
                         # No detections - publish feedback with no detection
