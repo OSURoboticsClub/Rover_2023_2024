@@ -6,7 +6,7 @@ import math
 import time
 import rclpy
 from rclpy.node import Node
-from rclpy.action import ActionServer, CancelResponse, GoalResponse
+from rclpy.action import ActionServer, ActionClient, CancelResponse, GoalResponse
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
 from nav2_simple_commander.robot_navigator import BasicNavigator
@@ -62,12 +62,13 @@ class MissionManager(Node):
             cancel_callback=self.cancel_callback,
         )
 
-        # self._yolo_client = ActionClient(
-        #     self,
-        #     YoloFind,
-        #     'YoloFind',
-        #     callback_group=self.callback_group
-        # )
+        self._yolo_client = ActionClient(
+            self,
+            YoloFind,
+            'YoloFind',
+            callback_group=self.callback_group
+
+        )
 
         self.search_fsm = SearchFSM(
             node=self, 
@@ -89,14 +90,17 @@ class MissionManager(Node):
 
         self.get_logger().info('MissionManager action server ready.')
 
+
     def _pose_callback(self, msg):
         pose = PoseStamped()
         pose.header = msg.header
         pose.pose = msg.pose.pose
         self.current_pose = pose
 
+
     def _fsm_tick(self):
         self.search_fsm.tick()
+
 
     def gps_to_map_pose(self, lat, lon, yaw=0.0):
         request = FromLL.Request()
@@ -130,7 +134,6 @@ class MissionManager(Node):
     # -------------------------
     # Action server callbacks
     # -------------------------
-
     def goal_callback(self, goal_request):
         self.get_logger().info(
             f'\n=== New Mission Received ===\n'
@@ -151,15 +154,17 @@ class MissionManager(Node):
 
         return GoalResponse.ACCEPT
 
+
     def cancel_callback(self, goal_handle):
         """Accept or reject a client request to cancel an action."""
         self.get_logger().info('Received cancel request')
         return CancelResponse.ACCEPT
 
-    # ------------------------------------------------
-    # Execute a mission
-    # ------------------------------------------------
+    # Execute mission
     async def execute_callback(self, goal_handle):
+        self.yolo_goal_handle = None
+        self.yolo_result_future = None
+
         try:
             req = goal_handle.request
 
@@ -181,10 +186,31 @@ class MissionManager(Node):
             else:
                 start_waypoints = map_wps
 
+
             # ==============================
             # Call Yolo Action Server
             # ==============================
-            # self._send_yolo_action(goal_handle)
+            if not self._yolo_client.wait_for_server(timeout_sec=5.0):
+                self.get_logger().error('YOLO action server not available')
+                goal_handle.abort()
+                return Mission.Result(ack=Mission.Result.FAILED)
+
+            yolo_goal = YoloFind.Goal()
+            yolo_goal.search_object = req.search_object
+
+            self.get_logger().info('Sending YOLO goal')
+            self.yolo_goal_handle = await self._yolo_client.send_goal_async(
+                yolo_goal,
+                feedback_callback=self.yolo_feedback_cb
+            )
+
+            if not self.yolo_goal_handle.accepted:
+                self.get_logger().error('YOLO goal rejected')
+                goal_handle.abort()
+                return Mission.Result(ack=Mission.Result.FAILED)
+
+            # Track the result future to know when YOLO hits its sthresholdtop 
+            self.yolo_result_future = self.yolo_goal_handle.get_result_async()
         
         
             # ==============================
@@ -211,8 +237,11 @@ class MissionManager(Node):
             while rclpy.ok() and self.search_fsm.is_active():
                 if goal_handle.is_cancel_requested:
                     goal_handle.canceled()
+                    if self.yolo_goal_handle:
+                        await self.yolo_goal_handle.cancel_goal_async()
                     return Mission.Result(ack=Mission.Result.CANCELED)
-
+                
+                #self.search_fsm.tick()
                 goal_handle.publish_feedback(self._map_search_feedback())
                 time.sleep(0.4)
 
@@ -235,6 +264,16 @@ class MissionManager(Node):
 
         finally:
             self.search_fsm.stop()
+
+
+    def _yolo_feedback_cb(self, msg):
+        """Route live YOLO action feedback into the FSM"""
+        fb = msg.feedback
+        target_pose = None
+        if fb.detected:
+            target_pose = fb.pose
+            
+        self.search_fsm.update_perception(fb.total_conf, target_pose)
 
 
     def _map_search_feedback(self):
@@ -280,40 +319,7 @@ class MissionManager(Node):
             fb.current_heading = 0.0
 
         return fb
-
-
-    # async def _send_yolo_action(self, goal_handle):
-    #     self.get_logger().info(f'Connecting to YOLO action server.')
-
-    #     if not self._yolo_client.wait_for_server(timeout_sec=5.0):
-    #         self.get_logger().error('YOLO action server not available')
-    #         goal_handle.abort()
-    #         return Mission.Result(ack=Mission.Result.CANCELED)
-
-    #     # Create and send YOLO goal
-    #     yolo_goal = YoloFind.Goal()
-    #     yolo_goal.search_object = 3  # or req.search_object if passed in Mission.Goal
-
-    #     self.get_logger().info(f'Sending YOLO goal: {yolo_goal.search_object}')
-    #     yolo_goal_future = await self._yolo_client.send_goal_async(yolo_goal)
-
-    #     if not yolo_goal_future.accepted:
-    #         self.get_logger().error('YOLO goal rejected')
-    #         goal_handle.abort()
-    #         return Mission.Result(ack=Mission.Result.FAILED)
-
-    #     self.get_logger().info('YOLO goal accepted, waiting for result...')
-    #     yolo_result = await yolo_goal_future.get_result_async()
-
-    #     if yolo_result.result.ack != YoloFind.Result.SUCCESS:
-    #         self.get_logger().warn(f'YOLO search failed or canceled: {yolo_result.result.ack}')
-    #         goal_handle.abort()
-    #         return Mission.Result(ack=Mission.Result.FAILED)
-
-    #     self.get_logger().info(
-    #         f'YOLO found object at: ({yolo_result.result.center.x:.2f}, {yolo_result.result.center.y:.2f})'
-    #     )
-
+    
 
 def main(args=None):
     rclpy.init(args=args)

@@ -320,6 +320,7 @@ class YoloServer(Node):
         
         return estimated_depth
 
+
     def goal_callback(self, goal_request):
         """Accept or reject a client request to begin an action."""
         self.get_logger().info(
@@ -344,11 +345,13 @@ class YoloServer(Node):
         self.busy = True
         return GoalResponse.ACCEPT
 
+
     def cancel_callback(self, goal_handle):
         """Accept or reject a client request to cancel an action."""
         self.get_logger().info("Received cancel request")
         self.quit = True
         return CancelResponse.ACCEPT
+
 
     def _draw_detections(self, frame, boxes_xyxy, conf_scores, best_idx):
         """
@@ -386,6 +389,7 @@ class YoloServer(Node):
         )
 
         return annotated
+
 
     async def action_callback(self, goal_handle):
         class ActionCanceled(Exception):
@@ -478,8 +482,7 @@ class YoloServer(Node):
                         feedback.center = center
                         feedback.top_left = top_left
                         feedback.bottom_right = bottom_right
-                        goal_handle.publish_feedback(feedback)
-
+                        feedback.pose = None
 
                         if self.xc and self.yc and self.detected_camera_id is not None:
                             # Estimate depth from bounding box size
@@ -537,6 +540,9 @@ class YoloServer(Node):
 
                                     self.marker_pub.publish(marker)
                                     self.target_pose_pub.publish(pose_base)
+                                    feedback.pose = pose_base
+
+                        goal_handle.publish_feedback(feedback)
 
                     else:
                         # No detections - publish feedback with no detection
@@ -544,6 +550,7 @@ class YoloServer(Node):
                         feedback.confidence = 0.0
                         feedback.frame_id = frame_id
                         feedback.detected = False
+                        feedback.pose = None
                         goal_handle.publish_feedback(feedback)
 
                     # Display the frame (with or without detections)
