@@ -127,6 +127,24 @@ class SearchFSM:
             else:
                 self._to_failed()
 
+    def update_perception(self, confidence: float, target_pose: PoseStamped = None):
+        if not self.active:
+            return
+
+        if target_pose is not None:
+            self.target_pose = target_pose
+
+        if self.state == SearchState.SEARCHING and confidence >= self.investigate_threshold:
+            if self.target_pose is not None:
+                self._to_investigate()
+            else:
+                self.node.get_logger().warn("Confidence threshold met, but no target map pose received.")
+        
+        if self.state == SearchState.INVESTIGATING and confidence >= self.success_threshold:
+            self.state = SearchState.SUCCESS
+            self.active = False
+            self.navigator.cancelTask()
+            self._publish_state()   
 
     def get_state(self):
         return self.state
