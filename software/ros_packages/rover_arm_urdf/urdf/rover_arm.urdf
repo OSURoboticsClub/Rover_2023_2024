@@ -264,4 +264,42 @@
     <origin rpy="0 0 0" xyz="0 0 0.23"/>
   </joint>
 
+
+<link name="camera_left_chassis">
+  <visual>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <geometry>
+      <box size="0.02 0.02 0.02"/>
+    </geometry>
+  </visual>
+</link>
+
+<joint name="camera_left_joint" type="fixed">
+  <parent link="rover_base_origin"/>
+  <child link="camera_left_chassis"/>
+
+  <origin
+    xyz="0.1524 0.2413 0.2286"
+    rpy="0 0 0.698"/>
+</joint>
+
+<link name="camera_right_chassis">
+  <visual>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+    <geometry>
+      <box size="0.02 0.02 0.02"/>
+    </geometry>
+  </visual>
+</link>
+
+<joint name="camera_right_joint" type="fixed">
+  <parent link="rover_base_origin"/>
+  <child link="camera_right_chassis"/>
+
+  <origin
+    xyz="0.1524 -0.2413 0.2286"
+    rpy="0 0 -0.698"/>
+</joint>
+
+
 </robot>
