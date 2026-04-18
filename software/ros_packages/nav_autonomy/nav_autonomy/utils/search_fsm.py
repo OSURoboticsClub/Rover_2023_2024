@@ -25,14 +25,16 @@ class SearchState(Enum):
 
 
 class SearchFSM:
-    def __init__(self, node, navigator, confidence_topic, status_topic, debug_markers=False):
+    def __init__(self, node, navigator, confidence_topic, status_topic, target_pose_topic, debug_markers=False, dbg_marker_topic='/search_waypoints_viz'):
 
         self.node = node
         self.navigator = navigator
+        self.target_pose_topic = target_pose_topic
 
         self.pattern = SearchPattern.NONE
         self.success_threshold = 0.85
         self.investigate_threshold = 0.50
+        self.target_pose = None
 
         self.state = SearchState.IDLE
         self.active = False
@@ -41,11 +43,13 @@ class SearchFSM:
         self.resume_path: List[PoseStamped] = []
         self.start_length = 0
         self.current_index = 0
-
+        
         self.status_pub = node.create_publisher(String, status_topic, 10)
-        self.conf_sub = node.create_subscription(Float32, confidence_topic, self._confidence_cb, 10)
+        self.debug_marker_pub = node.create_publisher(MarkerArray, dbg_marker_topic, 10) if debug_markers else None
 
-        self.debug_marker_pub = node.create_publisher(MarkerArray, 'search_waypoints_viz', 10) if debug_markers else None
+        self.conf_sub = node.create_subscription(Float32, confidence_topic, self._confidence_cb, 10)
+        self.target_pose_sub = node.create_subscription(PoseStamped, self.target_pose_topic, self._target_pose_cb, 10)
+  
 
     def start(self, start_path: List[PoseStamped], search_inputs: List[PoseStamped], pattern: SearchPattern, param1: float, param2: float, success_threshold: float = 0.85, investigate_threshold: float = 0.50):
 
@@ -71,14 +75,17 @@ class SearchFSM:
             return
 
         self.navigator.followWaypoints(self.active_path)
+        # self.navigator.goThroughPoses(self.active_path)
         self._publish_state()
         self._publish_dbg_waypoint_markers()
+
 
     def stop(self):
         self.navigator.cancelTask()
         self.active = False
         self.state = SearchState.STOPPED
         self._publish_state()
+
 
     def tick(self):
         if not self.active:
@@ -95,7 +102,6 @@ class SearchFSM:
                 if self.state == SearchState.MOVING_TO_START and self.current_index >= self.start_length:
                     self.state = SearchState.SEARCHING
                     self._publish_state()
-
         else:
             # waypoint task completed
             result = self.navigator.getResult()
@@ -118,11 +124,20 @@ class SearchFSM:
             else:
                 self._to_failed()
 
+
     def get_state(self):
         return self.state
 
+
     def is_active(self):
         return self.active
+
+
+    # CALLBACKS
+    def _target_pose_cb(self, msg: PoseStamped):
+        if not self.active:
+            return
+        self.target_pose = msg
 
 
     def _confidence_cb(self, msg: Float32):
@@ -131,10 +146,11 @@ class SearchFSM:
 
         conf = msg.data
 
-        # TODO: Consider some throttling or smoothing to avoid rapid state changes on false positives/negatives
-
         if self.state == SearchState.SEARCHING and conf >= self.investigate_threshold:
-            self._to_investigate()
+            if self.target_pose is not None:
+                self._to_investigate()
+            else:
+                self.node.get_logger().warn("Confidence threshold met, but no target map pose received yet!")
             return
 
         if self.state == SearchState.INVESTIGATING and conf >= self.success_threshold:
@@ -142,6 +158,7 @@ class SearchFSM:
             self.active = False
             self.navigator.cancelTask()
             self._publish_state()
+
 
     def _to_investigate(self):
         self.navigator.cancelTask()
@@ -153,6 +170,9 @@ class SearchFSM:
         self._publish_state()
         
         # TODO: Execute investigation behavior
+        self.node.get_logger().info(f"Interrupt Triggered: Investigating target at X: {self.target_pose.pose.position.x:.2f}, Y: {self.target_pose.pose.position.y:.2f}")
+        self.navigator.goToPose(self.target_pose)
+
 
     def _return_to_search(self):
         self.state = SearchState.RETURNING_TO_SEARCH
@@ -163,16 +183,19 @@ class SearchFSM:
         else:
             self._to_failed()
 
+
     def _to_failed(self):
         self.state = SearchState.FAILED
         self.active = False
         self._publish_state()
+
 
     def _publish_state(self):
         msg = String()
         msg.data = self.state.name
         self.status_pub.publish(msg)
         self.node.get_logger().info(f"[SearchFSM] State: {self.state.name}")
+
 
     def _publish_dbg_waypoint_markers(self):
         if self.debug_marker_pub is None:
