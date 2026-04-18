@@ -91,8 +91,6 @@ class YoloServer(Node):
         self.max_frames = self.get_parameter("max_frames").value
         self.check_frames = self.get_parameter("check_frames").value
 
-        self.detected_camera_id = 1
-
     def switch_camera(self, cam_idx):
         if not self.switch_camera_client.wait_for_service(timeout_sec=5.0):
             self.get_logger().warn(f'switch_camera service for muxing node not available')
@@ -221,7 +219,7 @@ class YoloServer(Node):
             PoseStamped in base_link frame
         """
         # Select appropriate camera frame
-        camera_frame = self.left_camera_frame if self.detected_camera_id == 0 else self.right_camera_frame
+        camera_frame = self.left_camera_frame if camera_id == 0 else self.right_camera_frame
         
         try:
             # Get transform from camera to base_link
@@ -418,10 +416,10 @@ class YoloServer(Node):
                             frame, boxes_xyxy, conf_scores, best_idx
                         )
                         
-                        camera_stacks[self.detected_camera_id].append(current_conf)
+                        camera_stacks[cam_idx].append(current_conf)
 
                         # Grab average of list and check against thresholds
-                        total_mean = sum(camera_stacks[self.detected_camera_id]) / len(camera_stacks[self.detected_camera_id])
+                        total_mean = sum(camera_stacks[cam_idx]) / len(camera_stacks[cam_idx])
 
                         # recent_stack = camera_stacks[current_cam][-self.check_frames :]:
                         # recent_mean = sum(recent_stack) / self.check_frames
@@ -454,7 +452,7 @@ class YoloServer(Node):
                         feedback.bottom_right = bottom_right
                         feedback.pose = PoseStamped()
 
-                        if self.xc and self.yc and self.detected_camera_id is not None:
+                        if self.xc and self.yc:
                             # Estimate depth from bounding box size
                             estimated_depth = self.estimate_depth_from_bbox(
                                 self.bbox_dims[0], 
@@ -469,7 +467,7 @@ class YoloServer(Node):
                                 self.xc, 
                                 self.yc, 
                                 estimated_depth,
-                                self.detected_camera_id
+                                cam_idx
                             )
                             
                             if point_camera is not None:
@@ -478,7 +476,7 @@ class YoloServer(Node):
                                 # Transform to base_link frame
                                 pose_base = self.transform_to_base_frame(
                                     point_camera,
-                                    self.detected_camera_id
+                                    cam_idx
                                 )
                                 
                                 if pose_base is not None:
