@@ -9,6 +9,7 @@ from rcl_interfaces.msg import ParameterType
 from visualization_msgs.msg import Marker
 from std_msgs.msg import Header
 from nav_autonomy_interface.action import YoloFind
+from nav_autonomy_interface.srv import SwitchCamera
 
 # TF2
 from tf2_ros import Buffer, TransformListener
@@ -54,12 +55,7 @@ class YoloServer(Node):
         
         # Get camera intrinsics from camera nodes
         self.get_camera_intrinsics()
-        self.current_cam_mux_sub = self.create_subscription(
-            Int32,
-            'selected_cam_mux',
-            self.camera_callback,
-            10
-        )
+   
         # Action Server
         self._action_server = ActionServer(
             self,
@@ -70,6 +66,9 @@ class YoloServer(Node):
             goal_callback=self.goal_callback,
             cancel_callback=self.cancel_callback,
         )
+
+        # Service Client: Switch Camera
+        self.switch_camera_client = self.create_client(SwitchCamera, f'camera_muxing/switch_camera')
 
         self.get_logger().info("YoloServer action server ready.")
         self.marker_pub = self.create_publisher(Marker, '/visualization_marker', 10)
@@ -153,9 +152,19 @@ class YoloServer(Node):
 
         self.detected_camera_id = 1
 
-    def camera_callback(self, msg):
-        self.detected_camera_id = 1 #msg.data
+    def switch_camera(self, cam_idx):
+        if not self.switch_camera.wait_for_service(timeout_sec=5.0):
+            self.get_logger().warn(f'switch_camera service for muxing node not available')
+            return SwitchCamera.Failed
 
+        request = SwitchCamera.Request()
+        request.cam_idx = cam_idx
+        
+        future = self.switch_camera.call_async(request)
+        rclpy.spin_until_future_complete(self, future, timeout_sec=5.0)
+        
+        return future.result().ack
+        
     def get_camera_intrinsics(self):
         """Retrieve camera intrinsics from camera nodes via parameter service"""
         # Get left camera intrinsics
@@ -420,6 +429,7 @@ class YoloServer(Node):
                 # Start searching in camera stream for object(s)
                 
                 frame_id = 0
+                cam_idx = 0
 
                 while cap.isOpened():
                     if goal_handle.is_cancel_requested:
@@ -429,6 +439,14 @@ class YoloServer(Node):
                         cap.release()
                         return YoloFind.Result()
 
+                    # Switch Camera
+                    while True:
+                        cam_idx = (cam_idx + 1) % self.num_cameras
+                        if self.switch_camera(cam_idx) == SwitchCamera.SUCCESS:
+                            break
+                        self.get_logger().warn("Failed to switch cameras")
+
+                    # Get Frame
                     ret, frame = cap.read()
                     if not ret:
                         self.get_logger().warn("Failed to read frame")
