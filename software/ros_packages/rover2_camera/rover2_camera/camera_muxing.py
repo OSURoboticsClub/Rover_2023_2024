@@ -36,18 +36,15 @@ class CameraMuxing(Node):
     def switch_camera_callback(self, request, response):
         cam_idx = request.cam_idx
         if cam_idx >= self.num_cams:
-            response.result = SwitchCamera.Response.FAIL
+            response.ack = SwitchCamera.Response.FAIL
             return response
 
         self.current_cam = cam_idx
         src_pad = self.sel.get_static_pad(f"sink_{self.current_cam}")
         self.sel.set_property("active-pad", src_pad)
-        msg = Int32()
-        msg.data = self.current_cam
-        self.publisher_.publish(msg)
         print(self.current_cam)
 
-        response.result = SwitchCamera.Response.SUCCESS
+        response.ack = SwitchCamera.Response.SUCCESS
         return response
 
 

@@ -68,7 +68,7 @@ class YoloServer(Node):
         )
 
         # Service Client: Switch Camera
-        self.switch_camera_client = self.create_client(SwitchCamera, f'camera_muxing/switch_camera')
+        self.switch_camera_client = self.create_client(SwitchCamera, f'/rover2_camera/switch_camera')
 
         self.get_logger().info("YoloServer action server ready.")
         self.marker_pub = self.create_publisher(Marker, '/visualization_marker', 10)
@@ -155,15 +155,19 @@ class YoloServer(Node):
         self.detected_camera_id = 1
 
     def switch_camera(self, cam_idx):
-        if not self.switch_camera.wait_for_service(timeout_sec=5.0):
+        if not self.switch_camera_client.wait_for_service(timeout_sec=5.0):
             self.get_logger().warn(f'switch_camera service for muxing node not available')
-            return SwitchCamera.Failed
+            return SwitchCamera.Response.FAIL
 
         request = SwitchCamera.Request()
         request.cam_idx = cam_idx
         
-        future = self.switch_camera.call_async(request)
+        future = self.switch_camera_client.call_async(request)
         rclpy.spin_until_future_complete(self, future, timeout_sec=5.0)
+
+        if future.result() == None:
+            self.get_logger().warn(f'switch_camera service for muxing node timed out')
+            return SwitchCamera.Response.FAIL
         
         return future.result().ack
         
@@ -448,7 +452,7 @@ class YoloServer(Node):
                     # Switch Camera
                     while True:
                         cam_idx = (cam_idx + 1) % self.num_cameras
-                        if self.switch_camera(cam_idx) == SwitchCamera.SUCCESS:
+                        if self.switch_camera(cam_idx) == SwitchCamera.Response.SUCCESS:
                             break
                         self.get_logger().warn("Failed to switch cameras")
 
