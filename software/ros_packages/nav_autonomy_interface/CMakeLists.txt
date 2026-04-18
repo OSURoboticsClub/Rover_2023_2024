@@ -18,6 +18,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "action/Mission.action"
   "action/YoloFind.action"
   "msg/GPSWaypoint.msg"
+  "srv/SwitchCamera.srv"
 
   DEPENDENCIES geometry_msgs std_msgs
   DEPENDENCIES builtin_interfaces std_msgs
