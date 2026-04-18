@@ -92,11 +92,14 @@ class SearchFSM:
             return
 
         # Currently navigating to waypoints, check for completion or progress
-        # FIX: Might have used non-Humble version of the followwaypoints API, see: https://api.nav2.org/actions/humble/followwaypoints.html
         if not self.navigator.isTaskComplete():
             nav_feedback = self.navigator.getFeedback()
             if nav_feedback:
-                #FIX: followWapoints and goToPose feedback is different, see: https://api.nav2.org/actions/humble/navigatetopose.html
+                #followWapoints and goToPose have different feedback, see: https://api.nav2.org/actions/humble/navigatetopose.html
+                if hasattr(nav_feedback, 'number_of_poses_remaining'):
+                    self.current_index = len(self.active_path) - nav_feedback.number_of_poses_remaining
+                elif hasattr(nav_feedback, 'current_waypoint'):
+                    self.current_index = nav_feedback.current_waypoint
                 self.current_index = nav_feedback.current_waypoint
                 
                 if self.state == SearchState.MOVING_TO_START and self.current_index >= self.start_length:

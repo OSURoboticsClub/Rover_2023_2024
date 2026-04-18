@@ -484,8 +484,7 @@ class YoloServer(Node):
                                     marker.color.a = 1.0
 
                                     self.marker_pub.publish(marker)
-
-                            
+                                    self.target_pose_pub.publish(pose_base)
 
                     else:
                         # No detections - publish feedback with no detection
