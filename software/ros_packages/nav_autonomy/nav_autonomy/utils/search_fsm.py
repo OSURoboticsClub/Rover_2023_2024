@@ -31,18 +31,20 @@ class SearchFSM:
         self.navigator = navigator
         self.target_pose_topic = target_pose_topic
 
-        self.pattern = SearchPattern.NONE
-        self.success_threshold = 0.85
-        self.investigate_threshold = 0.50
-        self.target_pose = None
-
         self.state = SearchState.IDLE
         self.active = False
         
+        self.pattern = SearchPattern.NONE
         self.active_path: List[PoseStamped] = []
         self.resume_path: List[PoseStamped] = []
         self.start_length = 0
         self.current_index = 0
+
+        self.success_threshold = 0.85
+        self.investigate_threshold = 0.50
+        self.target_pose = None
+        self.last_detection_time = None
+        self.detection_timeout_ms = 3000.0
         
         self.status_pub = node.create_publisher(String, status_topic, 10)
         self.debug_marker_pub = node.create_publisher(MarkerArray, dbg_marker_topic, 10) if debug_markers else None
@@ -91,6 +93,14 @@ class SearchFSM:
         if not self.active:
             return
 
+        if self.state == SearchState.INVESTIGATING and self.last_detection_time is not None:
+            time_since_detection = (self.node.get_clock().now() - self.last_detection_time).nanoseconds / 1e9
+            if time_since_detection > self.detection_timeout_ms:
+                self.node.get_logger().warn(f"INVESTIGATION: Haven't seen target in {time_since_detection:.1f}, returning to search.")
+                self.navigator.cancelTask()
+                self._return_to_search()
+                return
+
         # Currently navigating to waypoints, check for completion or progress
         if not self.navigator.isTaskComplete():
             nav_feedback = self.navigator.getFeedback()
@@ -127,12 +137,14 @@ class SearchFSM:
             else:
                 self._to_failed()
 
+
     def update_perception(self, confidence: float, target_pose: PoseStamped = None):
         if not self.active:
             return
 
         if target_pose is not None:
             self.target_pose = target_pose
+            self.last_detection_time = self.node.get_clock().now()
 
         if self.state == SearchState.SEARCHING and confidence >= self.investigate_threshold:
             if self.target_pose is not None:
@@ -140,11 +152,13 @@ class SearchFSM:
             else:
                 self.node.get_logger().warn("Confidence threshold met, but no target map pose received.")
         
+        # WINNER: Object found, end everything.
         if self.state == SearchState.INVESTIGATING and confidence >= self.success_threshold:
             self.state = SearchState.SUCCESS
             self.active = False
             self.navigator.cancelTask()
             self._publish_state()   
+
 
     def get_state(self):
         return self.state
