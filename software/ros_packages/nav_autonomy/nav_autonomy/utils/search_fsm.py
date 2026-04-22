@@ -49,7 +49,7 @@ class SearchFSM:
         self.status_pub = node.create_publisher(String, status_topic, 10)
         self.debug_marker_pub = node.create_publisher(MarkerArray, dbg_marker_topic, 10) if debug_markers else None
 
-        self.conf_sub = node.create_subscription(Float32, confidence_topic, self._confidence_cb, 10)
+        # self.conf_sub = node.create_subscription(Float32, confidence_topic, self._confidence_cb, 10)
         self.target_pose_sub = node.create_subscription(PoseStamped, self.target_pose_topic, self._target_pose_cb, 10)
   
 
@@ -93,49 +93,80 @@ class SearchFSM:
         if not self.active:
             return
 
+        # If we've been investigating for too long without a yolo detection, return to search
         if self.state == SearchState.INVESTIGATING and self.last_detection_time is not None:
-            time_since_detection = (self.node.get_clock().now() - self.last_detection_time).nanoseconds / 1e9
+            time_since_detection = (self.node.get_clock().now() - self.last_detection_time).nanoseconds / 1e6 # convert to milliseconds
             if time_since_detection > self.detection_timeout_ms:
                 self.node.get_logger().warn(f"INVESTIGATION: Haven't seen target in {time_since_detection:.1f}, returning to search.")
                 self.navigator.cancelTask()
                 self._return_to_search()
                 return
 
-        # Currently navigating to waypoints, check for completion or progress
+        
         if not self.navigator.isTaskComplete():
-            nav_feedback = self.navigator.getFeedback()
-            if nav_feedback:
-                #followWapoints and goToPose have different feedback, see: https://api.nav2.org/actions/humble/navigatetopose.html
-                if hasattr(nav_feedback, 'number_of_poses_remaining'):
-                    self.current_index = len(self.active_path) - nav_feedback.number_of_poses_remaining
-                elif hasattr(nav_feedback, 'current_waypoint'):
+            self._process_nav_feedback()
+        else:
+            self._process_nav_result()
+
+
+    def _process_nav_feedback(self):
+        nav_feedback = self.navigator.getFeedback()
+        if not nav_feedback:
+            return
+
+        match self.state:
+            case SearchState.MOVING_TO_START | SearchState.SEARCHING | SearchState.RETURNING_TO_SEARCH:
+                # Handle followWaypoints feedback
+                if hasattr(nav_feedback, 'current_waypoint'):
                     self.current_index = nav_feedback.current_waypoint
-                self.current_index = nav_feedback.current_waypoint
+                # Handle goThroughPoses feedback
+                # if hasattr(nav_feedback, 'number_of_poses_remaining'):
+                #     self.current_index = len(self.active_path) - nav_feedback.number_of_poses_remaining
                 
+                # State transition when reaching the start of the pattern
                 if self.state == SearchState.MOVING_TO_START and self.current_index >= self.start_length:
                     self.state = SearchState.SEARCHING
                     self._publish_state()
-        else:
-            # waypoint task completed
-            result = self.navigator.getResult()
-            if result == TaskResult.SUCCEEDED:
-                if self.state in (SearchState.SEARCHING, SearchState.MOVING_TO_START):
-                    self._to_failed() 
-                elif self.state == SearchState.INVESTIGATING:
-                    self._return_to_search()
-                elif self.state == SearchState.RETURNING_TO_SEARCH:
-                    self.active_path = self.resume_path
-                    self.start_length = 0 
-                    if self.active_path:
-                        self.navigator.followWaypoints(self.active_path)
-                        self.state = SearchState.SEARCHING
-                        self._publish_state()
-                    else:
-                        self._to_failed()
-            elif result == TaskResult.CANCELED:
-                pass 
-            else:
+
+            case SearchState.INVESTIGATING:
+                # Handle goToPose feedback
+                if hasattr(nav_feedback, 'distance_remaining'):
+                    pass
+
+
+    def _process_nav_result(self):
+        result = self.navigator.getResult()
+
+        # If navigation failed and wasn't canceled, something went wrong, end the search with failure. 
+        # If it was canceled, it's likely due to an investigation interrupt or return to search, so just wait for the next command.
+        if result != TaskResult.SUCCEEDED:
+            if result != TaskResult.CANCELED:
                 self._to_failed()
+            return
+
+        # Nav arrived at goal
+        match self.state:
+            
+            # Arrived at the end of the search space without hitting success thresholds
+            case SearchState.MOVING_TO_START | SearchState.SEARCHING:
+                self._to_failed()
+                
+            # Arrived at suspected object's location but YOLO didn't confirm it
+            case SearchState.INVESTIGATING:
+                self.node.get_logger().info("Reached investigation coordinates, but threshold not met.")
+                self._return_to_search()
+                
+            # Arrived back to the search breakpoint, resume the search
+            case SearchState.RETURNING_TO_SEARCH:
+                self.active_path = self.resume_path
+                self.start_length = 0 
+                if self.active_path:
+                    self.navigator.followWaypoints(self.active_path)
+                    # self.navigator.goThroughPoses(self.active_path)
+                    self.state = SearchState.SEARCHING
+                    self._publish_state()
+                else:
+                    self._to_failed()
 
 
     def update_perception(self, confidence: float, target_pose: PoseStamped = None):
@@ -175,24 +206,24 @@ class SearchFSM:
         self.target_pose = msg
 
 
-    def _confidence_cb(self, msg: Float32):
-        if not self.active:
-            return
+    # def _confidence_cb(self, msg: Float32):
+    #     if not self.active:
+    #         return
 
-        conf = msg.data
+    #     conf = msg.data
 
-        if self.state == SearchState.SEARCHING and conf >= self.investigate_threshold:
-            if self.target_pose is not None:
-                self._to_investigate()
-            else:
-                self.node.get_logger().warn("Confidence threshold met, but no target map pose received yet!")
-            return
+    #     if self.state == SearchState.SEARCHING and conf >= self.investigate_threshold:
+    #         if self.target_pose is not None:
+    #             self._to_investigate()
+    #         else:
+    #             self.node.get_logger().warn("Confidence threshold met, but no target map pose received yet!")
+    #         return
 
-        if self.state == SearchState.INVESTIGATING and conf >= self.success_threshold:
-            self.state = SearchState.SUCCESS
-            self.active = False
-            self.navigator.cancelTask()
-            self._publish_state()
+    #     if self.state == SearchState.INVESTIGATING and conf >= self.success_threshold:
+    #         self.state = SearchState.SUCCESS
+    #         self.active = False
+    #         self.navigator.cancelTask()
+    #         self._publish_state()
 
 
     def _to_investigate(self):
