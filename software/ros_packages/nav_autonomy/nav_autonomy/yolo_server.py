@@ -43,6 +43,11 @@ class YoloServer(Node):
         self.callback_group = ReentrantCallbackGroup()
 
         self.busy = False  # Is a search already being executed?
+        self.feedback = None
+
+        # Keep track of best detection
+        self.best_cam_idx = -1
+        self.best_mean_conf = 0
 
         # TF2 Buffer and Listener
         self.tf_buffer = Buffer()
@@ -81,11 +86,11 @@ class YoloServer(Node):
         # Camera frame names
         self.left_camera_frame = self.get_parameter("left_camera_frame").value
         self.right_camera_frame = self.get_parameter("right_camera_frame").value
-        self.base_frame = self.get_parameter("base_frame").value
+        self.nav_frame = self.get_parameter("nav_frame").value
             
         # Confidence thresholds
         self.stop_threshold = self.get_parameter("stop_threshold").value
-        self.check_threshold = self.get_parameter("check_threshold").value
+        self.detect_threshold = self.get_parameter("detect_threshold").value
         
         # Frame Storage
         self.max_frames = self.get_parameter("max_frames").value
@@ -207,7 +212,7 @@ class YoloServer(Node):
         
         return point_camera
 
-    def transform_to_base_frame(self, point_camera, camera_id):
+    def transform_to_nav_frame(self, point_camera, camera_id):
         """
         Transform point from camera frame to base_link frame
         
@@ -224,7 +229,7 @@ class YoloServer(Node):
         try:
             # Get transform from camera to base_link
             transform = self.tf_buffer.lookup_transform(
-                self.base_frame,
+                self.nav_frame,
                 camera_frame,
                 rclpy.time.Time(),
                 timeout=rclpy.duration.Duration(seconds=1.0)
@@ -270,6 +275,81 @@ class YoloServer(Node):
         
         return estimated_depth
 
+    def calc_detection_point(self):
+        # Estimate depth from bounding box size
+        estimated_depth = self.estimate_depth_from_bbox(
+            self.bbox_dims[0], 
+            self.bbox_dims[1],
+            known_object_size=0.3  # TODO: Adjust based on your object
+        )
+        
+        self.get_logger().info(f"Estimated depth: {estimated_depth:.2f}m")
+        
+        # Convert pixel to 3D point in camera frame
+        point_camera = self.pixel_to_3d_point(
+            self.xc, 
+            self.yc, 
+            estimated_depth,
+            cam_idx
+        )
+        
+        if point_camera is not None:
+            self.get_logger().info(f"Point in camera frame: {point_camera}")
+            
+            # Transform to base_link frame
+            pose_base = self.transform_to_nav_frame(
+                point_camera,
+                cam_idx
+            )
+            
+            if pose_base is not None:
+                self.get_logger().info(
+                    f"Object position in map: "
+                    f"x={pose_base.pose.position.x:.2f}, "
+                    f"y={pose_base.pose.position.y:.2f}, "
+                    f"z={pose_base.pose.position.z:.2f}"
+                )
+                marker = Marker()
+                marker.header.frame_id = self.nav_frame  # "map"
+                marker.header.stamp = self.get_clock().now().to_msg()
+
+                marker.ns = "yolo"
+                marker.id = 0
+                marker.type = Marker.SPHERE
+                marker.action = Marker.ADD
+
+                marker.pose = pose_base.pose
+
+                marker.scale.x = 0.2
+                marker.scale.y = 0.2
+                marker.scale.z = 0.2
+
+                marker.color.r = 1.0
+                marker.color.g = 0.0
+                marker.color.b = 0.0
+                marker.color.a = 1.0
+
+                self.marker_pub.publish(marker)
+                self.target_pose_pub.publish(pose_base)
+                feedback.pose = pose_base
+
+    def update_feedback(self, detected, frame_id, current_conf, mean_conf):
+        center, top_left, bottom_right = self.get_points()
+        feedback = YoloFind.feedback()
+        feedback.confidence = confidence
+        feedback.frame_id = frame_id
+        feedback.detected = detected
+        feedback.total_conf = total_mean
+        feedback.center = center
+        feedback.top_left = top_left
+        feedback.bottom_right = bottom_right
+        feedback.pose = PoseStamped()
+
+        # Calculate navigation waypoint pose
+        if detected:
+            waypoint = self.calc_detection_point()
+            if waypoint:
+                feedback.pose = waypoint
 
     def goal_callback(self, goal_request):
         """Accept or reject a client request to begin an action."""
@@ -365,13 +445,14 @@ class YoloServer(Node):
             elif goal.search_object == YoloFind.Goal.OG_HAMMER:
                 model = YOLO("yolo_models/hammer.pt")
             model.overrides['verbose'] = False
+
+            # Run Yolo or Aruco
             if goal.search_object == YoloFind.Goal.ARUCO:
                 await self.do_aruco(goal_handle)
                 return
             else:
                 cap = cv2.VideoCapture(self.source, cv2.CAP_V4L2)
 
-                
                 camera_stacks = [deque(maxlen=self.max_frames) for _ in range(self.num_cameras)]
                 # Start searching in camera stream for object(s)
                 
@@ -392,6 +473,7 @@ class YoloServer(Node):
                         if self.switch_camera(cam_idx) == SwitchCamera.Response.SUCCESS:
                             break
                         self.get_logger().warn("Failed to switch cameras")
+                        camera_stacks[cam_idx].append(0.0)
 
                     # Get Frame
                     ret, frame = cap.read()
@@ -402,10 +484,14 @@ class YoloServer(Node):
                     # Run YOLO on frame
                     result = model(frame, device=0)[0]
 
-                    # Default display frame (no detections)
                     display_frame = frame.copy()
 
-                    if result.boxes is not None and len(result.boxes) > 0:
+                    # Check if detection in frame
+                    if result.boxes is None or len(result.boxes) == 0:
+                        # No detection
+                        camera_stacks[cam_idx].append(0.0)
+                    else:
+                        # Get best detection from the frame
                         boxes_xyxy = result.boxes.xyxy.tolist()
                         conf_scores = result.boxes.conf.tolist()
                         best_idx = np.argmax(conf_scores)
@@ -418,8 +504,13 @@ class YoloServer(Node):
                         
                         camera_stacks[cam_idx].append(current_conf)
 
-                        # Grab average of list and check against thresholds
-                        total_mean = sum(camera_stacks[cam_idx]) / len(camera_stacks[cam_idx])
+                    # Grab average of list and check against thresholds
+                    total_mean = sum(camera_stacks[cam_idx]) / len(camera_stacks[cam_idx])
+
+                    # Check if this camera has better detection
+                    if self.best_cam_idx == cam_idx or total_mean > self.best_mean_conf:
+                        self.best_cam_idx = cam_idx
+                        self.best_mean_conf = total_mean
 
                         # recent_stack = camera_stacks[current_cam][-self.check_frames :]:
                         # recent_mean = sum(recent_stack) / self.check_frames
