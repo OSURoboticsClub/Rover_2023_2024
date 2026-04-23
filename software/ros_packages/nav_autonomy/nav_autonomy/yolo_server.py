@@ -765,20 +765,21 @@ class YoloServer(Node):
                     best_cam_idx = cam_idx
                     best_mean_conf = total_mean
 
-                # Update feedback if best detection is this frame
-                if detected_this_frame and best_cam_idx == cam_idx:
-                    center, top_left, bottom_right = self.get_points(best_boxes, xc, yc)
+                # Update feedback if best detection is this camera
+                if best_cam_idx == cam_idx:
                     feedback.confidence = current_conf
-                    feedback.frame_id = frame_id
-                    feedback.detected = total_mean > self.detect_threshold
                     feedback.total_conf = total_mean
-                    feedback.center = center
-                    feedback.top_left = top_left
-                    feedback.bottom_right = bottom_right
-                    feedback.pose = PoseStamped()
+                    feedback.detected = total_mean > self.detect_threshold
+                    feedback.frame_id = frame_id
 
-                    # Calculate navigation waypoint pose
-                    if feedback.detected:
+                    # Calculate new waypoint if within detect threshold and detected this frame
+                    if detected_this_frame and feedback.detected:
+                        center, top_left, bottom_right = self.get_points(best_boxes, xc, yc)
+                        feedback.center = center
+                        feedback.top_left = top_left
+                        feedback.bottom_right = bottom_right
+                        feedback.pose = PoseStamped()
+
                         waypoint = self.calc_detection_point(cam_idx, bbox_dims, xc, yc)
                         if waypoint:
                             feedback.pose = waypoint
