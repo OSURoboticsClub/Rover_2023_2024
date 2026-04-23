@@ -14,7 +14,7 @@ from nav_autonomy_interface.srv import SwitchCamera
 # TF2
 from tf2_ros import Buffer, TransformListener
 import tf2_geometry_msgs
-from geometry_msgs.msg import TransformStamped, PoseStamped, Pose
+from geometry_msgs.msg import PoseStamped
 
 # YOLO specific
 from ultralytics import YOLO
@@ -23,12 +23,13 @@ import numpy as np
 from geometry_msgs.msg import Point
 import cv2
 import torch
-from std_msgs.msg import Int32
 
 torch.backends.cudnn.enabled = False
 
-# ARUCO
-import asyncio
+
+class ActionCanceled(Exception):
+    """Custom exception to handle action cancellation"""
+    pass
 
 
 class YoloServer(Node):
@@ -43,10 +44,6 @@ class YoloServer(Node):
 
         self.busy = False  # Is a search already being executed?
         self.feedback = None
-
-        # Keep track of best detection
-        self.best_cam_idx = -1
-        self.best_mean_conf = 0
 
         # TF2 Buffer and Listener
         self.tf_buffer = Buffer()
@@ -136,13 +133,12 @@ class YoloServer(Node):
         self.declare_parameter(
             "nav_frame",
             "map",
-            ParameterDescriptor(description="Frame for returned freedback poses for navigation"),
+            ParameterDescriptor(description="Frame for returned feedback poses for navigation"),
         )
 
         # Internal Parameters
         self.num_cameras = self.get_parameter("num_cameras").value
         self.source = self.get_parameter("source").value
-        self.quit = False
         
         # Camera frame names
         self.left_camera_frame = self.get_parameter("left_camera_frame").value
@@ -302,11 +298,9 @@ class YoloServer(Node):
             pose_camera.pose.position.y = float(-point_camera[1])
             pose_camera.pose.position.z = 0.0
             pose_camera.pose.orientation.w = 1.0
-            print(pose_camera)
 
             # Transform to base_link
             pose_base = tf2_geometry_msgs.do_transform_pose_stamped(pose_camera, transform)
-            print(pose_base)
             return pose_base
             
         except Exception as e:
@@ -335,114 +329,68 @@ class YoloServer(Node):
         estimated_depth = ((known_object_size * focal_length) / bbox_size)/2
         
         return estimated_depth
+    
+    def pose_marker_logging(self, pose):
+        self.get_logger().info(
+            f"Object position in map: "
+            f"x={pose.pose.position.x:.2f}, "
+            f"y={pose.pose.position.y:.2f}, "
+            f"z={pose.pose.position.z:.2f}"
+        )
+        marker = Marker()
+        marker.header.frame_id = self.nav_frame  # "map"
+        marker.header.stamp = self.get_clock().now().to_msg()
 
-    def calc_detection_point(self):
+        marker.ns = "yolo"
+        marker.id = 0
+        marker.type = Marker.SPHERE
+        marker.action = Marker.ADD
+
+        marker.pose = pose.pose
+
+        marker.scale.x = 0.2
+        marker.scale.y = 0.2
+        marker.scale.z = 0.2
+
+        marker.color.r = 1.0
+        marker.color.g = 0.0
+        marker.color.b = 0.0
+        marker.color.a = 1.0
+
+        self.marker_pub.publish(marker)
+
+    def calc_detection_point(self, cam_idx, bbox_dims, xc, yc):
         # Estimate depth from bounding box size
         estimated_depth = self.estimate_depth_from_bbox(
-            self.bbox_dims[0], 
-            self.bbox_dims[1],
+            bbox_dims[0], 
+            bbox_dims[1],
             known_object_size=0.3  # TODO: Adjust based on your object
         )
-        
+
         self.get_logger().info(f"Estimated depth: {estimated_depth:.2f}m")
         
         # Convert pixel to 3D point in camera frame
         point_camera = self.pixel_to_3d_point(
-            self.xc, 
-            self.yc, 
+            xc, 
+            yc, 
             estimated_depth,
             cam_idx
         )
         
         if point_camera is not None:
             self.get_logger().info(f"Point in camera frame: {point_camera}")
-            
+
             # Transform to base_link frame
             pose_base = self.transform_to_nav_frame(
                 point_camera,
                 cam_idx
             )
-            
             if pose_base is not None:
-                self.get_logger().info(
-                    f"Object position in map: "
-                    f"x={pose_base.pose.position.x:.2f}, "
-                    f"y={pose_base.pose.position.y:.2f}, "
-                    f"z={pose_base.pose.position.z:.2f}"
-                )
-                marker = Marker()
-                marker.header.frame_id = self.nav_frame  # "map"
-                marker.header.stamp = self.get_clock().now().to_msg()
-
-                marker.ns = "yolo"
-                marker.id = 0
-                marker.type = Marker.SPHERE
-                marker.action = Marker.ADD
-
-                marker.pose = pose_base.pose
-
-                marker.scale.x = 0.2
-                marker.scale.y = 0.2
-                marker.scale.z = 0.2
-
-                marker.color.r = 1.0
-                marker.color.g = 0.0
-                marker.color.b = 0.0
-                marker.color.a = 1.0
-
-                self.marker_pub.publish(marker)
+                self.pose_marker_logging(pose_base)
                 self.target_pose_pub.publish(pose_base)
-                feedback.pose = pose_base
-
-    def update_feedback(self, detected, frame_id, current_conf, mean_conf):
-        center, top_left, bottom_right = self.get_points()
-        feedback = YoloFind.feedback()
-        feedback.confidence = confidence
-        feedback.frame_id = frame_id
-        feedback.detected = detected
-        feedback.total_conf = total_mean
-        feedback.center = center
-        feedback.top_left = top_left
-        feedback.bottom_right = bottom_right
-        feedback.pose = PoseStamped()
-
-        # Calculate navigation waypoint pose
-        if detected:
-            waypoint = self.calc_detection_point()
-            if waypoint:
-                feedback.pose = waypoint
-
-    def goal_callback(self, goal_request):
-        """Accept or reject a client request to begin an action."""
-        self.get_logger().info(
-            f"Received goal request: search_object={goal_request.search_object}, "
-        )
-        # Check if already busy
-        if self.busy:
-            self.get_logger().info("Rejecting new goal - already executing a search")
-            return GoalResponse.REJECT
-
-        # Validate input
-        if goal_request.search_object not in [
-            YoloFind.Goal.BOTTLE,
-            YoloFind.Goal.OG_HAMMER,
-            YoloFind.Goal.ORANGE_HAMMER,
-            YoloFind.Goal.ARUCO
-        ]:
-            self.get_logger().warn("Rejecting goal - invalid or missing search object")
-            return GoalResponse.REJECT
-
-        self.get_logger().info("Accepting goal request")
-        self.busy = True
-        return GoalResponse.ACCEPT
-
-
-    def cancel_callback(self, goal_handle):
-        """Accept or reject a client request to cancel an action."""
-        self.get_logger().info("Received cancel request")
-        self.quit = True
-        return CancelResponse.ACCEPT
-
+                return pose_base
+            
+        return None
 
     def _draw_detections(self, frame, boxes_xyxy, conf_scores, best_idx):
         """
@@ -480,148 +428,14 @@ class YoloServer(Node):
         )
 
         return annotated
-
-
-    async def action_callback(self, goal_handle):
-        class ActionCanceled(Exception):
-            """Custom exception to handle action cancellation"""
-            pass
-
-        self.xc = None
-        self.yc = None
-        
-        self.bbox_dims = None
-        
-        cap = None
-
-        try:
-            goal = goal_handle.request
-            model = YOLO("yolo_models/mallet.pt")
-            
-            # Define model from action request
-            if goal.search_object == YoloFind.Goal.BOTTLE:
-                model = YOLO("yolo_models/bottle.pt")
-            elif goal.search_object == YoloFind.Goal.ORANGE_HAMMER:
-                model = YOLO("yolo_models/mallet.pt")
-            elif goal.search_object == YoloFind.Goal.OG_HAMMER:
-                model = YOLO("yolo_models/hammer.pt")
-            model.overrides['verbose'] = False
-
-            # Run Yolo or Aruco
-            if goal.search_object == YoloFind.Goal.ARUCO:
-                await self.do_aruco(goal_handle)
-                return
-            else:
-                cap = cv2.VideoCapture(self.source, cv2.CAP_V4L2)
-
-                camera_stacks = [deque(maxlen=self.max_frames) for _ in range(self.num_cameras)]
-                # Start searching in camera stream for object(s)
-                
-                frame_id = 0
-                cam_idx = 0
-
-                while cap.isOpened():
-                    if goal_handle.is_cancel_requested:
-                        goal_handle.canceled()
-                        self.busy = False
-                        cv2.destroyAllWindows()
-                        cap.release()
-                        return YoloFind.Result()
-
-                    # Switch Camera
-                    while True:
-                        cam_idx = (cam_idx + 1) % self.num_cameras
-                        if self.switch_camera(cam_idx) == SwitchCamera.Response.SUCCESS:
-                            break
-                        self.get_logger().warn("Failed to switch cameras")
-                        camera_stacks[cam_idx].append(0.0)
-
-                    # Get Frame
-                    ret, frame = cap.read()
-                    if not ret:
-                        self.get_logger().warn("Failed to read frame")
-                        continue
-
-                    # Run YOLO on frame
-                    result = model(frame, device=0)[0]
-
-                    display_frame = frame.copy()
-
-                    # Check if detection in frame
-                    if result.boxes is None or len(result.boxes) == 0:
-                        # No detection
-                        camera_stacks[cam_idx].append(0.0)
-                    else:
-                        # Get best detection from the frame
-                        boxes_xyxy = result.boxes.xyxy.tolist()
-                        conf_scores = result.boxes.conf.tolist()
-                        best_idx = np.argmax(conf_scores)
-                        current_conf = conf_scores[best_idx]
-
-                        # Draw bounding boxes on display frame
-                        display_frame = self._draw_detections(
-                            frame, boxes_xyxy, conf_scores, best_idx
-                        )
-                        
-                        camera_stacks[cam_idx].append(current_conf)
-
-                    # Grab average of list and check against thresholds
-                    total_mean = sum(camera_stacks[cam_idx]) / len(camera_stacks[cam_idx])
-
-                    # Check if this camera has better detection
-                    if self.best_cam_idx == cam_idx or total_mean > self.best_mean_conf:
-                        self.best_cam_idx = cam_idx
-                        self.best_mean_conf = total_mean
-
-                        # Lock in best detection
-                        self.best_boxes = boxes_xyxy[best_idx]
-                        self.xc, self.yc, w, h = result.boxes.xywh[best_idx].tolist()
-                        self.bbox_dims = (w, h)
-                        
-                        self.update_feedback(
-                            detected = total_mean > self.detect_threshold, 
-                            frame_id = frame_id, 
-                            current_conf = current_conf, 
-                            mean_conf = total_mean
-                        )
-
-                    goal_handle.publish_feedback(feedback)
-
-                    # Display the frame (with or without detections)
-                    cv2.imshow("YOLO Detection", display_frame)
-
-                    # Press 'q' to manually quit the window
-                    if cv2.waitKey(1) & 0xFF == ord("q"):
-                        break
-
-                    frame_id += 1
-
-                cap.release()
-                cv2.destroyAllWindows()
-                    
-                        
-        except ActionCanceled:
-            self.get_logger().info("Yolo search canceled")
-            result = YoloFind.Result()
-            result.header = Header()
-            result.ack = YoloFind.Result.CANCELED
-            self.busy = False
-            return result
-        except Exception as e:
-            self.get_logger().error(f"Action callback error: {e}")
-            self.busy = False
-            if cap is not None:
-                cap.release()
-            cv2.destroyAllWindows()
-            raise
-
-    def get_points(self):
+    
+    def get_points(self, best_boxes, xc, yc):
         center = Point()
-        center.x = self.xc
-        center.y = self.yc
+        center.x = xc
+        center.y = yc
         center.z = 0.0
 
-        x1, y1, x2, y2 = self.best_boxes
+        x1, y1, x2, y2 = best_boxes
 
         top_left = Point()
         top_left.x = x1
@@ -635,10 +449,8 @@ class YoloServer(Node):
         
         return center, top_left, bottom_right
 
-
-
-    async def do_aruco(self, goal_handle):
-        print("[INFO] detecting '{}' tags...".format(cv2.aruco.DICT_4X4_50))
+    def do_aruco(self, goal_handle):
+        self.get_logger().info("detecting '{}' tags...".format(cv2.aruco.DICT_4X4_50))
         arucoDict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
         arucoParams = cv2.aruco.DetectorParameters()
         
@@ -654,57 +466,232 @@ class YoloServer(Node):
 
         marker_length = 0.2  # meters
 
-        while rclpy.ok() and not goal_handle.is_cancel_requested:
-            ret, frame = cap.read()
-            if not ret:
-                break
-            
-            display_frame = frame.copy()
-            
-            # Detect markers
-            (corners, ids, rejected) = detector.detectMarkers(frame)
-            
-            if ids is not None:
-                cv2.aruco.drawDetectorMarkers(display_frame, corners, ids)
-                rvecs, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(
-                    corners, marker_length, camera_matrix, dist_coeffs
-                )
-                tvec = tvecs[0][0]
+        try:
+            while rclpy.ok():
+                if goal_handle.is_cancel_requested:
+                    raise ActionCanceled()
+                
+                ret, frame = cap.read()
+                if not ret:
+                    break
+                
+                display_frame = frame.copy()
+                
+                # Detect markers
+                (corners, ids, rejected) = detector.detectMarkers(frame)
+                
+                if ids is not None:
+                    cv2.aruco.drawDetectorMarkers(display_frame, corners, ids)
+                    rvecs, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(
+                        corners, marker_length, camera_matrix, dist_coeffs
+                    )
+                    tvec = tvecs[0][0]
 
-                # Overlay pose info on frame
-                cv2.putText(
-                    display_frame,
-                    f"X:{tvec[0]:.2f} Y:{tvec[1]:.2f} Z:{tvec[2]:.2f}",
-                    (10, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.6,
-                    (0, 255, 255),
-                    2,
-                )
+                    # Overlay pose info on frame
+                    cv2.putText(
+                        display_frame,
+                        f"X:{tvec[0]:.2f} Y:{tvec[1]:.2f} Z:{tvec[2]:.2f}",
+                        (10, 30),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.6,
+                        (0, 255, 255),
+                        2,
+                    )
 
-                feedback = YoloFind.Feedback()
-                feedback.detected = True
-                feedback.pose.position.x = float(tvec[0])
-                feedback.pose.position.y = float(tvec[1])
-                feedback.pose.position.z = float(tvec[2])
+                    feedback = YoloFind.Feedback()
+                    feedback.detected = True
+                    feedback.pose.position.x = float(tvec[0])
+                    feedback.pose.position.y = float(tvec[1])
+                    feedback.pose.position.z = float(tvec[2])
+                    goal_handle.publish_feedback(feedback)
+
+                else:
+                    feedback = YoloFind.Feedback()
+                    feedback.detected = False
+                    goal_handle.publish_feedback(feedback)
+                
+                cv2.imshow("ArUco Detection", display_frame)
+                if cv2.waitKey(1) & 0xFF == ord("q"):
+                    break
+            
+            result = YoloFind.Result()
+            result.header = Header()
+            result.ack = YoloFind.Result.FAILED
+            return result
+
+        finally:
+            cap.release()
+            cv2.destroyAllWindows()
+
+    def do_yolo(self, goal_handle):
+        cap = None
+        best_cam_idx = -1
+        best_mean_conf = 0.0
+        frame_id = 0
+        cam_idx = 0
+
+        feedback = YoloFind.Feedback()
+        feedback.detected = 0.0
+        feedback.confidence = 0.0
+
+        try:
+            # Define model from action request
+            model = YOLO("yolo_models/mallet.pt")
+            if goal_handle.request.search_object == YoloFind.Goal.BOTTLE:
+                model = YOLO("yolo_models/bottle.pt")
+            elif goal_handle.request.search_object == YoloFind.Goal.ORANGE_HAMMER:
+                model = YOLO("yolo_models/mallet.pt")
+            elif goal_handle.request.search_object == YoloFind.Goal.OG_HAMMER:
+                model = YOLO("yolo_models/hammer.pt")
+            model.overrides['verbose'] = False
+
+            cap = cv2.VideoCapture(self.source, cv2.CAP_V4L2)
+
+            camera_stacks = [deque(maxlen=self.max_frames) for _ in range(self.num_cameras)]
+
+            # Start searching in camera stream for object(s)
+            while cap.isOpened():
+                if goal_handle.is_cancel_requested:
+                    raise ActionCanceled()
+                    
+                # Switch Camera
+                while True:
+                    cam_idx = (cam_idx + 1) % self.num_cameras
+                    if self.switch_camera(cam_idx) == SwitchCamera.Response.SUCCESS:
+                        break
+                    self.get_logger().warn("Failed to switch cameras")
+                    camera_stacks[cam_idx].append(0.0)
+
+                # Get Frame
+                ret, frame = cap.read()
+                if not ret:
+                    self.get_logger().warn("Failed to read frame")
+                    continue
+
+                # Run YOLO on frame
+                result = model(frame, device=0)[0]
+                display_frame = frame.copy()
+
+                # Check for detection
+                detected_this_frame = result.boxes is not None and len(result.boxes) > 0
+                if detected_this_frame:
+                    # Get best detection from the frame
+                    boxes_xyxy = result.boxes.xyxy.tolist()
+                    conf_scores = result.boxes.conf.tolist()
+
+                    best_idx = np.argmax(conf_scores)
+                    current_conf = conf_scores[best_idx]
+                    best_boxes = boxes_xyxy[best_idx]
+                    xc, yc, w, h = result.boxes.xywh[best_idx].tolist()
+                    bbox_dims = (w, h)
+
+                    # Draw bounding boxes on display frame
+                    display_frame = self._draw_detections(
+                        frame, boxes_xyxy, conf_scores, best_idx
+                    )
+
+                else:
+                    current_conf = 0.0
+                    
+                # Calculate the average of recent detections
+                camera_stacks[cam_idx].append(current_conf)
+                total_mean = sum(camera_stacks[cam_idx]) / len(camera_stacks[cam_idx])
+
+                # Keep track of which camera has best detection
+                if total_mean > best_mean_conf or best_cam_idx == cam_idx:
+                    best_cam_idx = cam_idx
+                    best_mean_conf = total_mean
+
+                # Update feedback if best detection is this frame
+                if detected_this_frame and best_cam_idx == cam_idx:
+                    center, top_left, bottom_right = self.get_points(best_boxes, xc, yc)
+                    feedback.confidence = current_conf
+                    feedback.frame_id = frame_id
+                    feedback.detected = total_mean > self.detect_threshold
+                    feedback.total_conf = total_mean
+                    feedback.center = center
+                    feedback.top_left = top_left
+                    feedback.bottom_right = bottom_right
+                    feedback.pose = PoseStamped()
+
+                    # Calculate navigation waypoint pose
+                    if feedback.detected:
+                        waypoint = self.calc_detection_point(cam_idx, bbox_dims, xc, yc)
+                        if waypoint:
+                            feedback.pose = waypoint
+
                 goal_handle.publish_feedback(feedback)
 
+                # Display the frame (with or without detections)
+                cv2.imshow("YOLO Detection", display_frame)
+
+                # Press 'q' to manually quit the window
+                if cv2.waitKey(1) & 0xFF == ord("q"):
+                    break
+
+                frame_id += 1
+
+        except ActionCanceled:
+            raise
+        except Exception as e:
+            self.get_logger().error(f"Action callback error: {e}")
+            result = YoloFind.Result()
+            result.header = Header()
+            result.ack = YoloFind.Result.FAILED
+            return result
+              
+        finally:   
+            if cap is not None:
+                cap.release()
+            cv2.destroyAllWindows()  
+
+    def goal_callback(self, goal_request):
+        """Accept or reject a client request to begin an action."""
+        self.get_logger().info(
+            f"Received goal request: search_object={goal_request.search_object}, "
+        )
+        # Check if already busy
+        if self.busy:
+            self.get_logger().info("Rejecting new goal - already executing a search")
+            return GoalResponse.REJECT
+
+        # Validate input
+        if goal_request.search_object not in [
+            YoloFind.Goal.BOTTLE,
+            YoloFind.Goal.OG_HAMMER,
+            YoloFind.Goal.ORANGE_HAMMER,
+            YoloFind.Goal.ARUCO
+        ]:
+            self.get_logger().warn("Rejecting goal - invalid or missing search object")
+            return GoalResponse.REJECT
+
+        self.get_logger().info("Accepting goal request")
+        self.busy = True
+        return GoalResponse.ACCEPT
+
+    def cancel_callback(self, goal_handle):
+        """Accept or reject a client request to cancel an action."""
+        self.get_logger().info("Received cancel request")
+        return CancelResponse.ACCEPT
+
+    async def action_callback(self, goal_handle):
+        try:
+            # Run Yolo or Aruco
+            if goal_handle.request.search_object == YoloFind.Goal.ARUCO:
+                return self.do_aruco(goal_handle)
             else:
-                feedback = YoloFind.Feedback()
-                feedback.detected = False
-                goal_handle.publish_feedback(feedback)
-            
-            cv2.imshow("ArUco Detection", display_frame)
-            if cv2.waitKey(1) & 0xFF == ord("q"):
-                break
-            
+                return self.do_yolo(goal_handle)
+                        
+        except ActionCanceled:
+            self.get_logger().info("Yolo search canceled")
+            goal_handle.canceled()
+            result = YoloFind.Result()
+            result.header = Header()
+            result.ack = YoloFind.Result.CANCELED
+            return result
         
-        cap.release()
-        cv2.destroyAllWindows()
-        goal_handle.canceled()
-        result = YoloFind.Result()
-        result.ack = YoloFind.Result.CANCELED
-        return result
+        finally:
+            self.busy = False
 
 
 def main(args=None):
