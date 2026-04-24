@@ -20,26 +20,12 @@ from nav_msgs.msg import Odometry
 from nav_autonomy_interface.action import Mission, YoloFind
 from nav_autonomy.utils.search_fsm import SearchFSM, SearchState, SearchPattern
 
-def gps_translation(lat1, lon1, lat2, lon2):
-    """
-    Calculate the x, y translation (in meters) between two GPS points, assuming a small distance.
-    """
-    DEGREE_TO_METERS = 111000  # meters per degree of latitude
-
-    lat_avg_rad = (math.radians(lat1) + math.radians(lat2)) / 2
-
-    dlat = lat2 - lat1
-    dlon = lon2 - lon1
-
-    dy = dlat * DEGREE_TO_METERS
-    dx = dlon * DEGREE_TO_METERS * math.cos(lat_avg_rad)        # Scale dlon based on location
-
-    return dx, dy
 
 def get_yaw_from_quaternion(q) -> float:
     siny_cosp = 2.0 * (q.w * q.z + q.x * q.y)
     cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
     return math.atan2(siny_cosp, cosy_cosp)
+
 
 class MissionManager(Node):
     def __init__(self):
@@ -51,6 +37,10 @@ class MissionManager(Node):
         self.fromLL_client = self.navigator.create_client(FromLL, '/fromLL')
 
         self.current_pose: PoseStamped = None
+
+        # FIX: These should be parameters in a config or set via goal request.
+        self.confidence_threshold_investigate = 0.5 
+        self.confidence_threshold_success = 0.85
 
         self._action_server = ActionServer(
             self,
@@ -67,15 +57,14 @@ class MissionManager(Node):
             YoloFind,
             'YoloFind',
             callback_group=self.callback_group
-
         )
 
         self.search_fsm = SearchFSM(
             node=self, 
             navigator=self.navigator, 
-            confidence_topic="yolo/confidence", 
+            investigate_threshold=self.confidence_threshold_investigate,
+            success_threshold=self.confidence_threshold_success,
             status_topic="search/status",
-            target_pose_topic="/yolo_target_pose",
             debug_markers=True
         )
 
@@ -121,13 +110,6 @@ class MissionManager(Node):
         pose.pose.orientation.z = math.sin(yaw / 2.0)
         pose.pose.orientation.w = math.cos(yaw / 2.0)
 
-        # Sanity check for how far lat long is
-        sanity_x, sanity_y = gps_translation(self.latest_gps_lat, self.latest_gps_long, lat, lon)
-        self.get_logger().info(f'Sanity Check:')
-        self.get_logger().info(f'Waypoint should be about this far away dx={sanity_x} dy={sanity_y}')
-        self.get_logger().info(f'Current map pose is x={self.latest_map_pose.pose.position.x} y={self.latest_map_pose.pose.position.y}')
-        self.get_logger().info(f'Translated waypoint map pose is x={pose.pose.position.x} y={pose.pose.position.y}')
-
         return pose
 
 
@@ -159,6 +141,7 @@ class MissionManager(Node):
         """Accept or reject a client request to cancel an action."""
         self.get_logger().info('Received cancel request')
         return CancelResponse.ACCEPT
+
 
     # Execute mission
     async def execute_callback(self, goal_handle):
@@ -197,6 +180,7 @@ class MissionManager(Node):
 
             yolo_goal = YoloFind.Goal()
             yolo_goal.search_object = req.search_object
+            yolo_goal.confidence_threshold = self.confidence_threshold_investigate
 
             self.get_logger().info('Sending YOLO goal')
             self.yolo_goal_handle = await self._yolo_client.send_goal_async(
@@ -209,9 +193,6 @@ class MissionManager(Node):
                 goal_handle.abort()
                 return Mission.Result(ack=Mission.Result.FAILED)
 
-            # Track the result future to know when YOLO hits its sthresholdtop 
-            self.yolo_result_future = self.yolo_goal_handle.get_result_async()
-        
         
             # ==============================
             # Execute search
@@ -241,7 +222,6 @@ class MissionManager(Node):
                         await self.yolo_goal_handle.cancel_goal_async()
                     return Mission.Result(ack=Mission.Result.CANCELED)
                 
-                #self.search_fsm.tick()
                 goal_handle.publish_feedback(self._map_search_feedback())
                 time.sleep(0.4)
 
@@ -267,13 +247,10 @@ class MissionManager(Node):
 
 
     def _yolo_feedback_cb(self, msg):
-        """Route live YOLO action feedback into the FSM"""
         fb = msg.feedback
-        target_pose = None
+        # no detection, no pose, no care.
         if fb.detected:
-            target_pose = fb.pose
-            
-        self.search_fsm.update_perception(fb.total_conf, target_pose)
+            self.search_fsm.update_perception(fb.total_conf, fb.pose)
 
 
     def _map_search_feedback(self):

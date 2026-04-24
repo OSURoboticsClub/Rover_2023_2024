@@ -49,4 +49,5 @@ uint16 FAILED=3
 # Telemetry for Unity
 float32 current_x
 float32 current_y
-float32 current_heading  # Degrees from East = 0
+# Degrees (East = 0, +CCW)
+float32 current_heading  
