@@ -3,7 +3,7 @@ from rclpy.node import Node
 from rclpy.action import ActionServer, CancelResponse, GoalResponse
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
-from rcl_interfaces.msg import ParameterDescriptor
+from rcl_interfaces.msg import ParameterDescriptor, SetParametersResult
 from rcl_interfaces.srv import GetParameters
 from rcl_interfaces.msg import ParameterType
 from visualization_msgs.msg import Marker
@@ -352,8 +352,8 @@ class YoloServer(Node):
         marker.scale.y = 0.2
         marker.scale.z = 0.2
 
-        marker.color.r = 1.0
-        marker.color.g = 0.0
+        marker.color.r = 0.0
+        marker.color.g = 1.0
         marker.color.b = 0.0
         marker.color.a = 1.0
 
@@ -531,8 +531,11 @@ class YoloServer(Node):
         cam_idx = 0
 
         feedback = YoloFind.Feedback()
-        feedback.detected = 0.0
+        feedback.detected = False
         feedback.confidence = 0.0
+
+        # Use confidence threshold from goal per request
+        detect_threshold = goal_handle.request.confidence_threshold if goal_handle.request.confidence_threshold > 0 else self.detect_threshold
 
         try:
             # Define model from action request
@@ -606,7 +609,7 @@ class YoloServer(Node):
                 if best_cam_idx == cam_idx:
                     feedback.confidence = current_conf
                     feedback.total_conf = total_mean
-                    feedback.detected = total_mean > self.detect_threshold
+                    feedback.detected = total_mean > detect_threshold
                     feedback.frame_id = frame_id
 
                     # Calculate new waypoint if within detect threshold and detected this frame
@@ -657,6 +660,10 @@ class YoloServer(Node):
             return GoalResponse.REJECT
 
         # Validate input
+        if goal_request.confidence_threshold <= 0.0 or goal_request.confidence_threshold > 1.0:
+            self.get_logger().warn("Rejecting goal - confidence threshold must be in [0.0, 1.0]")
+            return GoalResponse.REJECT
+        
         if goal_request.search_object not in [
             YoloFind.Goal.BOTTLE,
             YoloFind.Goal.OG_HAMMER,
