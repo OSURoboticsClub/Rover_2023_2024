@@ -258,15 +258,17 @@ class SearchFSM:
             marker.action = Marker.ADD
             marker.pose = wp.pose
             marker.pose.position.z = 0.25 
-            
             marker.scale.x = 0.25
             marker.scale.y = 0.25
             marker.scale.z = 0.25
             
-            marker.color.r = 0.0
-            marker.color.g = 1.0
-            marker.color.b = 0.0
-            marker.color.a = 0.8
+            r, g, b, a = 0.45, 0.73, 0.98, 0.8
+            if i >= self.start_length:
+                r, g, b = 0.98, 0.92, 0.55
+            marker.color.r = r
+            marker.color.g = g
+            marker.color.b = b
+            marker.color.a = a
 
             marker_array.markers.append(marker)
 
