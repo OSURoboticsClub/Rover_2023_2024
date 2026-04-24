@@ -75,7 +75,8 @@ class MissionManager(Node):
             10
         )
 
-        self.fsm_timer = self.create_timer(0.2, self._fsm_tick)
+        self.latest_yolo_feedback = None
+        # self.fsm_timer = self.create_timer(0.2, self._fsm_tick)
 
         self.get_logger().info('MissionManager action server ready.')
 
@@ -222,6 +223,12 @@ class MissionManager(Node):
                         await self.yolo_goal_handle.cancel_goal_async()
                     return Mission.Result(ack=Mission.Result.CANCELED)
                 
+                if self.latest_yolo_feedback:
+                    self.search_fsm.update_perception(self.latest_yolo_feedback.confidence, self.latest_yolo_feedback.pose)
+                    self.latest_yolo_feedback = None
+                
+                self.search_fsm.tick()
+
                 goal_handle.publish_feedback(self._map_search_feedback())
                 time.sleep(0.4)
 
@@ -235,6 +242,7 @@ class MissionManager(Node):
                 self.get_logger().info('Mission succeeded')
                 goal_handle.succeed()
                 result.ack = Mission.Result.SUCCESS
+                # TODO: Send back detection frame?
             else:
                 self.get_logger().info(f'Mission stopped with state: {final_state.name}')
                 goal_handle.abort()
@@ -250,7 +258,8 @@ class MissionManager(Node):
         fb = msg.feedback
         # no detection, no pose, no care.
         if fb.detected:
-            self.search_fsm.update_perception(fb.total_conf, fb.pose)
+            self.latest_yolo_feedback = fb # buffer until next FSM tick
+            # self.search_fsm.update_perception(fb.total_conf, fb.pose)
 
 
     def _map_search_feedback(self):
