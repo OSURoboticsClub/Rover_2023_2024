@@ -185,7 +185,10 @@ class SearchFSM:
                 
             # Arrived back to the search breakpoint, resume the search
             case SearchState.RETURNING_TO_SEARCH:
-                self.active_path = self.resume_path
+                if len(self.resume_path) > 1:
+                    self.active_path = self.resume_path[1:] # drop the first pose since we're already there
+                else:
+                    self.active_path = []
                 self.start_length = 0 
                 if self.active_path:
                     self.navigator.followWaypoints(self.active_path)
