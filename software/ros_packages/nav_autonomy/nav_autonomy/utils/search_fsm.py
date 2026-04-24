@@ -25,11 +25,10 @@ class SearchState(Enum):
 
 
 class SearchFSM:
-    def __init__(self, node, navigator, confidence_topic, status_topic, target_pose_topic, debug_markers=False, dbg_marker_topic='/search_waypoints_viz'):
+    def __init__(self, node, navigator, investigate_threshold = 0.5, success_threshold = 0.85, status_topic='search/status', debug_markers=False, dbg_marker_topic="search/debug_markers"):
 
         self.node = node
         self.navigator = navigator
-        self.target_pose_topic = target_pose_topic
 
         self.state = SearchState.IDLE
         self.active = False
@@ -40,8 +39,8 @@ class SearchFSM:
         self.start_length = 0
         self.current_index = 0
 
-        self.success_threshold = 0.85
-        self.investigate_threshold = 0.50
+        self.investigate_threshold = investigate_threshold
+        self.success_threshold = success_threshold
         self.target_pose = None
         self.last_detection_time = None
         self.detection_timeout_ms = 3000.0
@@ -49,9 +48,6 @@ class SearchFSM:
         self.status_pub = node.create_publisher(String, status_topic, 10)
         self.debug_marker_pub = node.create_publisher(MarkerArray, dbg_marker_topic, 10) if debug_markers else None
 
-        # self.conf_sub = node.create_subscription(Float32, confidence_topic, self._confidence_cb, 10)
-        self.target_pose_sub = node.create_subscription(PoseStamped, self.target_pose_topic, self._target_pose_cb, 10)
-  
 
     def start(self, start_path: List[PoseStamped], search_inputs: List[PoseStamped], pattern: SearchPattern, param1: float, param2: float, success_threshold: float = 0.85, investigate_threshold: float = 0.50):
 
@@ -101,13 +97,43 @@ class SearchFSM:
                 self.navigator.cancelTask()
                 self._return_to_search()
                 return
-
         
-        if not self.navigator.isTaskComplete():
-            self._process_nav_feedback()
-        else:
+        if self.navigator.isTaskComplete():
             self._process_nav_result()
+        else:
+            self._process_nav_feedback()
 
+
+    def update_perception(self, confidence: float, target_pose: PoseStamped):
+        if not self.active:
+            return
+
+        if target_pose is None:
+            self.node.get_logger().debug(f"Perception update: no target pose, how'd that happen?")
+            return
+        
+        self.target_pose = target_pose
+        self.last_detection_time = self.node.get_clock().now()
+
+        if self.state == SearchState.SEARCHING and confidence >= self.investigate_threshold:
+            self._to_investigate()
+            return
+        
+        # WINNER: Object found, end everything.
+        if self.state == SearchState.INVESTIGATING and confidence >= self.success_threshold:
+            self.state = SearchState.SUCCESS
+            self.active = False
+            self.navigator.cancelTask()
+            self._publish_state()   
+
+
+    def get_state(self):
+        return self.state
+
+
+    def is_active(self):
+        return self.active
+    
 
     def _process_nav_feedback(self):
         nav_feedback = self.navigator.getFeedback()
@@ -136,6 +162,7 @@ class SearchFSM:
 
     def _process_nav_result(self):
         result = self.navigator.getResult()
+        self.node.get_logger().info(f"Navigation task completed with result: {result}")
 
         # If navigation failed and wasn't canceled, something went wrong, end the search with failure. 
         # If it was canceled, it's likely due to an investigation interrupt or return to search, so just wait for the next command.
@@ -169,69 +196,12 @@ class SearchFSM:
                     self._to_failed()
 
 
-    def update_perception(self, confidence: float, target_pose: PoseStamped = None):
-        if not self.active:
-            return
-
-        if target_pose is not None:
-            self.target_pose = target_pose
-            self.last_detection_time = self.node.get_clock().now()
-
-        if self.state == SearchState.SEARCHING and confidence >= self.investigate_threshold:
-            if self.target_pose is not None:
-                self._to_investigate()
-            else:
-                self.node.get_logger().warn("Confidence threshold met, but no target map pose received.")
-        
-        # WINNER: Object found, end everything.
-        if self.state == SearchState.INVESTIGATING and confidence >= self.success_threshold:
-            self.state = SearchState.SUCCESS
-            self.active = False
-            self.navigator.cancelTask()
-            self._publish_state()   
-
-
-    def get_state(self):
-        return self.state
-
-
-    def is_active(self):
-        return self.active
-
-
-    # CALLBACKS
-    def _target_pose_cb(self, msg: PoseStamped):
-        if not self.active:
-            return
-        self.target_pose = msg
-
-
-    # def _confidence_cb(self, msg: Float32):
-    #     if not self.active:
-    #         return
-
-    #     conf = msg.data
-
-    #     if self.state == SearchState.SEARCHING and conf >= self.investigate_threshold:
-    #         if self.target_pose is not None:
-    #             self._to_investigate()
-    #         else:
-    #             self.node.get_logger().warn("Confidence threshold met, but no target map pose received yet!")
-    #         return
-
-    #     if self.state == SearchState.INVESTIGATING and conf >= self.success_threshold:
-    #         self.state = SearchState.SUCCESS
-    #         self.active = False
-    #         self.navigator.cancelTask()
-    #         self._publish_state()
-
-
     def _to_investigate(self):
         self.navigator.cancelTask()
 
         resume_index = max(0, self.current_index - 1)
         self.resume_path = self.active_path[resume_index:]
-        
+
         self.state = SearchState.INVESTIGATING
         self._publish_state()
         
@@ -242,6 +212,9 @@ class SearchFSM:
 
     def _return_to_search(self):
         self.state = SearchState.RETURNING_TO_SEARCH
+        self.target_pose = None
+        self.last_detection_time = None
+
         self._publish_state()
         
         if self.resume_path:
