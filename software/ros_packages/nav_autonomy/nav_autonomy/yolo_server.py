@@ -308,7 +308,7 @@ class YoloServer(Node):
             pose_camera = PoseStamped()
             pose_camera.header.frame_id = camera_frame
             pose_camera.pose.position.x = float(point_camera[2])        # TODO: we need to switch up where we do this x y swapping, it might not be same for aruco
-            pose_camera.pose.position.y = float(-point_camera[1])
+            pose_camera.pose.position.y = float(-point_camera[0])       # TODO: evaluate if this 
             pose_camera.pose.position.z = 0.0
             pose_camera.pose.orientation.w = 1.0
 
@@ -569,7 +569,9 @@ class YoloServer(Node):
                         dist_coeffs
                     )
                     x, y, z = tvecs[0] 
+
                     self.get_logger().warn("Pose: {}".format(tvecs[0]))
+                    self.get_logger().warn("Cam: {}".format(cam_idx))
 
 
                     # Transform to map frame
@@ -583,6 +585,7 @@ class YoloServer(Node):
                         continue
                         
                     self.get_logger().info(f"Waypoint: {pose}")
+                    self.pose_marker_logging(pose)
 
                     feedback = YoloFind.Feedback()
                     feedback.detected = True
