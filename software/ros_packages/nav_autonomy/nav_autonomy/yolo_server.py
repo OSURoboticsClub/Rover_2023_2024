@@ -8,6 +8,9 @@ from rcl_interfaces.srv import GetParameters
 from rcl_interfaces.msg import ParameterType
 from visualization_msgs.msg import Marker
 from std_msgs.msg import Header
+from ament_index_python.packages import get_package_share_directory
+import os
+
 from nav_autonomy_interface.action import YoloFind
 from nav_autonomy_interface.srv import SwitchCamera
 
@@ -75,6 +78,10 @@ class YoloServer(Node):
         self.get_logger().info("YoloServer action server ready.")
         self.marker_pub = self.create_publisher(Marker, '/visualization_marker', 10)
         self.target_pose_pub = self.create_publisher(PoseStamped, '/yolo_target_pose', 10)
+
+        self.models_dir = os.path.join(
+            get_package_share_directory('nav_autonomy'), 'nav_autonomy', 'yolo_models'
+        )
 
         # ROS2 Parameters
         self.declare_parameter(
@@ -556,13 +563,13 @@ class YoloServer(Node):
 
         try:
             # Define model from action request
-            model = YOLO("yolo_models/mallet.pt")
+            model = YOLO(os.path.join(self.models_dir, "mallet.pt"))
             if goal_handle.request.search_object == YoloFind.Goal.BOTTLE:
-                model = YOLO("yolo_models/bottle.pt")
+                model = YOLO(os.path.join(self.models_dir, "bottle.pt"))
             elif goal_handle.request.search_object == YoloFind.Goal.ORANGE_HAMMER:
-                model = YOLO("yolo_models/mallet.pt")
+                model = YOLO(os.path.join(self.models_dir, "mallet.pt"))
             elif goal_handle.request.search_object == YoloFind.Goal.OG_HAMMER:
-                model = YOLO("yolo_models/hammer.pt")
+                model = YOLO(os.path.join(self.models_dir, "hammer.pt"))
             model.overrides['verbose'] = False
 
             cap = cv2.VideoCapture(self.source, cv2.CAP_V4L2)
