@@ -294,7 +294,7 @@ class YoloServer(Node):
             # Create PoseStamped in camera frame
             pose_camera = PoseStamped()
             pose_camera.header.frame_id = camera_frame
-            pose_camera.pose.position.x = float(point_camera[2])
+            pose_camera.pose.position.x = float(point_camera[2])        # TODO: we need to switch up where we do this x y swapping, it might not be same for aruco
             pose_camera.pose.position.y = float(-point_camera[1])
             pose_camera.pose.position.z = 0.0
             pose_camera.pose.orientation.w = 1.0
@@ -466,14 +466,25 @@ class YoloServer(Node):
 
         marker_length = 0.2  # meters
 
+        cam_idx = 0
+
         try:
             while rclpy.ok():
                 if goal_handle.is_cancel_requested:
                     raise ActionCanceled()
                 
+                # Switch Camera
+                while True:
+                    cam_idx = (cam_idx + 1) % self.num_cameras
+                    if self.switch_camera(cam_idx) == SwitchCamera.Response.SUCCESS:
+                        break
+                    self.get_logger().warn("Failed to switch cameras")
+                
+                # Get frame
                 ret, frame = cap.read()
                 if not ret:
-                    break
+                    self.get_logger().warn("Failed to read frame")
+                    continue
                 
                 display_frame = frame.copy()
                 
@@ -498,11 +509,17 @@ class YoloServer(Node):
                         2,
                     )
 
+                    # Transform to map frame
+                    pose = self.transform_to_nav_frame(
+                        [tvec[0], tvec[1]],             # KRJ TODO: is this the correct xy in camera frame?
+                        cam_idx
+                    )
+
                     feedback = YoloFind.Feedback()
                     feedback.detected = True
-                    feedback.pose.position.x = float(tvec[0])
-                    feedback.pose.position.y = float(tvec[1])
-                    feedback.pose.position.z = float(tvec[2])
+                    feedback.confidence = 1
+                    feedback.total_conf = 1
+                    feedback.pose = pose
                     goal_handle.publish_feedback(feedback)
 
                 else:
