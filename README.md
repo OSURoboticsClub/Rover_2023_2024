@@ -77,4 +77,4 @@ Overall instillation and setup is very straight forward, just make sure to follo
 * Tanush Ojha
 * Project Partner: Oregon State University's DAM Robotics Club
 
-**Contact Us: [TODO] A contact or feedback channel (GitHub Issues, email, or a form)**
+**Contact Us: Jagelsky@oregonstate.edu
