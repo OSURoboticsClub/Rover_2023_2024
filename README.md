@@ -13,7 +13,7 @@
 
 ## About The Project
 
-### Project Overview
+### Project Description
 We are developing an autonomous navigation system for the Mars Rover team at OSU to complete roving autonomy tasks for the University Rover Challenge (URC) and the Canadian International Rover Challenge (CIRC).
 
 ### Competition Navigation
@@ -65,6 +65,13 @@ This code utilizes NVENC h.265 hardware acceleration for our cameras, powered by
 
 Overall instillation and setup is very straight forward, just make sure to follow all instructional guides closely. 
 
+## Team Credits
+* Andrew Swartz
+* Ryan Davidson
+* Kylan Jagels
+* Henry Dalrymple
+* Siya Sonpatki
+* Tanush Ojha
+* Project Partner: Oregon State University's DAM Robotics Club
 
-
-
+**Contact Us: [TODO] A contact or feedback channel (GitHub Issues, email, or a form)**
