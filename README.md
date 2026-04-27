@@ -3,7 +3,7 @@
 ### DAM Robotics' Rover
 <img src="assets/rover.png" alt="Rover" width="80%">
 
-### Groundstation
+### Groundstation (User Interface)
 <img src="assets/groundstation.png" alt="Groundstation" width="80%">
 
 ### Navigation System
@@ -36,7 +36,7 @@ The rover will need to search and identify specific objects and ArUco markers au
 ### Visual Object Perception
 **YOLOv11 Edge-Computed Object Detection.** The rover uses a set of custom-trained YOLOv11 models running locally on the onboard Jetson to identify mission targets. To manage hardware compute limits, we multiplexed multiple camera feeds into a single inference stream. The pipeline calculates confidence scores in real-time before publishing the bounding boxes and video feed back to the operator's ground station.
 
-## Groundstation (User Interface) Setup
+## Groundstation Setup
 
 ### Getting Started With Groundstation Code
 This repo does not contain groundstation code. To view groundstation code and setup, see https://github.com/OSURoboticsClub/Rover-Unity
