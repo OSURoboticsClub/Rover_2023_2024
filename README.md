@@ -36,6 +36,9 @@ The rover will need to search and identify specific objects and ArUco markers au
 ### Visual Object Perception
 **YOLOv11 Edge-Computed Object Detection.** The rover uses a set of custom-trained YOLOv11 models running locally on the onboard Jetson to identify mission targets. To manage hardware compute limits, we multiplexed multiple camera feeds into a single inference stream. The pipeline calculates confidence scores in real-time before publishing the bounding boxes and video feed back to the operator's ground station.
 
+## Architecture Overview
+<img src="assets/general_architecture.svg" alt="Diagram showing nav architecture. Sensors pass information to processing nodes." width="100%">
+
 ## Groundstation Setup
 
 ### Getting Started With Groundstation Code
