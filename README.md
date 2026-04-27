@@ -1,5 +1,16 @@
 # Oregon State University Mars Rover Capstone (CS.005)
 
+### DAM Robotics' Rover
+<img src="assets/rover.png" alt="Rover" width="80%">
+
+### Groundstation
+<img src="assets/groundstation.png" alt="Groundstation" width="80%">
+
+### Navigation System
+<img src="assets/navigation.png" alt="Navigation" width="80%">
+
+
+
 ## About The Project
 
 ### Project Overview
