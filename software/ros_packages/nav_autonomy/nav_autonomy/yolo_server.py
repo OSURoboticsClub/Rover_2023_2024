@@ -315,7 +315,13 @@ class YoloServer(Node):
             # Transform to base_link
             pose_base = tf2_geometry_msgs.do_transform_pose_stamped(pose_camera, transform)
             pose_base.header.stamp = Time()
+
+            # Remove camera frame rotation and place point on ground
             pose_base.pose.position.z = 0.0
+            pose_base.pose.orientation.x = 0.0
+            pose_base.pose.orientation.y = 0.0
+            pose_base.pose.orientation.z = 0.0
+            pose_base.pose.orientation.w = 1.0
             return pose_base
             
         except Exception as e:

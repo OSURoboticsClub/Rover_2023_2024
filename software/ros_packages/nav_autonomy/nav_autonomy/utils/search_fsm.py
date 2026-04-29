@@ -14,14 +14,15 @@ class SearchPattern(Enum):
 
 
 class SearchState(Enum):
-    IDLE = 0
-    MOVING_TO_START = 1
-    SEARCHING = 2
-    INVESTIGATING = 3
-    RETURNING_TO_SEARCH = 4
-    SUCCESS = 5
-    FAILED = 6
-    STOPPED = 7
+    IDLE = auto()
+    MOVING_TO_START = auto()
+    SEARCHING = auto()
+    INVESTIGATION_PENDING = auto()
+    INVESTIGATING = auto()
+    RETURNING_TO_SEARCH = auto()
+    SUCCESS = auto()
+    FAILED = auto()
+    STOPPED = auto()
 
 
 class SearchFSM:
@@ -41,6 +42,7 @@ class SearchFSM:
 
         self.investigate_threshold = investigate_threshold
         self.success_threshold = success_threshold
+        # self.investigate_theshold_met = False
         self.target_pose = None
         self.last_detection_time = None
         self.detection_timeout_ms = 8000.0
@@ -89,6 +91,13 @@ class SearchFSM:
         if not self.active:
             return
 
+        # spin until cancelTask is complete then start investigation
+        if self.state == SearchState.INVESTIGATION_PENDING:
+        # if self.investigate_theshold_met:
+            if self.navigator.isTaskComplete():
+             self._to_investigate()
+            return
+
         # If we've been investigating for too long without a yolo detection, return to search
         if self.state == SearchState.INVESTIGATING and self.last_detection_time is not None:
             time_since_detection = (self.node.get_clock().now() - self.last_detection_time).nanoseconds / 1e6 # convert to milliseconds
@@ -117,7 +126,10 @@ class SearchFSM:
         self.last_detection_time = self.node.get_clock().now()
 
         if self.state == SearchState.SEARCHING and confidence >= self.investigate_threshold:
-            self._to_investigate()
+            self.state = SearchState.INVESTIGATION_PENDING
+            # self.investigate_theshold_met = True
+            self.navigator.cancelTask()
+            #self._to_investigate()
             return
         
         # WINNER: Object found, end everything.
@@ -203,7 +215,8 @@ class SearchFSM:
 
 
     def _to_investigate(self):
-        self.navigator.cancelTask()
+        #self.navigator.cancelTask()
+        # self.investigate_theshold_met = False
 
         resume_index = max(0, self.current_index - 1)
         self.resume_path = self.active_path[resume_index:]
@@ -211,9 +224,10 @@ class SearchFSM:
         self.state = SearchState.INVESTIGATING
         self._publish_state()
         
-        # TODO: Execute investigation behavior
         self.node.get_logger().info(f"Interrupt Triggered: Investigating target at X: {self.target_pose.pose.position.x:.2f}, Y: {self.target_pose.pose.position.y:.2f}")
-        self.navigator.goToPose(self.target_pose)
+        if not self.navigator.goToPose(self.target_pose):
+            self.node.get_logger().error("Failed to accept goToPose for investigation.")
+            self._to_failed()
 
 
     def _return_to_search(self):
