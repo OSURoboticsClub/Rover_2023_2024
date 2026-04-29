@@ -278,6 +278,10 @@ class MissionManager(Node):
             fb.current_action = Mission.Feedback.SEARCHING
             fb.completion_status = Mission.Feedback.IN_PROGRESS
 
+        elif fsm_state == SearchState.INVESTIGATION_PENDING:
+            fb.current_action = Mission.Feedback.INVESTIGATING
+            fb.completion_status = Mission.Feedback.IN_PROGRESS
+
         elif fsm_state == SearchState.INVESTIGATING:
             fb.current_action = Mission.Feedback.INVESTIGATING
             fb.completion_status = Mission.Feedback.IN_PROGRESS
