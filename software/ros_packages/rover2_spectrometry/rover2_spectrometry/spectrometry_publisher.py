@@ -40,7 +40,7 @@ class Spectrometry_Publisher(Node):
         self.timer_period = .1
         self.timer = self.create_timer(self.timer_period, self.timer_callback)
 
-        self.srv = self.create_service(SpectrometryInterface, 'rgb_chart', self.start_graph_feed)
+        self.srv = self.create_service(SpectrometryInterface, 'spectrometry_chart', self.start_graph_feed)
 
         self.reaction_type = {}
         self.start_times = {}
