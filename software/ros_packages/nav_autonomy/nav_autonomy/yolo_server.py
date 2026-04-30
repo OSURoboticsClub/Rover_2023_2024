@@ -230,7 +230,7 @@ class YoloServer(Node):
             PoseStamped in base_link frame
         """
         # Select appropriate camera frame
-        camera_frame = self.left_camera_frame if camera_id == 1 else self.right_camera_frame
+        camera_frame = self.left_camera_frame if camera_id == 0 else self.right_camera_frame
         
         try:
             # Get transform from camera to base_link
@@ -704,7 +704,8 @@ class YoloServer(Node):
                 while True:
                     cam_idx = (cam_idx + 1) % self.num_cameras
                     if self.switch_camera(cam_idx) == SwitchCamera.Response.SUCCESS:
-                        cap.grab()      # Flush buffer to guarantee new frame
+                        for _ in range(5):
+                            garbage = cap.grab()      # Flush buffer to guarantee new frame
                         break
                     self.get_logger().warn("Failed to switch cameras")
                 
@@ -824,7 +825,8 @@ class YoloServer(Node):
                 while True:
                     cam_idx = (cam_idx + 1) % self.num_cameras
                     if self.switch_camera(cam_idx) == SwitchCamera.Response.SUCCESS:
-                        cap.grab()      # Flush buffer to guarantee new frame
+                        for _ in range(5):
+                            garbage = cap.grab()      # Flush buffer to guarantee new frame
                         break
                     self.get_logger().warn("Failed to switch cameras")
                     camera_stacks[cam_idx].append(0.0)
