@@ -530,6 +530,7 @@ class YoloServer(Node):
         detector = cv2.aruco.ArucoDetector(arucoDict, arucoParams)
         
         cap = cv2.VideoCapture(self.source, cv2.CAP_V4L2)
+        cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)             # Limit buffer size to guarantee synced muxing frames
 
         marker_length = 0.2  # meters
         cam_idx = 0
@@ -544,6 +545,7 @@ class YoloServer(Node):
                 while True:
                     cam_idx = (cam_idx + 1) % self.num_cameras
                     if self.switch_camera(cam_idx) == SwitchCamera.Response.SUCCESS:
+                        cap.grab()      # Flush buffer to guarantee new frame
                         break
                     self.get_logger().warn("Failed to switch cameras")
                 
@@ -644,6 +646,7 @@ class YoloServer(Node):
             model.overrides['verbose'] = False
 
             cap = cv2.VideoCapture(self.source, cv2.CAP_V4L2)
+            cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)            # Limit buffer size to guarantee synced muxing frames
 
             camera_stacks = [deque(maxlen=self.max_frames) for _ in range(self.num_cameras)]
 
@@ -662,6 +665,7 @@ class YoloServer(Node):
                 while True:
                     cam_idx = (cam_idx + 1) % self.num_cameras
                     if self.switch_camera(cam_idx) == SwitchCamera.Response.SUCCESS:
+                        cap.grab()      # Flush buffer to guarantee new frame
                         break
                     self.get_logger().warn("Failed to switch cameras")
                     camera_stacks[cam_idx].append(0.0)
