@@ -347,7 +347,7 @@ class YoloServer(Node):
         # focal_length can be approximated from camera matrix
         focal_length = (self.left_camera_matrix[0, 0] + self.left_camera_matrix[1, 1]) / 2
         
-        estimated_depth = ((known_object_size * focal_length) / bbox_size)/3
+        estimated_depth = ((known_object_size * focal_length) / bbox_size)
         
         return estimated_depth
     
@@ -385,7 +385,7 @@ class YoloServer(Node):
         estimated_depth = self.estimate_depth_from_bbox(
             bbox_dims[0], 
             bbox_dims[1],
-            known_object_size=0.3  # TODO: Adjust based on your object
+            known_object_size=0.15  # TODO: Adjust based on your object
         )
 
         self.get_logger().info(f"Estimated depth: {estimated_depth:.2f}m")
@@ -799,7 +799,7 @@ class YoloServer(Node):
         self.get_logger().info("Received cancel request")
         return CancelResponse.ACCEPT
 
-    async def action_callback(self, goal_handle):
+    def action_callback(self, goal_handle):
         try:
             # Run Yolo or Aruco
             if goal_handle.request.search_object == YoloFind.Goal.ARUCO:

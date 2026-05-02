@@ -131,7 +131,7 @@ controller_server:
       sim_time: 1.5
       linear_granularity: 0.05
       angular_granularity: 0.01
-      transform_tolerance: 0.25
+      transform_tolerance: 0.35
       trans_stopped_velocity: 0.1
       short_circuit_trajectory_evaluation: True
       stateful: True
@@ -309,7 +309,7 @@ behavior_server:
     local_frame: odom
     global_frame: map
     robot_base_frame: rover_base_origin
-    transform_tolerance: 0.2
+    transform_tolerance: 0.35
     simulate_ahead_time: 2.0
     min_rotational_vel: 0.4
     max_rotational_vel: 1.0 # Match planner limits
@@ -334,7 +334,7 @@ waypoint_follower:
   ros__parameters:
     use_sim_time: False
     loop_rate: 20
-    stop_on_failure: True
+    stop_on_failure: False
     waypoint_task_executor_plugin: "wait_at_waypoint"
     wait_at_waypoint:
       plugin: "nav2_waypoint_follower::WaitAtWaypoint"
