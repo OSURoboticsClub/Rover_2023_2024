@@ -5,7 +5,7 @@ from geometry_msgs.msg import PoseStamped
 from nav2_simple_commander.robot_navigator import TaskResult
 from nav_autonomy.utils.search_patterns import spiral, lawnmower
 from visualization_msgs.msg import Marker, MarkerArray
-
+import time
 
 class SearchPattern(Enum):
     NONE = auto()
@@ -94,8 +94,9 @@ class SearchFSM:
         # spin until cancelTask is complete then start investigation
         if self.state == SearchState.INVESTIGATION_PENDING:
         # if self.investigate_theshold_met:
+            self.node.get_logger().info(f"We are investigate pending ONCE")
             if self.navigator.isTaskComplete():
-             self._to_investigate()
+                self._to_investigate()
             return
 
         # If we've been investigating for too long without a yolo detection, return to search
@@ -120,10 +121,13 @@ class SearchFSM:
         if target_pose is None:
             self.node.get_logger().warning(f"Perception update: no target pose, how'd that happen?")
             return
+
         
         self.node.get_logger().info(f"[Perception]: Updating confidence ({confidence})")
         self.target_pose = target_pose
         self.last_detection_time = self.node.get_clock().now()
+
+        self._publish_dbg_waypoint_markers()
 
         if self.state == SearchState.SEARCHING and confidence >= self.investigate_threshold:
             self.state = SearchState.INVESTIGATION_PENDING
@@ -182,8 +186,12 @@ class SearchFSM:
         # If it was canceled, it's likely due to an investigation interrupt or return to search, so just wait for the next command.
         if result != TaskResult.SUCCEEDED:
             self.node.get_logger().info(f"Didn't succeed, checking if canceled: {result}")
+            # if result == TaskResult.FAILED:
+            #     self._to_investigate()
+
             if result != TaskResult.CANCELED:
                 self._to_failed()
+                
             return
 
         # Nav arrived at goal
@@ -225,9 +233,14 @@ class SearchFSM:
         self._publish_state()
         
         self.node.get_logger().info(f"Interrupt Triggered: Investigating target at X: {self.target_pose.pose.position.x:.2f}, Y: {self.target_pose.pose.position.y:.2f}")
+        self.node.get_logger().info(f"big sleeping")
+        time.sleep(1)
+        self.node.get_logger().info(f"Done big sleeping")
         if not self.navigator.goToPose(self.target_pose):
             self.node.get_logger().error("Failed to accept goToPose for investigation.")
             self._to_failed()
+        else:
+            self.node.get_logger().warn("Accepted Investigate Point")
 
 
     def _return_to_search(self):
@@ -236,7 +249,10 @@ class SearchFSM:
         self.last_detection_time = None
 
         self._publish_state()
-        
+
+        self.node.get_logger().info(f"big sleeping")
+        time.sleep(1)
+        self.node.get_logger().info(f"Done big sleeping")
         if self.resume_path:
             self.navigator.goToPose(self.resume_path[0])
         else:
@@ -287,6 +303,28 @@ class SearchFSM:
             marker.color.b = b
             marker.color.a = a
 
+            marker_array.markers.append(marker)
+
+        # post current target
+        if self.target_pose is not None:
+            marker = Marker()
+            marker.header.frame_id = 'map'
+            marker.header.stamp = self.node.get_clock().now().to_msg()
+            marker.ns = 'mission_waypoints'
+            marker.id = 100
+            marker.type = Marker.CUBE
+            marker.action = Marker.ADD
+            marker.pose = self.target_pose.pose
+            marker.pose.position.z = 0.25 
+            marker.scale.x = 0.25
+            marker.scale.y = 0.25
+            marker.scale.z = 0.25
+            
+            r, g, b, a = 0.9, 0.4, 0.0, 0.8
+            marker.color.r = r
+            marker.color.g = g
+            marker.color.b = b
+            marker.color.a = a
             marker_array.markers.append(marker)
 
         self.debug_marker_pub.publish(marker_array)

@@ -40,7 +40,7 @@ class MissionManager(Node):
 
         # FIX: These should be parameters in a config or set via goal request.
         self.confidence_threshold_investigate = 0.5 
-        self.confidence_threshold_success = 0.85
+        self.confidence_threshold_success = 0.70
 
         self._action_server = ActionServer(
             self,
@@ -259,7 +259,6 @@ class MissionManager(Node):
         # no detection, no pose, no care.
         if fb.detected:
             self.latest_yolo_feedback = fb # buffer until next FSM tick
-            # self.search_fsm.update_perception(fb.total_conf, fb.pose)
 
 
     def _map_search_feedback(self):
