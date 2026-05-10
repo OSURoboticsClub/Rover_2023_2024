@@ -1,20 +1,10 @@
-from enum import Enum
 import math
 from geometry_msgs.msg import PoseStamped
 from typing import List
 
-def spiral(center: PoseStamped, max_radius: float, spacing: float, points_per_revolution: int = 12) -> List[PoseStamped]:
+def spiral(center: PoseStamped, spacing: float, max_radius: float, point_distance: float = 1.0) -> List[PoseStamped]:
     """
-    Generate an Archimedean spiral search pattern.
-    
-    Args:
-        start_pose: Starting pose (center of spiral)
-        max_radius: Maximum radius of spiral in meters
-        spacing: Distance between spiral loops in meters
-        points_per_revolution: Number of waypoints per revolution
-    
-    Returns:
-        List of PoseStamped waypoints forming the spiral
+    Generate a spiral search pattern with roughly constant distance between points.
     """
     waypoints = []
     
@@ -22,15 +12,13 @@ def spiral(center: PoseStamped, max_radius: float, spacing: float, points_per_re
     center_y = center.pose.position.y
     
     a = spacing / (2.0 * math.pi)
-    theta_max = max_radius / a
-    theta_step = (2.0 * math.pi) / points_per_revolution        # KRJ TODO: do we want consistently spaces points instead?
-    
     theta = 0.0
-    while theta <= theta_max:
+
+    while True:
         r = a * theta
         if r > max_radius:
             break
-        
+            
         x = center_x + r * math.cos(theta)
         y = center_y + r * math.sin(theta)
         
@@ -46,7 +34,10 @@ def spiral(center: PoseStamped, max_radius: float, spacing: float, points_per_re
         waypoint.pose.orientation.w = math.cos(tangent_angle / 2.0)
         
         waypoints.append(waypoint)
-        theta += theta_step
+        
+        # Calculate the next theta to maintain a roughly constant linear distance
+        radius_for_step = max(r, 0.1) 
+        theta += point_distance / radius_for_step
     
     return waypoints
 
@@ -72,12 +63,12 @@ def lawnmower(corners: List[PoseStamped], spacing: float, step_size: float) -> L
 
     if sq_dist_01 >= sq_dist_03:
         sweep_v = (p1.x - p0.x, p1.y - p0.y)
-        space_v = (p3.x - p0.x, p3.y - p0.y) # Spacing goes toward p3
+        space_v = (p3.x - p0.x, p3.y - p0.y) 
         sweep_len = math.sqrt(sq_dist_01)
         space_len = math.sqrt(sq_dist_03)
     else:
         sweep_v = (p3.x - p0.x, p3.y - p0.y)
-        space_v = (p1.x - p0.x, p1.y - p0.y) # Spacing goes toward p1
+        space_v = (p1.x - p0.x, p1.y - p0.y) 
         sweep_len = math.sqrt(sq_dist_03)
         space_len = math.sqrt(sq_dist_01)
 
