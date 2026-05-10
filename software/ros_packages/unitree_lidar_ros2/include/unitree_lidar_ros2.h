@@ -132,8 +132,15 @@ UnitreeLidarSDKNode::UnitreeLidarSDKNode(const rclcpp::NodeOptions &options)
 
     if (initialize_type_ == 1)
     {
-        lsdk_->initializeSerial(serial_port_, baudrate_,
-                                cloud_scan_num_, use_system_timestamp_, range_min_, range_max_);
+        if(lsdk_->initializeSerial(serial_port_, baudrate_, cloud_scan_num_, use_system_timestamp_, range_min_, range_max_))
+        {
+            printf("Unilidar initialization failed! Exit here!\n");
+            exit(0);
+        }
+        else
+        {
+            printf("Unilidar initialization succeed!\n");
+        }
     }
     else if (initialize_type_ == 2)
     {
@@ -145,8 +152,18 @@ UnitreeLidarSDKNode::UnitreeLidarSDKNode(const rclcpp::NodeOptions &options)
         std::cout << "initialize_type is not right! exit now ...\n";
         exit(0);
     }
-
+    
+    std::cout << "set Lidar work mode to: " << work_mode_ << std::endl;
     lsdk_->setLidarWorkMode(work_mode_);
+
+    // Stop and start lidar
+    std::cout << "stop lidar rotation ..." << std::endl;
+    lsdk_->stopLidarRotation();
+    sleep(3);
+
+    std::cout << "start lidar rotation ..." << std::endl;
+    lsdk_->startLidarRotation();
+    sleep(3);
 
     // ROS2
     broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(*this);
