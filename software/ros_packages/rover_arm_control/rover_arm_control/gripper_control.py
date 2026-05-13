@@ -42,7 +42,7 @@ class GripperCanControl(Node):
         self.declare_parameter('joy_publish_rate', 30)
         self.declare_parameter('direction', -1)
         self.declare_parameter('flat_endpoints', "")
-        self.declare_parameter('can', "can1")
+        self.declare_parameter('can', "can0")
         self.is_position_control = self.get_parameter('is_position_control').value
         self.joy_publish_rate = self.get_parameter('joy_publish_rate').value
         self.direction = self.get_parameter('direction').value #direction odrive closes
@@ -211,7 +211,7 @@ class GripperCanControl(Node):
         #Velocity Control mode
         else:
             #Time out
-            if abs(time() - self.last_message_time) > 0.25: #Ideally set to some scalar bigger than joy_publish rate
+            if abs(time() - self.last_message_time) > 0.25 and self.mode != 5: #Ideally set to some scalar bigger than joy_publish rate
                 self.controller_state = 0
             match self.controller_state:
                 #No input state
@@ -692,6 +692,7 @@ class GripperCanControl(Node):
         response.message = "Gripper successfully completed the motion"
         goal_handle.succeed()
         self.in_action = False
+        self.controller_state = 10
         return response
             
 

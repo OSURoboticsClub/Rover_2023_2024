@@ -123,8 +123,8 @@ def generate_launch_description():
         absolute_move_node,
         #pick_and_place_node,
         aruco_detector_node,
-        # pc_filter_node,
-        # pc_plane_node,
-        # pc_count_object_node,
+        pc_filter_node,
+        pc_plane_node,
+        pc_count_object_node,
 
     ])

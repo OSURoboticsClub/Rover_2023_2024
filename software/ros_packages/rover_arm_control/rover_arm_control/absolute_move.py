@@ -13,6 +13,9 @@ There are no constraints on the movement and this may cause seemingly random arm
 goal. 
 
 Current arm implementation aligns the base frame with the world. 
+
+This should be combined with absolute move with changes to the srv call definition to allow for both relative and absolute moves.
+
 """
 import rclpy
 from rclpy.node import Node

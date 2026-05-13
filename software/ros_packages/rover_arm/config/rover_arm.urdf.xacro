@@ -3,8 +3,18 @@
     <xacro:arg name="initial_positions_file" default="initial_positions.yaml" />
     <xacro:arg name="ros2_control_hardware_type" default="main" />
 
+    <xacro:include filename="$(find rover_urdf)/urdf/rover_body.urdf.xacro" />
+    
+    <xacro:rover_body name="rover_body">
+    </xacro:rover_body>
+
+
     <!-- Import rover_arm urdf file -->
     <xacro:include filename="$(find rover_arm_urdf)/urdf/rover_arm.urdf" />
+
+    <xacro:rover_arm parent="rover_base_origin">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:sensor_d455>
 
     <!-- Import control_xacro -->
     <xacro:include filename="rover_arm.ros2_control.xacro" />
@@ -21,7 +31,7 @@
     <xacro:include filename="$(find realsense2_description)/urdf/_d455.urdf.xacro"/>
 
     <xacro:sensor_d455 parent="base_link" name="d455" use_nominal_extrinsics="true">
-        <origin xyz="0.03 -0.075 -0.01" rpy="3.1415926536 0 0"/>
+        <origin xyz="0.0889 0.13335 0.0635" rpy="3.1415926536 0.2617994 0"/>
     </xacro:sensor_d455>
 
     <xacro:rover_arm_ros2_control name="RealSystem" initial_positions_file="$(arg initial_positions_file)" ros2_control_hardware_type="$(arg ros2_control_hardware_type)"/>

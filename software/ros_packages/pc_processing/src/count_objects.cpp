@@ -68,7 +68,7 @@ public:
         thresh_dist = 0.1;
 
         //Complementary filter value for weighted sum of centroids 
-        filter_val = 0.8;
+        filter_val = 0.4;
 
         //Start with this node disabled, user will enable it with a service call:
         enable = false;
@@ -150,11 +150,15 @@ private:
                 extract.filter(*object_cloud);
                 
                 pcl::PointXYZ average_point;
+                average_point.z = -1000000; //Initialize as a very low value
                 //Iterate over the points w/in the cluster and get an average point:
                 for(auto& point : *object_cloud){
                     average_point.x += point.x;
                     average_point.y += point.y;
-                    average_point.z += point.z;
+                    //Actually, lets use the max height of the object that we saw:
+                    average_point.z = std::max(point.z,average_point.z);
+                    
+                    //average_point.z += point.z;
                     // average_point.r += point.r;
                     // average_point.g += point.g;
                     // average_point.b += point.b;
@@ -163,7 +167,7 @@ private:
                 float num_pts = (object_cloud->height * object_cloud->width);
                 average_point.x = average_point.x/num_pts;
                 average_point.y = average_point.y/num_pts;
-                average_point.z = average_point.z/num_pts;
+                //average_point.z = average_point.z/num_pts;
                 // average_point.r = average_point.r/num_pts;
                 // average_point.g = average_point.g/num_pts;
                 // average_point.b = average_point.b/num_pts;

@@ -1,0 +1,251 @@
+<?xml version="1.0" ?>
+
+<robot name="rover2_arm" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:macro name="rover2_arm" params="parent *origin name:=rover_arm" >
+    <!-- <xacro:include filename="$(find rover_arm_description)/urdf/rover_arm.trans" /> -->
+    <!-- <xacro:include filename="$(find rover_arm_description)/urdf/rover_arm.gazebo" /> -->
+
+    <link name="${name}_base_link">
+      <inertial>
+        <origin xyz="0.08371 -0.000083675 0.03944" rpy="0 0 -1.5708"/>
+        <mass value="1.9803212654096218"/>
+        <inertia ixx="0.003734" iyy="0.007149" izz="0.007073" ixy="1.085e-06" iyz="-3.675e-06" ixz="0.001344"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 -1.5708"/>
+        <geometry>
+          <mesh filename="package://rover_arm_urdf/urdf/stl_files/mr2526-arm-Base_Link-URDF_Mass.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="silver"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 -1.5708"/>
+        <geometry>
+          <mesh filename="package://rover_arm_urdf/urdf/stl_files/mr2526-arm-Base_Collision.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <link name="${name}_shoulder">
+      <inertial>
+        <origin xyz="0.0094258 0.0003306 0.11444" rpy="0 0 0"/>
+        <mass value="4.597426515663195"/>
+        <inertia ixx="0.017924" iyy="0.03421" izz="0.026905" ixy="0.000571" iyz="3.3e-05" ixz="0.000896"/>
+      </inertial>
+      <visual>
+        <origin xyz="0.0 -0.055 -0.0865" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://rover_arm_urdf/urdf/stl_files/mr2526-arm-Shoulder_Link-URDF_Mass.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="silver"/>
+      </visual>
+      <collision>
+        <origin xyz="0.0 -0.055 -0.0865" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://rover_arm_urdf/urdf/stl_files/mr2526-arm-Shoulder_Collision.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <link name="${name}_long_arm">
+      <inertial>
+        <origin xyz="-0.082265 -0.002920 0.304191" rpy="0 0 0"/>
+        <mass value="1.931219575863863"/>
+        <inertia ixx="0.102866" iyy="0.10401" izz="0.003018" ixy="-4.1e-05" iyz="0.00216" ixz="0.006075"/>
+      </inertial>
+      <visual>
+        <origin xyz="-0.064949 -0.052429 -0.237943" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://rover_arm_urdf/urdf/stl_files/mr2526-arm-Long_Arm_Link-URDF_Mass.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="silver"/>
+      </visual>
+      <collision>
+        <origin xyz="-0.064949 -0.052429 -0.237943" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://rover_arm_urdf/urdf/stl_files/mr2526-arm-Long_Arm_Collision.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <link name="${name}_elbow_roll">
+      <inertial>
+        <origin xyz="0.06296 -0.001884  0.002448" rpy="0 0 0"/>
+        <mass value="1.6182387209715599"/>
+        <inertia ixx="0.002582" iyy="0.002773" izz="0.001869" ixy="-5e-06" iyz="3.2e-05" ixz="7e-05"/>
+      </inertial>
+      <visual>
+        <origin xyz="0.059204 -0.057343 -0.739926" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://rover_arm_urdf/urdf/stl_files/mr2526-arm-Elbow_Roll_Link-URDF_Mass.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="silver"/>
+      </visual>
+      <collision>
+        <origin xyz="0.059204 -0.057343 -0.739926" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://rover_arm_urdf/urdf/stl_files/mr2526-arm-Elbow_Roll_Collision.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <link name="${name}_short_arm">
+      <inertial>
+        <origin xyz="-0.019578 -0.0008965 0.308656" rpy="0 0 0"/>
+        <mass value="2.3532339025644338"/>
+        <inertia ixx="0.024841" iyy="0.029375" izz="0.007124" ixy="-0.000127" iyz="8.7e-05" ixz="0.001874"/>
+      </inertial>
+      <visual>
+        <origin xyz="0.124153 -0.059914 -0.790926" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://rover_arm_urdf/urdf/stl_files/mr2526-arm-Short_Arm_Link-URDF_Mass.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="silver"/>
+      </visual>
+      <collision>
+        <origin xyz="0.124153 -0.059914 -0.790926" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://rover_arm_urdf/urdf/stl_files/mr2526-arm-Short_Arm_Collision.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <link name="${name}_wrist_roll">
+      <inertial>
+        <origin xyz="0.048557 0.002168 -0.03599" rpy="0 0 0"/>
+        <mass value="1.3442681899530171"/>
+        <inertia ixx="0.002484" iyy="0.002597" izz="0.001636" ixy="8e-06" iyz="4.8e-05" ixz="8.1e-05"/>
+      </inertial>
+      <visual>
+        <origin xyz="0.059204 -0.057343 -1.139326" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://rover_arm_urdf/urdf/stl_files/mr2526-arm-Wrist_Roll_Link-URDF-Mass.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="silver"/>
+      </visual>
+      <collision>
+        <origin xyz="0.059204 -0.057343 -1.139326" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://rover_arm_urdf/urdf/stl_files/mr2526-arm-Wrist_Roll_Collision.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <link name="${name}_tool0">
+      <inertial>
+        <origin xyz="-0.00042542 0.00016296 0.016355" rpy="0 0 0"/>
+        <mass value="0.09744608224670866"/>
+        <inertia ixx="3.3e-05" iyy="3.3e-05" izz="5.6e-05" ixy="0.0" iyz="0.0" ixz="0.0"/>
+      </inertial>
+      <visual>
+        <origin xyz="0.009243 -0.055366 -1.165364" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://rover_arm_urdf/urdf/stl_files/mr2526-arm-Tool0-URDF_Mass.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="silver"/>
+      </visual>
+      <collision>
+        <origin xyz="0.009243 -0.055366 -1.165364" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://rover_arm_urdf/urdf/stl_files/mr2526-arm-Tool0_Collision.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <link name="${name}_gripper">
+      <inertial>
+        <origin xyz="0.00054881 -0.003385 0.09155" rpy="0 0 0"/>
+        <mass value="1.436142089281915"/>
+        <inertia ixx="0.004268" iyy="0.006284" izz="0.003365" ixy="-0.000106" iyz="0.000102" ixz="0.00012"/>
+      </inertial>
+      <visual>
+        <origin xyz="0.01459598 -0.05420133 -1.189494" rpy="0 0 0.097633718357"/>
+        <geometry>
+          <mesh filename="package://rover_arm_urdf/urdf/stl_files/mr2526-arm-Gripper-2019-URDF_Mass.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="silver"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="1.570796632679 0 3.141592653589793"/>
+        <geometry>
+          <mesh filename="package://rover_arm_urdf/urdf/stl_files/arm_1819_gripper.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <link name="${name}_jaws_link">
+      <visual> 
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.005" length="0.01"/>
+        </geometry>
+      </visual>
+    </link>
+
+    <joint name="${name}_body_joint" type="fixed">
+      <parent link="${parent}"/>
+      <child link="${name}_base_link"/>
+      <xacro:insert_block name="origin"/>
+    </joint>
+
+    <joint name="${name}_base_joint" type="revolute">
+      <origin xyz="0.055 0.0 0.08648" rpy="0 0 -1.5708"/>
+      <parent link="${name}_base_link"/>
+      <child link="${name}_shoulder"/>
+      <axis xyz="0.0 0.0 -1.0"/>
+      <limit upper="1.570796" lower="-1.570796" effort="100" velocity="100"/>
+    </joint>
+
+    <joint name="${name}_shoulder_joint" type="revolute">
+      <origin xyz="0.064949 -0.002571 0.151443" rpy="0 0 0"/>
+      <parent link="${name}_shoulder"/>
+      <child link="${name}_long_arm"/>
+      <axis xyz="1.0 0.0 0.0"/>
+      <limit upper="1.570796" lower="-1.570796" effort="100" velocity="100"/>
+    </joint>
+
+    <joint name="${name}_elbow_pitch_joint" type="revolute">
+      <origin xyz="-0.124153 0.004914 0.501983" rpy="0 0 0"/>
+      <parent link="${name}_long_arm"/>
+      <child link="${name}_elbow_roll"/>
+      <axis xyz="1.0 0.0 0.0"/>
+      <limit upper="3.141593" lower="-3.141593" effort="100" velocity="100"/>
+    </joint>
+
+    <joint name="${name}_elbow_roll_joint" type="revolute">
+      <origin xyz="-0.064949 0.002571 0.051" rpy="0 0 0"/>
+      <parent link="${name}_elbow_roll"/>
+      <child link="${name}_short_arm"/>
+      <axis xyz="0.0 0.0 -1.0"/>
+      <limit upper="3.141593" lower="-3.141593" effort="100" velocity="100"/>
+    </joint>
+
+    <joint name="${name}_wrist_pitch_joint" type="revolute">
+      <origin xyz="0.064949 -0.002571 0.34838" rpy="0 0 0"/>
+      <parent link="${name}_short_arm"/>
+      <child link="${name}_wrist_roll"/>
+      <axis xyz="1.0 0.0 0.0"/>
+      <limit upper="3.141593" lower="-3.141593" effort="100" velocity="100"/>
+    </joint>
+
+    <joint name="${name}_wrist_roll_joint" type="continuous">
+      <origin xyz="0.049961 -0.001978 0.026058" rpy="0 0 0"/>
+      <parent link="${name}_wrist_roll"/>
+      <child link="${name}_tool0"/>
+      <axis xyz="0.0 0.0 1.0"/>
+    </joint>
+
+    <joint name="${name}_gripper_joint" type="fixed">
+      <origin xyz="0.0 0.0 0.02413" rpy="0 0 0"/>
+      <parent link="${name}_tool0"/>
+      <child link="${name}_gripper"/>
+    </joint>
+
+    <joint name="${name}_gripper_jaws" type="fixed">
+      <parent link = "${name}_gripper"/>
+      <child link = "${name}_jaws_link"/> 
+      <origin rpy="0 0 0" xyz="0 0 0.236"/>
+    </joint>
+
+  </xacro:macro>
+</robot>

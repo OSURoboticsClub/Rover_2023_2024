@@ -12,17 +12,62 @@ find_package(ament_cmake REQUIRED)
 # find_package(<dependency> REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
+find_package(control_msgs REQUIRED)
+find_package(moveit_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+
+add_library(joy_to_servo SHARED src/joy_to_servo.cpp)
+
+target_include_directories(joy_to_servo PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/SwitchController.srv"
   "srv/RelativeMoveSrv.srv"
   "action/RelativeMove.action"
   "action/GripperControl.action"
+  "action/AutonTyping.action"
   DEPENDENCIES geometry_msgs
 )
 
-ament_export_dependencies(rosidl_default_runtime)
+ament_target_dependencies(
+  joy_to_servo
+  rclcpp
+  rclcpp_components
+  geometry_msgs
+  control_msgs
+  moveit_msgs
+  std_srvs
+  sensor_msgs
+)
+
+ament_export_dependencies(
+  rosidl_default_runtime
+  rclcpp_components
+)
 # ament_package()
+
+
+rclcpp_components_register_node(joy_to_servo
+  PLUGIN "moveit_servo::JoyToServoPub"
+  EXECUTABLE joy_to_servo_node
+)
+
+# Export the library target
+ament_export_targets(export_joy_to_servo_component)
+
+# Install the shared library
+install(TARGETS joy_to_servo
+        EXPORT export_joy_to_servo_component
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+        RUNTIME DESTINATION bin
+)
 
 
 if(BUILD_TESTING)

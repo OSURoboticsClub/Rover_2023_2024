@@ -1,0 +1,25 @@
+sensors:
+  - d405_camera
+  # - d455_camera
+
+d405_camera:
+  filtered_cloud_topic: d405_filtered_cloud
+  max_range: 0.5 #Point cloud cutoff range [m]
+  max_update_rate: 1.0 #update times will be >= this value [sec ?]
+  padding_offset: 0.01 #Padding added to the surface [cm?]
+  padding_scale: 1.0 #Scale for the padding [1 = cm?]
+  point_cloud_topic: /camera/d405/depth/color/points
+  point_subsample: 1 #use a subset of points [1 = all]
+  sensor_plugin: occupancy_map_monitor/PointCloudOctomapUpdater
+  #   frame_id: d405_depth_optical_frame #not sure if this is needed or correct
+
+# d455_camera:
+#   filtered_cloud_topic: filtered_cloud2
+#   max_range: 6.0
+#   max_update_rate: 1.0
+#   padding_offset: 0.5
+#   padding_scale: 1.0
+#   point_cloud_topic: /camera/d455/depth/color/points
+#   point_subsample: 4
+#   sensor_plugin: occupancy_map_monitor/PointCloudOctomapUpdater
+#   frame_id: d455_depth_optical_frame

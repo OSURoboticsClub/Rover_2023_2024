@@ -1,0 +1,25 @@
+- ros_topic_name: "camera/d455/depth/color/points"
+  gz_topic_name: "/camera/d455/depth/color/points"
+  ros_type_name: "sensor_msgs/msg/PointCloud2"
+  gz_type_name: "ignition.msgs.PointCloudPacked"
+  direction: GZ_TO_ROS  # BIDIRECTIONAL or ROS_TO_IGN
+- ros_topic_name: "imu/data/raw"
+  gz_topic_name: "/imu/data/raw"
+  ros_type_name: "sensor_msgs/msg/Imu"
+  gz_type_name: "ignition.msgs.IMU"
+  direction: GZ_TO_ROS  # BIDIRECTIONAL or ROS_TO_IGN
+- ros_topic_name: "imu/mag/raw"
+  gz_topic_name: "/imu/mag/raw"
+  ros_type_name: "sensor_msgs/msg/MagneticField"
+  gz_type_name: "ignition.msgs.Magnetometer"
+  direction: GZ_TO_ROS  # BIDIRECTIONAL or ROS_TO_IGN
+- ros_topic_name: "gps/raw"
+  gz_topic_name: "/gps/raw"
+  ros_type_name: "sensor_msgs/msg/NavSatFix"
+  gz_type_name: "ignition.msgs.NavSat"
+  direction: GZ_TO_ROS  # BIDIRECTIONAL or ROS_TO_IGN
+- ros_topic_name: "/clock"
+  gz_topic_name: "/clock"
+  ros_type_name: "rosgraph_msgs/msg/Clock"
+  gz_type_name: "ignition.msgs.Clock"
+  direction: GZ_TO_ROS

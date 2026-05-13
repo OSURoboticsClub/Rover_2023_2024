@@ -1,0 +1,38 @@
+# Goal
+std_msgs/Header header
+
+uint16 search_object
+uint16 NO_OBJECT=0
+uint16 BOTTLE=1
+uint16 OG_HAMMER=2
+uint16 ORANGE_HAMMER=3
+uint16 ARUCO=4 
+
+---
+# Result
+std_msgs/Header header
+
+uint16 ack
+uint16 CANCELED=0
+uint16 SUCCESS=1
+uint16 FAILED=2
+geometry_msgs/Point center
+geometry_msgs/Point top_left
+geometry_msgs/Point bottom_right
+
+
+---
+# Feedback
+std_msgs/Header header
+float32 total_conf
+float32 recent_conf
+geometry_msgs/Point center
+geometry_msgs/Point top_left
+geometry_msgs/Point bottom_right
+float32 confidence # 0-1 (ex. 0.95)
+uint16 frame_id
+bool detected
+geometry_msgs/Pose pose
+#float32 direction   # Relative radians
+# TODO: Can we get something to tell us how far away? Object size?
+# float32 distance

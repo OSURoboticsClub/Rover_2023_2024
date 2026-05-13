@@ -1,0 +1,102 @@
+<?xml version="1.0"?>
+
+<!--
+Urdf for the rover of the DAM Robotics Rover triple bogie system.
+-->
+
+<robot name="rover" xmlns:xacro="https://ros.org/wiki/xacro">
+    <xacro:macro name="rover" params="name attachment:=arm">
+        <!-- Includes (material libraries, etc) -->
+        <xacro:include filename="$(find rover_arm_urdf)/urdf/rover2_arm.urdf.xacro" />
+        <xacro:include filename="$(find rover_urdf)/urdf/rover2_body.urdf.xacro"/>
+        <xacro:include filename="$(find rover_urdf)/urdf/materials.xacro" />
+
+        <!-- Link Chasis with bogies and tower -->
+        <xacro:rover_body name="rover">
+        </xacro:rover_body>
+
+
+        <!-- Link Arm or Scimech-->
+        <xacro:if value="${attachment== 'arm'}">
+            <xacro:rover2_arm parent="rover_base_origin" >
+                <origin rpy= "0.0 0.0 0.0" xyz="0.173803 -0.020767 0.071924"/>
+            </xacro:rover2_arm>
+
+            <!-- Include sensors and other links -->
+            <xacro:include filename="$(find realsense2_description)/urdf/_d405.urdf.xacro"/>
+        
+            <!-- Instantiate micros  -->
+            <xacro:sensor_d405 parent ="rover_arm_gripper" name="d405" use_nominal_extrinsics="true">
+                <!-- For older urdf <origin xyz="0 0.04075 0.1" rpy="0 -1.3963 -1.5708"/> -->
+                <origin xyz="-0.001611 -0.040711 0.099525" rpy="0.0 -1.3963635 1.5707963"/> 
+            </xacro:sensor_d405>
+        </xacro:if>
+        
+        <xacro:if value="${attachment == 'science'}">
+
+        </xacro:if>
+
+        <!-- Sensors -->
+
+        <!-- Chassis Depth Camera -->
+        <xacro:include filename="$(find realsense2_description)/urdf/_d455.urdf.xacro"/>
+
+        <xacro:sensor_d455 parent="rover_base_origin" name="d455" use_nominal_extrinsics="true">
+            <origin xyz="0.26 0.11 0.15" rpy="3.1415926536 0.2618 0"/>
+        </xacro:sensor_d455>
+
+            <!-- Arm option for gripper -->
+
+        <!-- Gazebo Setup -->
+        <gazebo reference="d455_depth_frame">
+            <sensor name="d455" type="rgbd_camera">
+                <ignition_frame_id>d455_depth_frame</ignition_frame_id>
+                <camera name="d455">
+                <horizontal_fov>1.518436</horizontal_fov>
+                <!-- <lens> Camera Specific (Don't know them)
+                    <intrinsics>
+                    <fx>277.1</fx>
+                    <fy>277.1</fy>
+                    <cx>160.5</cx>
+                    <cy>120.5</cy>
+                    <s>0</s>
+                    </intrinsics>
+                </lens> 
+                <distortion>
+                    <k1>0.104207</k1>
+                    <k2>-0.255558</k2>
+                    <k3>0.128694</k3>
+                    <p1>0.000512</p1>
+                    <p2>0.000319</p2>
+                    <center>0.5 0.5</center>
+                </distortion> -->
+                <image>
+                    <width>1280</width>
+                    <height>720</height>
+                    <format>R_FLOAT32</format>
+                </image>
+                <clip>
+                    <near>0.1</near>
+                    <far>10</far>
+                </clip>
+                <depth_camera>
+                    <clip>
+                    <near>0.6</near>
+                    <far>6</far>
+                    </clip>
+                </depth_camera>
+                <noise>
+                    <type>gaussian</type>
+                    <mean>0</mean>
+                    <stddev>0.01</stddev>
+                </noise>
+                </camera>
+                <always_on>1</always_on>
+                <update_rate>15</update_rate>
+                <visualize>true</visualize>
+                <topic>/camera/d455/depth/color</topic>
+            </sensor>
+        </gazebo>
+    </xacro:macro>
+
+</robot>

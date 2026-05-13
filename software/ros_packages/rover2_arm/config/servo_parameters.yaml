@@ -1,0 +1,72 @@
+#General config
+thread_priotiry: 40 #For scheduling with real time kernel
+publish_period: 0.01 #command publish rate [sec]
+max_expected_latency: 0.1 #latency between command generation and controller recieving [sec]
+move_group_name: "rover_arm" 
+active_subgroup: "" #Switches to a subgroup of the move group
+use_gazebo: false #true if running in gazebo
+ee_frame_name: "rover_arm_tool0" #end effector frame
+planning_frame: "rover_arm_base_link" #planning frame
+robot_link_command_frame: "rover_arm_tool0" #robot link for command frame
+
+#Incoming command settings
+pose_command_in_topic: "~/pose_target_cmds" #Pose command topic
+cartesian_command_in_topic: "~/delta_twist_cmds" #Cartesian command topic
+joint_command_in_topic: "~/delta_joint_cmds" #Joint command topic
+command_in_type: "unitless" # "unitless"> in the range [-1:1], as if from joystick. "speed_units"> cmds are in m/s and rad/s
+scale: #Since these are applied to each joint or total motion, they either should be set to the limiting joints speed or the opposite depending on how moveit handles what limits the joints and if the commands sent to moveit servo limits these already.
+  linear:  10.0  # "Max linear velocity in m/s if using speed units or tracking a pose, else a scaling factor on the unitless commanded velocity. Used for Cartesian and pose tracking commands."
+  rotational: 10.0  # "Max angular velocity in rad/s if using speed units or tracking a pose, else a scaling factor on the unitless commanded velocity. Used for Cartesian and pose tracking commands."
+  joint: 10.0  # "Joint angular/linear velocity scale. Only used for unitless joint commands."
+incoming_command_timeout: 0.1 #discard commands older than timeout [sec]
+
+#Twist Settings
+apply_twist_commands_about_ee_frame: true #true twist applied to ee frame, false twist includes linear component from rotation of ee about planning frame
+
+#Pose Tracking Settings
+pose_tracking: 
+  linear_tolerance: 0.0005 #allowable linear error [m]
+  angular_tolerance: 0.0001 #allowable angular error [rad]
+
+#outgoing command settings
+status_topic: "~/status" #Status topic
+command_out_topic: "/rover_arm_controller/commands" #Command publish topic [joint_trajectory, commands]
+command_out_type: "std_msgs/Float64MultiArray" #[std_msgs/Float64MultiArray, trajectory_msgs/JointTrajectory] # type of command to publish
+publish_joint_positions: true #publish joint positions in output
+publish_joint_velocities: false #publish joint velicities in output
+publish_joint_accelerations: false #publish joint accelerations in output
+
+#Planning Scene Monitor
+monitored_planning_scene_topic: "/monitored_planning_scene" #Topic to monitor planning scene 
+joint_topic: "/joint_states" #Joint State topic
+check_octomap_collisions: false #check for octomap collisions'
+is_primary_planning_scene_monitor: false #true if servo will publish the planning environment
+
+#Smoothing plugin
+use_smoothing: true #enalbe smoothing plugin
+smoothing_filter_plugin_name: "online_signal_smoothing::ButterworthFilterPlugin" #smoothing plugin may be best to use acceleration limiting
+
+#collision monitor
+check_collisions: true #enalbe collision checking
+self_collision_proximity_threshold: 0.01 #self collision deceleration threshold [m]
+scene_collision_proximity_threshold: 0.05 #scene collision deceleration threshold [m]
+collision_check_rate: 10.0 #collision checking rate [hz]
+
+#Singularity Checking
+lower_singularity_threshold: 100.0 #deceleration threshold
+hard_stop_singularity_threshold: 400.0 #hard stop threshold
+leaving_singularity_threshold_multiplier: 3.0 #scale speed when moving away from singularity
+singularity_step_scale: 0.01 #scale test vecctor towards singularity
+
+#joint limiting
+halt_all_joints_in_joint_mode: true #halt all when one hits a limit
+halt_all_joints_in_cartesian_mode: true #halt all when one hits a limit
+joint_limit_margins: [0.05, 0.1, 0.1, 0.05, 0.1, 0.05, 0.01] #soft limit margin for each joint [rad or m]
+override_velocity_scaling_factor: 0.05 #scaling factor when servo overrides the velocity [0, 1]. Larger is less safe.
+
+#UR Servo Params (not sure if they exist
+collision_check_type: "threshold_distance"
+system_latency_compensation: 0.04
+low_latency_mode: false
+low_pass_filter_coeff: 10.0
+num_outgoing_halt_msgs_to_publish: 4
