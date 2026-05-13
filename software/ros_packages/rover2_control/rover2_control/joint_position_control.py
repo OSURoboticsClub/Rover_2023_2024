@@ -82,8 +82,8 @@ class JointPositionController(Node):
             motion_request.goal_constraints[0].joint_constraints.append(joint_constraint)
         
         # Set planning parameters
-        motion_request.max_velocity_scaling_factor = 0.5
-        motion_request.max_acceleration_scaling_factor = 0.5
+        motion_request.max_velocity_scaling_factor = 1.0
+        motion_request.max_acceleration_scaling_factor = 1.0
         motion_request.allowed_planning_time = 5.0
         motion_request.num_planning_attempts = 10
         
