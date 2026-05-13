@@ -92,7 +92,7 @@ def generate_launch_description():
                         ('cloud', '/camera/cloud')]),
         Node(
             package='rtabmap_util', executable='obstacles_detection', output='screen',
-            parameters=[parameters],
+            parameters=[{'frame_id': 'rover_base_origin'}],
             remappings=[('cloud', '/camera/cloud'),     # /unilidar/cloud
                         ('obstacles', '/camera/obstacles'),
                         ('ground', '/camera/ground')]),
