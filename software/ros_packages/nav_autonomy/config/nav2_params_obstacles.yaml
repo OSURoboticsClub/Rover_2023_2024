@@ -128,7 +128,7 @@ controller_server:
       vx_samples: 20
       vy_samples: 1
       vtheta_samples: 60
-      sim_time: 1.5
+      sim_time: 3.0
       linear_granularity: 0.05
       angular_granularity: 0.01
       transform_tolerance: 0.35
@@ -149,7 +149,7 @@ controller_server:
 
       PathDist.scale: 32.0
       GoalDist.scale: 24.0
-      BaseObstacle.scale: 0.02
+      BaseObstacle.scale: .03
 
       Oscillation.scale: 1.0
 
@@ -157,17 +157,18 @@ local_costmap:
   local_costmap:
     ros__parameters:
       use_sim_time: False
-      update_frequency: 5.0
+      update_frequency: 15.0
       publish_frequency: 2.0
       global_frame: odom
       robot_base_frame: rover_base_origin
       resolution: 0.05 # match rtab voxel_size
       robot_radius: 0.7
+      track_unknown_space: True
       always_send_full_costmap: True
       
       rolling_window: True
-      width: 5
-      height: 5
+      width: 10   # should be around double realsense max range
+      height: 10
 
       # Layers
       plugins: ["obstacle_layer", "inflation_layer"]
@@ -212,15 +213,15 @@ local_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: True
-        cost_scaling_factor: 7.0
-        inflation_radius: 1.3
+        cost_scaling_factor: 15.0
+        inflation_radius: .9
 
 
 global_costmap:
   global_costmap:
     ros__parameters:
       use_sim_time: False
-      update_frequency: 1.0
+      update_frequency: 3.0
       publish_frequency: 1.0
       global_frame: odom # map
       robot_base_frame: rover_base_origin
@@ -278,8 +279,8 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: True
-        cost_scaling_factor: 4.0
-        inflation_radius: 1.3
+        cost_scaling_factor: 15.0
+        inflation_radius: .9
       
 # map_server:
   #ros__parameters:
