@@ -17,7 +17,7 @@ import cv2
 import torch
 
 torch.backends.cudnn.enabled = False
-                    
+torch.backends.cuda.matmul.allow_tf32 = True  # use TF32 instead, faster on Jetson                   
 
 # ARUCO
 import asyncio
@@ -50,7 +50,7 @@ class YoloServer(Node):
 
         # YOLO PARAMETERS
         self.num_cameras = 1
-        self.source = "/dev/video64"
+        self.source = "/dev/rover/camera_infrared"
         self.quit = False
         self.cam_queue = deque()
         # Append camera carousel order
@@ -167,7 +167,7 @@ class YoloServer(Node):
                     if goal_handle.is_cancel_requested:
                         goal_handle.canceled()
                         self.busy = False
-                        cv2.destroyAllWindows()
+    #                    cv2.destroyAllWindows()
                         cap.release()
                         return YoloFind.Result()
 
@@ -206,15 +206,15 @@ class YoloServer(Node):
                         recent_mean = sum(recent_stack) / len(recent_stack)
 
                         # Overlay stats on display frame
-                        cv2.putText(
-                            display_frame,
-                            f"Total Mean: {total_mean:.2f}  Recent Mean: {recent_mean:.2f}",
-                            (10, 30),
-                            cv2.FONT_HERSHEY_SIMPLEX,
-                            0.6,
-                            (255, 255, 0),
-                            2,
-                        )
+#                        cv2.putText(
+#                            display_frame,
+#                            f"Total Mean: {total_mean:.2f}  Recent Mean: {recent_mean:.2f}",
+#                            (10, 30),
+#                            cv2.FONT_HERSHEY_SIMPLEX,
+#                            0.6,
+#                            (255, 255, 0),
+#                            2,
+#                        )
 
                         if total_mean >= self.stop_threshold:
                             # Lock in best detection and exit loop
@@ -223,8 +223,8 @@ class YoloServer(Node):
                                 best_idx
                             ].tolist()
                             # Show final frame before breaking
-                            cv2.imshow("YOLO Detection", display_frame)
-                            cv2.waitKey(1)
+ #                           cv2.imshow("YOLO Detection", display_frame)
+ #                           cv2.waitKey(1)
                             break
                         elif recent_mean >= self.check_threshold:
                             # TODO: send message to nav to stop and gather frames
@@ -245,7 +245,7 @@ class YoloServer(Node):
                         goal_handle.publish_feedback(feedback)
 
                     # Display the frame (with or without detections)
-                    cv2.imshow("YOLO Detection", display_frame)
+  #                  cv2.imshow("YOLO Detection", display_frame)
 
                     # Press 'q' to manually quit the window
                     if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -254,7 +254,7 @@ class YoloServer(Node):
                     frame_id += 1
 
                 cap.release()
-                cv2.destroyAllWindows()
+   #             cv2.destroyAllWindows()
 
                 # ==============================
                 # Complete action
