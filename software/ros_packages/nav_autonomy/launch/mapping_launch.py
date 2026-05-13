@@ -74,13 +74,18 @@ def generate_launch_description():
         # Custom point cloud publishing for local map
         Node(
             package='rtabmap_util', executable='point_cloud_xyz', output='screen',
-            parameters=[{'decimation': 2,
-                         'min_depth': 0.5,
+            parameters=[{'min_depth': 0.3,
                          'max_depth': 6.0, #3.0,
-                         'voxel_size': 0.05, # match nav2 local_costmap resolution
+
+                         'approx_sync': True,
+                         'sync_queue_size': 2,
+                         'approx_sync_max_interval': 0.05,
+
                          'noise_filter_radius': 0.1,
                          'noise_filtering_min_neighbors': 10,
-                         'filter_nans': True
+                         'filter_nans': True,
+
+                         'voxel_size': .05, 
                         }],
             remappings=[('depth/image', '/camera/d455/depth/image_rect_raw'),
                         ('depth/camera_info', '/camera/d455/depth/camera_info'),

@@ -21,7 +21,8 @@ def generate_launch_description():
             "camera_name": "d455",
             "serial_no": "318122302525",
      
-            "depth_module.depth_profile": "848x480x30",  # Camera depth fps caps out around 15. Setting this to 30 just makes camera info publish faster = easier sync for nodes down the line
+            "depth_module.depth_profile": "848x480x20", # Camera depth fps caps out around 15. Setting this to 20 just makes camera info publish faster = easier sync for nodes down the line
+                                                        # Note: enabling filtering ignores fps cap and defaults to 30
             "pointcloud.enable": False,
 
             "enable_depth": True,
@@ -30,6 +31,11 @@ def generate_launch_description():
             "enable_infra1": False,
             "enable_infra2": False,
             "enable_rgbd": False,
+
+            "decimation_filter.enable": True,
+            "decimation_filter.filter_magnitude": 8,
+            "spatial_filter.enable": True,
+            "spatial_filter.holes_fill": 1,
         }],
         output='screen'
     ) 
