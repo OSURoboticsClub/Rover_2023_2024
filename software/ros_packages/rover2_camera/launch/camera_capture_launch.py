@@ -45,14 +45,16 @@ def generate_launch_description():
             # "depth_module.enable_auto_exposure": True,
             # "pointcloud.enable": False,
 
+            "depth_module.enable": True,        
+            "rgb_camera.enable": False,
+            "infra_module.enable": False,
+            "pointcloud.enable": False,
+            "align_depth.enable": False,
+            "pointcloud.enable": False,
+
             "depth_width": 1280,
             "depth_height": 720,
-            "color_width": 1280,
-            "color_height": 720,
-            "pointcloud.enable": True,
-            "align_depth.enable": True,
             "depth_fps": 10,
-            "rgb_fps": 10,
         }],
         output='screen'
     ) 

@@ -82,8 +82,8 @@ def generate_launch_description():
                          'noise_filtering_min_neighbors': 10,
                          'filter_nans': True
                         }],
-            remappings=[('depth/image', '/camera/d455/aligned_depth_to_color/image_raw'),
-                        ('depth/camera_info', '/camera/d455/color/camera_info'),
+            remappings=[('depth/image', '/camera/d455/depth/image_rect_raw'),
+                        ('depth/camera_info', '/camera/d455/depth/camera_info'),
                         ('cloud', '/camera/cloud')]),
         Node(
             package='rtabmap_util', executable='obstacles_detection', output='screen',
