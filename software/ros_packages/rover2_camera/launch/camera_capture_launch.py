@@ -13,19 +13,6 @@ def generate_launch_description():
     left_calib = os.path.join(pkg_share, 'calibration', 'camera_left_chassis', 'calibration_data.yaml')
     right_calib = os.path.join(pkg_share, 'calibration', 'camera_right_chassis', 'calibration_data.yaml')
     
-#    realsense_launch_nav = Node(
-#        package='realsense2_camera',
-#        executable='realsense2_camera_node',
-#        name='d455',
-#        parameters=[{
-#            "camera_name": "d455",
-#            
-#            "pointcloud.enable": True,
-#            "align_depth.enable": True,
-#            "serial_no":"318122302525",
-#        }],
-#        output='screen'
-#    )
     realsense_launch_nav = Node(
         package='realsense2_camera',
         executable='realsense2_camera_node',
@@ -33,28 +20,16 @@ def generate_launch_description():
         parameters=[{
             "camera_name": "d455",
             "serial_no": "318122302525",
-            # "depth_module.depth_profile": "424x240x5",  
-            # "depth_module.infra_profile": "424x240x5", 
-            # "rgb_camera.color_profile": "424x240x5",
-            
-            # Test for better costmap clearing
-            #"depth_module.profile": "848x480x15",
-            #"rgb_camera.profile": "848x480x15",
-            # "depth_module.emitter_enabled": True, 
-            # "depth_module.laser_power": 360,
-            # "depth_module.enable_auto_exposure": True,
-            # "pointcloud.enable": False,
-
-            "depth_module.enable": True,        
-            "rgb_camera.enable": False,
-            "infra_module.enable": False,
-            "pointcloud.enable": False,
-            "align_depth.enable": False,
+     
+            "depth_module.depth_profile": "848x480x30",  # Camera depth fps caps out around 15. Setting this to 30 just makes camera info publish faster = easier sync for nodes down the line
             "pointcloud.enable": False,
 
-            "depth_width": 1280,
-            "depth_height": 720,
-            "depth_fps": 10,
+            "enable_depth": True,
+            "enable_color": False,
+            "enable_infra": False,
+            "enable_infra1": False,
+            "enable_infra2": False,
+            "enable_rgbd": False,
         }],
         output='screen'
     ) 
