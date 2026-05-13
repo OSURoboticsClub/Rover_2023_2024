@@ -2,6 +2,7 @@
 #include "driver/twai.h"
 #include <Wire.h>
 #include <Adafruit_BNO055.h>
+#include <cstring>
 
 #define CAN_TX_PIN GPIO_NUM_5
 #define CAN_RX_PIN GPIO_NUM_4
@@ -16,6 +17,9 @@ struct CANMessage {
     uint8_t data[8];
 };
 
+bool Toggle_Stabilization = true;
+bool Toggle_IMU_Feedback = false;
+
 float pitch_offset = 0.0f;
 float yaw_offset = 0.0f;
 unsigned long last_update = 0;
@@ -29,9 +33,6 @@ float yaw_target = 0;
 float pitch_target = 0;
 float roll_target = 0;
 
-bool stabilize_initialized = false;
-
-// Function Declarations
 bool sendCANMessage(uint32_t id, uint8_t len, uint8_t* data);
 void setODriveState(uint32_t node_id, uint32_t state);
 void setODrivePosition(uint32_t node_id, float position);
@@ -48,6 +49,7 @@ void IMU_Stabilization_Gyro(float yaw_rad, float pitch_rad, float roll_rad);
 void Jetson_position_control(CANMessage &msg);
 float applyLowPass(float *hist, float new_sample);
 float wrapAngle(float error);
+void FeedbackIMUData();
 
 #define FILTER_TAPS 5
 
@@ -59,7 +61,7 @@ static const float kernel[FILTER_TAPS] = {0.2f, 0.2f, 0.2f, 0.2f, 0.2f};
 
 void setup() {
     Serial.begin(115200); // baud rate = 115200
-    delay(1000);
+    delay(100);
 
     // 1. Initialize CAN (1Mbps)
     twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(CAN_TX_PIN, CAN_RX_PIN, TWAI_MODE_NORMAL);
@@ -73,11 +75,7 @@ void setup() {
     // 0x7E0 shifted left for alignment
     uint32_t filter_mask = ~(0x1F << 21); 
 
-    twai_filter_config_t f_config = {
-        .acceptance_code = filter_id,
-        .acceptance_mask = filter_mask,
-        .single_filter = true
-};
+    twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
     
     if (twai_driver_install(&g_config, &t_config, &f_config) == ESP_OK) {
         twai_start();
@@ -106,7 +104,7 @@ void setup() {
     delay(100);
 
     // For Node 5 (pitch)
-    clearODriveErrors(5 );
+    clearODriveErrors(5);
     delay(100);
     setODriveControlMode(5); // Force Position Mode
     delay(100);
@@ -116,58 +114,73 @@ void setup() {
     Wire.begin(21, 22);
     Wire.setClock(100000); // Super slow for long wires
     Wire.setTimeOut(10);  // CRITICAL: If I2C fails, it will time out in 10ms instead of hanging
-
+    
     if (!bno.begin()) {
-        Serial.println("BNO055 failed to start. Running in Motor-Only mode.");
+        Serial.println("BNO055 failed to start.");
     }
 
 }
 
 void loop() {
     CANMessage msg;
-    if (Serial.available()) {
-        char cmd = Serial.read();
-
-        if (cmd == 'q') {
-            Serial.println("Moving roll 0.05 revolutions left");
-            setODrivePosition(3, camera_pos_roll += 0.05);
-        } 
-        else if (cmd == 'a') {
-            Serial.println("Moving roll 0.05 revolutions right");
-            setODrivePosition(3, camera_pos_roll -= 0.05);
-        } 
-        else if (cmd == 'w') {
-            Serial.println("Moving yaw 0.05 revolutions left");
-            setODrivePosition(4, camera_pos_yaw += 0.05);
-        } 
-        else if (cmd == 's') {
-            Serial.println("Moving yaw 0.05 revolutions right");
-            setODrivePosition(4, camera_pos_yaw -= 0.05);
-        } 
-        else if (cmd == 'e') {
-            Serial.println("Moving pitch 0.05 revolutions left");
-            setODrivePosition(5, camera_pos_pitch += 0.05);
-        }
-        else if (cmd == 'd') {
-            Serial.println("Moving pitch 0.05 revolutions right");
-            setODrivePosition(5, camera_pos_pitch -= 0.05);
-        }
-    }
-
+    
     if (millis() - last_update >= update_interval) {
         last_update = millis();
-
+        
         imu::Vector<3> gyro = bno.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
         IMU_Stabilization_Gyro(gyro.x(), gyro.y(), gyro.z()); //stabilize using velocity feed forward
         
     }
     
-    receiveCANMessage(msg); //check for messages
-    if(msg.cmd_id == 0x001){
-        Jetson_position_control(msg); //if jetson sends CAN command to change position, 
+    if(receiveCANMessage(msg)){ //check for messages
+        if (msg.node_id == 2){
+            if(msg.cmd_id == 1){
+                Serial.println("CAN Message Received");
+                Jetson_position_control(msg); //if jetson sends CAN command to change position, 
+            }
+            if(msg.cmd_id == 2){
+                memcpy(&Toggle_Stabilization, &msg.data[0], 1);
+            }
+            if(msg.cmd_id == 3)
+            {
+                memcpy(&Toggle_IMU_Feedback, &msg.data[0], 1);
+            }
+        }
+    }
+
+    if(Toggle_IMU_Feedback){
+        FeedbackIMUData();
     }
 }
 
+
+void FeedbackIMUData(){
+    imu::Vector<3> gyro = bno.getVector(Adafruit_BNO055::VECTOR_GYROSCOPE);
+    imu::Vector<3> accel = bno.getVector(Adafruit_BNO055::VECTOR_ACCELEROMETER);
+    uint8_t data[8] = {0};
+    float Accel = 0;
+    float Gyro = 0;
+    
+    Accel = accel.x();
+    Gyro = gyro.x();
+    memcpy(&data[0], &Accel, 4);
+    memcpy(&data[4], &Gyro, 4);
+    sendCANMessage(can_make_id(1, 0x04), 8, data);
+
+    std::memset(data, 0, sizeof(data));
+    Accel = accel.y();
+    Gyro = gyro.y();
+    memcpy(&data[0], &Accel, 4);
+    memcpy(&data[4], &Gyro, 4);
+    sendCANMessage(can_make_id(1, 0x05), 8, data);
+
+    std::memset(data, 0, sizeof(data));
+    Accel = accel.z();
+    Gyro = gyro.z();
+    memcpy(&data[0], &Accel, 4);
+    memcpy(&data[4], &Gyro, 4);
+    sendCANMessage(can_make_id(1, 0x06), 8, data);
+}
 
 float wrapAngle(float error)
 {
@@ -260,26 +273,27 @@ void IMU_Stabilization_Gyro(float yaw_rad, float pitch_rad, float roll_rad)
 
 void Jetson_position_control(CANMessage &msg) {
     // msg.data[0] = Axis ID (3, 4, or 5)
-    // msg.data[1-4] = Float Position (Little Endian)
+    //msg.data[1] = direction (0 left, 1 right)
+    // msg.data[2-5] = Float Position (Little Endian)
     
-    float received_pos;
-    // Extract bytes 1, 2, 3, and 4 into the float variable
-    memcpy(&received_pos, &msg.data[1], 4);
+    if(msg.cmd_id == 1){
+        float received_pos;
+        // Extract bytes 1 through 5 into the float variable
+        //memcpy(&direction, &msg.data[1], 1);
+        memcpy(&received_pos, &msg.data[1], 4);
 
-    if (msg.data[0] == 3) {
-        camera_pos_roll = received_pos;
-        setODrivePosition(3, camera_pos_roll);
-        Serial.printf("Jetson set Roll to: %.3f\n", received_pos);
-    }
-    else if (msg.data[0] == 4) {
-        camera_pos_yaw = received_pos;
-        setODrivePosition(4, camera_pos_yaw);
-        Serial.printf("Jetson set Yaw to: %.3f\n", received_pos);
-    }
-    else if (msg.data[0] == 5) {
-        camera_pos_pitch = received_pos;
-        setODrivePosition(5, camera_pos_pitch);
-        Serial.printf("Jetson set Pitch to: %.3f\n", received_pos);
+        if (msg.data[0] == 3) {
+            setODrivePosition(3, received_pos);
+            Serial.printf("Jetson set Roll to: %.3f revolutions \n", received_pos);
+        }
+        else if (msg.data[0] == 4) {
+            setODrivePosition(4, received_pos);
+            Serial.printf("Jetson set Yaw to: %.3f revolutions \n", received_pos);
+        }
+        else if (msg.data[0] == 5) {
+            setODrivePosition(5, received_pos);
+            Serial.printf("Jetson set Pitch to: %.3f revolutions \n", received_pos);
+        }
     }
 }
 
@@ -307,9 +321,8 @@ bool sendCANMessage(uint32_t id, uint8_t len, uint8_t* data) {
     return (res == ESP_OK);
 }
 
-
 void setODriveInputMode(uint32_t node_id, uint32_t mode) {
-
+ 
     uint8_t data[8] = {0};
 
     memcpy(&data[0], &mode, sizeof(uint32_t));
@@ -319,8 +332,6 @@ void setODriveInputMode(uint32_t node_id, uint32_t mode) {
     sendCANMessage(id, 8, data);
 
 }
-
-
 
 // 0x07: Set Axis State
 
