@@ -86,7 +86,7 @@ private:
 				"Point cloud has fewer than 100 points, skipping processing."
 			);
 		return;
-}
+		}
 
 		//Create output object:
 		pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_cloud_table_removed(new pcl::PointCloud<pcl::PointXYZRGB>);
@@ -171,7 +171,7 @@ private:
 			Marker plane_marker;
 
 			//plane_marker.header.frame_id = "/quori/head_camera_optical"; //Old HW Rosbag Frame
-			plane_marker.header.frame_id = "/base_link"; //Rover D405 Frame
+			plane_marker.header.frame_id = "/rover_arm_base_link"; //Rover D405 Frame
 			plane_marker.header.stamp = rclcpp::Clock().now();
 
 			plane_marker.pose.position.x = 0;

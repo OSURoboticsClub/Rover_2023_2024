@@ -60,6 +60,13 @@ def generate_launch_description():
             description='Launch drivetrain with indendent ros2 control[default:true]'
     )
 
+    attachment = LaunchConfiguration('attachment', default='arm')
+    attachment_arg = DeclareLaunchArgument(
+        'attachment',
+        default_value='arm',
+        description="Attachment type"
+    )
+
 
     kinematics_yaml = load_yaml(
         "rover2_arm", "config/kinematics.yaml"   
@@ -87,7 +94,8 @@ def generate_launch_description():
             mappings={
                 "ros2_control_hardware_type": LaunchConfiguration(
                     "hardware_type"
-                )
+                ),
+                "attachment": LaunchConfiguration("attachment"),
             },
         )
         .robot_description_semantic(file_path="config/rover.srdf")
@@ -277,7 +285,7 @@ def generate_launch_description():
             "pointcloud.stream_filter": 2,
             # "enable_color": True,
             # "enable_depth": True,
-            "serial_no":"_218622273613",
+            # "serial_no":"_218622273613",
             "depth_fps": 5,
             "rgb_fps": 5,
         }],
@@ -322,6 +330,7 @@ def generate_launch_description():
             use_sim_time_arg,
             launch_ros2_control_arg,
             ros2_control_hardware_type, 
+            attachment_arg, 
             controller_type,
             move_group_node,
             ros2_control_node,
@@ -332,7 +341,7 @@ def generate_launch_description():
             moveit_arm_controller_spawner,
             controller_switcher_node,
             rviz_node,
-            #d405_node,
+            d405_node,
             #d455_node,
         ]
     )

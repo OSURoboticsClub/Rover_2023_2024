@@ -17,6 +17,7 @@
         <link name="rover_arm_short_arm"/>
         <link name="rover_arm_wrist_roll"/>
         <link name="rover_arm_tool0"/>
+        <link name="rover_arm_gripper"/>
         <link name="rover_arm_jaws_link"/>
         <joint name="rover_arm_base_joint"/>
         <joint name="rover_arm_shoulder_joint"/>
@@ -24,6 +25,7 @@
         <joint name="rover_arm_elbow_roll_joint"/>
         <joint name="rover_arm_wrist_pitch_joint"/>
         <joint name="rover_arm_wrist_roll_joint"/>
+        <joint name="rover_arm_gripper_joint"/>
         <joint name="rover_arm_gripper_jaws"/>
     </group>
     <group name="gripper">
@@ -81,4 +83,5 @@
     <disable_collisions link1="rover_arm_tool0" link2="d405_link" reason="Adjacent"/>
     <disable_collisions link1="rover_arm_gripper" link2="d405_link" reason="Adjacent"/>
     <disable_collisions link1="rover_arm_tool0" link2="rover_arm_gripper" reason="Adjacent"/>
+    <disable_collisions link1="rover_arm_wrist_roll" link2="rover_arm_gripper" reason="Never"/>
 </robot>
