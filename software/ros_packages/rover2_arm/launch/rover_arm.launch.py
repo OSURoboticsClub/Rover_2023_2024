@@ -57,7 +57,7 @@ def generate_launch_description():
     launch_ros2_control_arg = DeclareLaunchArgument(
             'launch_ros2_control',
             default_value='true',
-            description='Launch drivetrain with indendent ros2 control[default:true]'
+            description='Launch arm with indendent ros2 control[default:true]'
     )
 
     attachment = LaunchConfiguration('attachment', default='arm')
@@ -66,7 +66,6 @@ def generate_launch_description():
         default_value='arm',
         description="Attachment type"
     )
-
 
     kinematics_yaml = load_yaml(
         "rover2_arm", "config/kinematics.yaml"   
@@ -315,12 +314,10 @@ def generate_launch_description():
     robot_state_publisher_node = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
-        parameters=[
-            moveit_config.robot_description,
-            {
-            'use_sim_time': use_sim_time,
-            }
-        ],
+        parameters=[{
+            'use_sim_time': "False",
+            "robot_description": moveit_config.robot_description
+        }],
         output="screen",
         condition=IfCondition(launch_ros2_control)
     )
@@ -341,7 +338,7 @@ def generate_launch_description():
             moveit_arm_controller_spawner,
             controller_switcher_node,
             rviz_node,
-            d405_node,
+            # d405_node,
             #d455_node,
         ]
     )

@@ -3,8 +3,11 @@ import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 
-#GPS Message Type (TODO: Change to propper type)
-from rover2_control_interface.msg import GPSStatusMessage
+#OLD Rover GPS Message Type
+#from rover2_control_interface.msg import GPSStatusMessage
+
+#GPS Message Type
+from sensor_msgs.msg import NavSatFix
 
 #Web Imports
 # Requirements:
@@ -84,8 +87,8 @@ class UbiquitiLogger(Node):
         #Initialize the GPS topic subscription
         #Do this after starting the session and opening the file in case it matters/to avoid a race condition?
         self.subscription = self.create_subscription(
-            GPSStatusMessage,
-            'tower/status/gps',
+            NavSatFix,
+            'gps/fix',
             self.gps_callback,
             10)
 
@@ -98,7 +101,8 @@ class UbiquitiLogger(Node):
             self.get_logger().warn("Failed to Read Ubiquiti data")
             return #TODO: Have it restart the session/reattempt login if it fails ideally?
 
-        gps_data = [datetime.datetime.now().time(), msg.rover_latitude, msg.rover_longitude] #Placeholder, replace with ros message data
+        #gps_data = [datetime.datetime.now().time(), msg.rover_latitude, msg.rover_longitude] #Old rover GPS data format
+        gps_data = [datetime.datetime.now().time(), msg.latitude, msg.longitude]
 
         #Actually write to the file :)
         write_data(self.file,gps_data,self.ubiquiti_keys,ubiquiti_data_dict)

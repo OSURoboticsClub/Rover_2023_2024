@@ -83,7 +83,7 @@ class CameraCaptureNode(Node):
             f'image/jpeg,width={cap_width},height={cap_height},framerate={cap_framerate}/1 ! '
             f'nvv4l2decoder mjpeg=1 ! nvvidconv ! tee name=t '
             f't. ! queue ! rtpvrawpay ! udpsink host=127.0.0.1 port={mux_port} sync=false async=false '
-            f't. ! queue ! videoscale ! '
+            f't. ! queue leaky=downstream ! videoscale ! '
             f'video/x-raw,width={stream_width},height={stream_height},format=I420 ! '
             f'nvvidconv ! video/x-raw(memory:NVMM),format=NV12 ! '
             f'nvv4l2h265enc preset-level={preset_level} bitrate={bitrate} ! '

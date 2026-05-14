@@ -1,6 +1,6 @@
 controller_manager:
   ros__parameters:
-    update_rate: 100
+    update_rate: 30
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
@@ -12,7 +12,7 @@ controller_manager:
 
 drive_controller:
   ros__parameters:
-    publish_rate: 100.0
+    publish_rate: 30.0
     left_wheel_names:
       - rover_front_left_wheel_joint
       - rover_middle_left_wheel_joint
@@ -32,9 +32,8 @@ drive_controller:
     #topmost frame of the robot
     odom_frame_id: odom
     base_frame_id: rover_base_origin
-    enable_odom_tf: False
-
-    use_stamped_vel: False
+    enable_odom_tf: false
+    use_stamped_velocities: true
 
     # Velocity and acceleration limits for the robot
     linear:

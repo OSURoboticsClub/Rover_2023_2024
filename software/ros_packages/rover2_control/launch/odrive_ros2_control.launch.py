@@ -56,10 +56,10 @@ def generate_launch_description():
             description='Robot Hardware [main, sim, gazebo]'
     )
 
-    launch_ros2_control = LaunchConfiguration('launch_ros2_control', default='true')
+    launch_ros2_control = LaunchConfiguration('launch_ros2_control', default='True')
     launch_ros2_control_arg = DeclareLaunchArgument(
             'launch_ros2_control',
-            default_value='true',
+            default_value='True',
             description='Launch drivetrain with indendent ros2 control[default:true]'
     )
 
@@ -202,12 +202,12 @@ def generate_launch_description():
         #     name='tower_pan_tilt',
         #     **config
         # ),
-        #Node(
-        #    package='rover2_control',
-        #    executable='joint_position_control',
-        #    name='joint_position',
-        #    **config
-        #),
+        Node(
+            package='rover2_control',
+            executable='joint_position_control',
+            name='joint_position',
+            **config
+        ),
         robot_state_publisher_node,
         ros2_control_node,
         joint_state_broadcaster_spawner,

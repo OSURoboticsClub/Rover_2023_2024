@@ -7,7 +7,7 @@ Urdf of the rovers chassis and bogies
         <!-- Set wheel direction -->
         <xacro:property name="wheel_direction" value="1.0"/>
         <xacro:if value="${hardware_type == 'main'}">
-            <xacro:property name="wheel_direction" value="-1.0"/>
+            <xacro:property name="wheel_direction" value="1.0"/>
         </xacro:if>
 
         <!-- Main Body -->

@@ -34,7 +34,7 @@ DEFAULT_HERTZ = 30
 COMMUNICATIONS_TIMEOUT = 0.15  # Seconds
 
 MODBUS_ID = 1
-RPS_FACTOR = 4
+RPS_FACTOR = 4 #Should be like 4
 
 STICK_DEADZONE = 0.01
 
@@ -175,10 +175,10 @@ class IrisController(Node):
             else:
 
                 left = (left_y_axis - SBUS_VALUES["SBUS_MID"]) / SBUS_VALUES[
-                    "SBUS_RANGE"]
+                    "SBUS_RANGE"] * RPS_FACTOR
 
                 right = (right_x_axis - SBUS_VALUES["SBUS_MID"]) / SBUS_VALUES[
-                    "SBUS_RANGE"]
+                    "SBUS_RANGE"] * RPS_FACTOR
 
                 command.controller_present = True
                 command.drive_twist.linear.x = left
@@ -257,7 +257,7 @@ class IrisController(Node):
                 difference = SBUS_VALUES["SBUS_MID"]-SBUS_VALUES["SBUS_MIN"]
                 for i in range(len(axes)):
                     if axes[i] != 0.0:
-                        axes[i] = ((axes[i]-SBUS_VALUES["SBUS_MID"])/difference) * RPS_FACTOR
+                        axes[i] = ((axes[i]-SBUS_VALUES["SBUS_MID"])/difference) 
                         self.get_logger().info(f"Axis {i}: {axes[i]}")       
                         if abs(axes[i]) < STICK_DEADZONE:
                             axes[i] = 0.0
