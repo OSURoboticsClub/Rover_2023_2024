@@ -1,40 +1,75 @@
-
 #ifndef CLOSE_LOOP_SERVO_HPP
 #define CLOSE_LOOP_SERVO_HPP
- 
- #include <geometry_msgs/msg/twist_stamped.hpp>
- #include <control_msgs/msg/joint_jog.hpp>
- #include <std_srvs/srv/trigger.hpp>
- #include <moveit_msgs/msg/planning_scene.hpp>
- #include <rclcpp/client.hpp>
- #include <rclcpp/experimental/buffers/intra_process_buffer.hpp>
- #include <rclcpp/node.hpp>
- #include <rclcpp/publisher.hpp>
- #include <rclcpp/qos.hpp>
- #include <rclcpp/qos_event.hpp>
- #include <rclcpp/subscription.hpp>
- #include <rclcpp/time.hpp>
- #include <rclcpp/utilities.hpp>
- #include <thread>
 
+#include <rclcpp/rclcpp.hpp>
+#include <rclcpp_action/rclcpp_action.hpp>
 
-const std::string TWIST_TOPIC = "/servo_node/delta_twist_cmds";
-const std::string JOINT_TOPIC = "/servo_node/delta_joint_cmds";
-const std::string EEF_FRAME_ID = "rover_arm_tool0";
-const std::string BASE_FRAME_ID = "rover_arm_base_link";
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
+#include "tf2/exceptions.h"
+#include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
-namespace moveit_servo
+#include <vector>
+#include <array>
+
+#include <geometry_msgs/msg/pose.hpp>
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <visualization_msgs/msg/marker.hpp>
+#include <geometry_msgs/msg/twist_stamped.hpp>
+
+#include <std_srvs/srv/trigger.hpp>
+
+class CloseLoopServo : public rclcpp::Node, public std::enable_shared_from_this<CloseLoopServo>
 {
-class CloseLoopServo : public rclcpp::Node
-{
-  public:
-    CloseLoopServo(const rclcpp::NodeOptions& options)
+public:
+    CloseLoopServo();
 
-  private:
-    void timer_callback(){}
+private:
+    // Moveit msg Type aliases for readability
+    using MoveGroupInterface = moveit::planning_interface::MoveGroupInterface;
+
+    // Robot State
+    geometry_msgs::msg::PoseStamped current_pose_; 
+    geometry_msgs::msg::PoseStamped target_pose_;
+    geometry_msgs::msg::TwistStamped controller_twist_;
+
+    float kp_ = 0.5; // Proportional gain for servoing
+    float ki_ = 0.0; // Integral gain for servoing
+    float kd_ = 0.1; // Derivative gain for servoing
+
+    bool run_close_loop_servo_ = false; // Flag to control servoing loop
+    bool reset_position_ = true; // Flag to trigger position reset
+
+    // TF2 components
+    tf2_ros::Buffer tf_buffer_;
+    tf2_ros::TransformListener tf_listener_;
+
+    //Service
+    rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr start_servo_srv_;
+    rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr stop_servo_srv_;
+    rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr reset_position_srv_;
+
+    //Subscribers
+    rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr joy_twist_sub_;
+
+    //Publishers
+    rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr servo_twist_pub_;
+
+    //Timers
     rclcpp::TimerBase::SharedPtr timer_;
-    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr publisher_;
-};
-} // namespace moveit servo
 
-#endif //CLOSE_LOOP_SERVO_HPP
+    void timer_callback();
+
+    void joy_twist_callback(const geometry_msgs::msg::TwistStamped::SharedPtr msg);
+
+    void stop_servo_callback(const std::shared_ptr<std_srvs::srv::Trigger::Request> request, std::shared_ptr<std_srvs::srv::Trigger::Response> response);
+
+    void start_servo_callback(const std::shared_ptr<std_srvs::srv::Trigger::Request> request, std::shared_ptr<std_srvs::srv::Trigger::Response> response);
+
+    void reset_position_callback(const std::shared_ptr<std_srvs::srv::Trigger::Request> request, std::shared_ptr<std_srvs::srv::Trigger::Response> response);
+
+    geometry_msgs::msg::TwistStamped zero_twist();
+
+};
+
+#endif  // CLOSE_LOOP_SERVO_HPP_
