@@ -1,0 +1,11 @@
+<library path="rob599_nav_gazebo">
+  <class
+    name="rob599_nav_gazebo::ClearanceLayer"
+    type="rob599_nav_gazebo::ClearanceLayer"
+    base_class_type="nav2_costmap_2d::Layer">
+    <description>
+      ClearanceLayer plugin that marks cells as LETHAL_OBSTACLE
+      if obstacles are lower than the robot height (vertical clearance check).
+    </description>
+  </class>
+</library>

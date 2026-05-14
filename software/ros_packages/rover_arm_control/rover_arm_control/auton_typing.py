@@ -1,3 +1,19 @@
+"""
+Auton Typing Node
+DAM Robotics
+Authors: Jared Northrop
+Year: 2526
+
+This node implements autonomous typing for the University Rover Challenge's equipment servicing mission. A 
+string is sent through an action call where each key is comma seperated. 
+
+Notes
+-----
+- See dictionary for key names. 
+- Key poses are hardcoded offsets from the Q key. 
+- Current implementation always moves back to the Q key before moving to the next key in the phrase. 
+
+"""
 import rclpy
 from rclpy.node import Node
 

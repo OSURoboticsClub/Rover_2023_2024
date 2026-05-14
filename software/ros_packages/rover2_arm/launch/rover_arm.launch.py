@@ -40,6 +40,13 @@ def generate_launch_description():
         description="Ros2 Control Hardware Interface Type [main, sim]",
     )
 
+    use_sim_time = LaunchConfiguration('use_sim_time', default='false')
+    use_sim_time_arg = DeclareLaunchArgument(
+        'use_sim_time',
+        default_value='false',
+        description="Use simulation time"
+    )
+
     controller_type= DeclareLaunchArgument(
         "controller_type",
         default_value="xbox",
@@ -53,6 +60,12 @@ def generate_launch_description():
             description='Launch arm with indendent ros2 control[default:true]'
     )
 
+    attachment = LaunchConfiguration('attachment', default='arm')
+    attachment_arg = DeclareLaunchArgument(
+        'attachment',
+        default_value='arm',
+        description="Attachment type"
+    )
 
     kinematics_yaml = load_yaml(
         "rover2_arm", "config/kinematics.yaml"   
@@ -80,7 +93,8 @@ def generate_launch_description():
             mappings={
                 "ros2_control_hardware_type": LaunchConfiguration(
                     "hardware_type"
-                )
+                ),
+                "attachment": LaunchConfiguration("attachment"),
             },
         )
         .robot_description_semantic(file_path="config/rover.srdf")
@@ -270,7 +284,7 @@ def generate_launch_description():
             "pointcloud.stream_filter": 2,
             # "enable_color": True,
             # "enable_depth": True,
-            "serial_no":"_218622273613",
+            # "serial_no":"_218622273613",
             "depth_fps": 5,
             "rgb_fps": 5,
         }],
@@ -310,19 +324,21 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
+            use_sim_time_arg,
             launch_ros2_control_arg,
             ros2_control_hardware_type, 
+            attachment_arg, 
             controller_type,
-            rviz_node,
-            container,
             move_group_node,
             ros2_control_node,
+            robot_state_publisher_node,
+            container,
             joint_state_broadcaster_spawner,
             rover_arm_controller_spawner,
             moveit_arm_controller_spawner,
             controller_switcher_node,
-            robot_state_publisher_node,
-            #d405_node,
+            rviz_node,
+            # d405_node,
             #d455_node,
         ]
     )
