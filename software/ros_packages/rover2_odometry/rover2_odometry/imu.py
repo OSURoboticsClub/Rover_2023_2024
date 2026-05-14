@@ -256,7 +256,7 @@ class IMUNode(Node):
             euler = self.imu.euler
             if euler and euler[0] is not None:
                 # Get heading and apply magnetic declination
-                offset_heading = euler[0] + self.magnetic_declination
+                offset_heading = euler[0] #+ self.magnetic_declination
                 
                 # Normalize to 0-360
                 if offset_heading > 360:

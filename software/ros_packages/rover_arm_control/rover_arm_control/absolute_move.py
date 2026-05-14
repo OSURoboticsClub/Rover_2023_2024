@@ -82,8 +82,8 @@ class GripperMoveNode(Node):
         
         self.move_action = ActionServer(self, RelativeMove, 'absolute_move', self.set_callback_flag)
         #set robot frames
-        self.target_frame = "arm_gripper"
-        self.reference_frame = "base_link"
+        self.target_frame = "rover_arm_gripper"
+        self.reference_frame = "rover_arm_base_link"
 
         self.latest_joint_state = None
 
@@ -245,13 +245,14 @@ class GripperMoveNode(Node):
         #switch ros2 control controller to servo
         self.start_servo()
         self.switch_controller(servo=True)
+        self.get_logger().info("Switched back to servo controller")
         return response
 
     def get_EE_pose(self):
         # Get the current pose of the gripper
         try:
             trans = self.tf_buffer.lookup_transform(
-                "base_link",  # target frame
+                self.reference_frame,  # target frame
                 self.target_frame,  # source frame
                 rclpy.time.Time())  # latest available
 

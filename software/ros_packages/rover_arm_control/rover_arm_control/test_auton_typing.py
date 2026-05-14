@@ -1,3 +1,13 @@
+"""
+Test Auton Typing
+DAM Robotics
+Authors: Jared Northrop
+Year: 2526
+
+This node sends an action call to the auton typing node. Modify the self.message.phrase to change the phrase 
+to be typed. Phrases need to be comma spaced (See dictionary in auton typing node). 
+
+"""
 import rclpy
 from rclpy.node import Node
 
