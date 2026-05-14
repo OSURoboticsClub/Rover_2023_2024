@@ -5,14 +5,14 @@ Urdf for the rover of the DAM Robotics Rover triple bogie system.
 -->
 
 <robot name="rover" xmlns:xacro="https://ros.org/wiki/xacro">
-    <xacro:macro name="rover" params="name attachment:=arm">
+    <xacro:macro name="rover" params="name attachment:=arm hardware_type:=main">
         <!-- Includes (material libraries, etc) -->
         <xacro:include filename="$(find rover_arm_urdf)/urdf/rover2_arm.urdf.xacro" />
         <xacro:include filename="$(find rover_urdf)/urdf/rover2_body.urdf.xacro"/>
         <xacro:include filename="$(find rover_urdf)/urdf/materials.xacro" />
 
         <!-- Link Chasis with bogies and tower -->
-        <xacro:rover_body name="rover">
+        <xacro:rover_body name="rover" hardware_type="${hardware_type}">
         </xacro:rover_body>
 
 
@@ -21,6 +21,23 @@ Urdf for the rover of the DAM Robotics Rover triple bogie system.
             <xacro:rover2_arm parent="rover_base_origin" >
                 <origin rpy= "0.0 0.0 0.0" xyz="0.173803 -0.020767 0.071924"/>
             </xacro:rover2_arm>
+
+            <!-- Include sensors and other links -->
+            <xacro:include filename="$(find realsense2_description)/urdf/_d405.urdf.xacro"/>
+        
+            <!-- Instantiate micros  -->
+            <xacro:sensor_d405 parent ="rover_arm_gripper" name="d405" use_nominal_extrinsics="true">
+                <!-- For older urdf <origin xyz="0 0.04075 0.1" rpy="0 -1.3963 -1.5708"/> -->
+                <origin xyz="-0.001611 -0.040711 0.099525" rpy="0.0 -1.3963635 1.5707963"/> 
+            </xacro:sensor_d405>
+        </xacro:if>
+
+        <xacro:if value="${attachment== 'northrop_arm'}">
+            <xacro:include filename="$(find rover_arm_urdf)/urdf/northrop_arm.urdf.xacro" />
+
+            <xacro:northrop_arm parent="rover_base_origin" >
+                <origin rpy= "0.0 0.0 3.14159265359" xyz="0.231803 -0.020767 0.141924"/>
+            </xacro:northrop_arm>
 
             <!-- Include sensors and other links -->
             <xacro:include filename="$(find realsense2_description)/urdf/_d405.urdf.xacro"/>
@@ -48,6 +65,7 @@ Urdf for the rover of the DAM Robotics Rover triple bogie system.
             <!-- Arm option for gripper -->
 
         <!-- Gazebo Setup -->
+        <!-- Note that the below camera is on the depth frame which may not be the actual frame since aligned depth to color may be used instead -->
         <gazebo reference="d455_depth_frame">
             <sensor name="d455" type="rgbd_camera">
                 <ignition_frame_id>d455_depth_frame</ignition_frame_id>
@@ -74,6 +92,7 @@ Urdf for the rover of the DAM Robotics Rover triple bogie system.
                     <width>1280</width>
                     <height>720</height>
                     <format>R_FLOAT32</format>
+                    <!-- <format>R8G8B8</format> -->
                 </image>
                 <clip>
                     <near>0.1</near>

@@ -1,0 +1,14 @@
+<library path="rob599_nav_gazebo">
+
+<class
+    name="rob599_nav_gazebo::ElevationLayer"
+    type="rob599_nav_gazebo::ElevationLayer"
+    base_class_type="nav2_costmap_2d::Layer">
+
+    <description>
+        Elevation-based terrain slope costmap layer
+    </description>
+
+</class>
+
+</library>

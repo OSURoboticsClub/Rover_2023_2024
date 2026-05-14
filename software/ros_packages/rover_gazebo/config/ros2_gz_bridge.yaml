@@ -3,6 +3,26 @@
   ros_type_name: "sensor_msgs/msg/PointCloud2"
   gz_type_name: "ignition.msgs.PointCloudPacked"
   direction: GZ_TO_ROS  # BIDIRECTIONAL or ROS_TO_IGN
+- ros_topic_name: "camera/d455/aligned_depth_to_color/image_raw"
+  gz_topic_name: "/camera/d455/depth/color/depth_image"
+  ros_type_name: "sensor_msgs/msg/Image"
+  gz_type_name: "ignition.msgs.Image"
+  direction: GZ_TO_ROS  # BIDIRECTIONAL or ROS_TO_IGN
+- ros_topic_name: "camera/d455/color/image"
+  gz_topic_name: "/camera/d455/depth/color/image"
+  ros_type_name: "sensor_msgs/msg/Image"
+  gz_type_name: "ignition.msgs.Image"
+  direction: GZ_TO_ROS  # BIDIRECTIONAL or ROS_TO_IGN
+- ros_topic_name: "camera/d455/color/camera_info"
+  gz_topic_name: "/camera/d455/depth/color/camera_info"
+  ros_type_name: "sensor_msgs/msg/CameraInfo"
+  gz_type_name: "ignition.msgs.CameraInfo"
+  direction: GZ_TO_ROS  # BIDIRECTIONAL or ROS_TO_IGN
+- ros_topic_name: "camera/d455/aligned_depth_to_color/camera_info"
+  gz_topic_name: "/camera/d455/depth/color/camera_info"
+  ros_type_name: "sensor_msgs/msg/CameraInfo"
+  gz_type_name: "ignition.msgs.CameraInfo"
+  direction: GZ_TO_ROS  # BIDIRECTIONAL or ROS_TO_IGN
 - ros_topic_name: "imu/data/raw"
   gz_topic_name: "/imu/data/raw"
   ros_type_name: "sensor_msgs/msg/Imu"

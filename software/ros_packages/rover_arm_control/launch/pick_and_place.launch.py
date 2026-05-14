@@ -1,3 +1,11 @@
+"""
+Pick and Place Launch
+DAM Robotics
+Authors: Jared Northrop, Osian Leahy, 
+Year: 2526
+
+This launch file launches the necessary nodes for ROB514 pick and place project. 
+"""
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.actions import IncludeLaunchDescription, RegisterEventHandler

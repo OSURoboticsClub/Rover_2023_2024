@@ -10,31 +10,31 @@ default_acceleration_scaling_factor: 1.0
 joint_limits:
   rover_arm_base_joint:
     has_velocity_limits: true
-    max_velocity: 1.15 #by math 5.5
+    max_velocity: 0.565478
     has_acceleration_limits: true
-    max_acceleration: 2.75 #math 5.5
+    max_acceleration: 2.261947
   rover_arm_shoulder_joint:
     has_velocity_limits: true
-    max_velocity: 0.72 #math 3.5
+    max_velocity: 0.353429
     has_acceleration_limits: true
-    max_acceleration: 1.4 #math 3.5
+    max_acceleration: 1.413717
   rover_arm_elbow_pitch_joint:
     has_velocity_limits: true
-    max_velocity: 1.17 #math 5.6
+    max_velocity: 0.604799
     has_acceleration_limits: true
-    max_acceleration: 2.8 #math 5.6
+    max_acceleration: 2.419194
   rover_arm_elbow_roll_joint:
     has_velocity_limits: true
-    max_velocity: 3.88 #math 18.5
+    max_velocity: 1.884956
     has_acceleration_limits: true
-    max_acceleration: 9.25 #math 18.5
+    max_acceleration: 7.539822
   rover_arm_wrist_pitch_joint:
     has_velocity_limits: true
-    max_velocity: 1.23 # math 5.9
+    max_velocity: 0.611337
     has_acceleration_limits: true
-    max_acceleration: 5.95 # math 5.9
+    max_acceleration: 2.445348
   rover_arm_wrist_roll_joint:
     has_velocity_limits: true
-    max_velocity: 4.61 #math 22.0
+    max_velocity: 2.261947
     has_acceleration_limits: true
-    max_acceleration: 11.0 #math 22.0
+    max_acceleration: 9.047787

@@ -8,7 +8,6 @@
                 <xacro:if value="${ros2_control_hardware_type == 'main'}">
                     <plugin>odrive_ros2_control_plugin/ODriveHardwareInterface</plugin>
                     <param name="can">can0</param>
-                    <plugin>mock_components/GenericSystem</plugin>
                 </xacro:if>
                 <xacro:if value="${ros2_control_hardware_type == 'sim'}">
                     <plugin>mock_components/GenericSystem</plugin>
@@ -17,62 +16,6 @@
                     <plugin>gz_ros2_control/GazeboSimSystem</plugin>
                 </xacro:if>
             </hardware>
-
-
-            <!-- <joint name="rover_front_left_link_joint">
-                <state_interface name="position">
-                    <param name="initial_value">${initial_positions['rover_front_left_link_joint']}</param>
-                </state_interface>
-            </joint>
-            <joint name="rover_back_left_link_joint">
-                <state_interface name="position">
-                    <param name="initial_value">${initial_positions['rover_back_left_link_joint']}</param>
-                </state_interface>
-            </joint>
-            <joint name="rover_front_left_bogie_joint">
-                <state_interface name="position">
-                    <param name="initial_value">${initial_positions['rover_front_left_bogie_joint']}</param>
-                </state_interface>
-            </joint> -->
-            <!-- Four Bar linkage doesn't exist in URDF's -->
-            <!-- <joint name="rover_back_left_bogie_joint">
-                <state_interface name="position">
-                    <param name="initial_value">${initial_positions['rover_back_left_bogie_joint']}</param>
-                </state_interface>
-            </joint> -->
-
-
-
-            <!--<joint name="rover_front_right_link_joint">
-                <state_interface name="position">
-                    <param name="initial_value">${initial_positions['rover_front_right_link_joint']}</param>
-                </state_interface>
-            </joint>
-            <joint name="rover_back_right_link_joint">
-                <state_interface name="position">
-                    <param name="initial_value">${initial_positions['rover_back_right_link_joint']}</param>
-                </state_interface>
-            </joint>
-            <joint name="rover_front_right_bogie_joint">
-                <state_interface name="position">
-                    <param name="initial_value">${initial_positions['rover_front_right_bogie_joint']}</param>
-                </state_interface>
-            </joint>-->
-            <!-- Four Bar linkage doesn't exist in URDF's -->
-            <!-- <joint name="rover_back_right_bogie_joint">
-                <state_interface name="position">
-                    <param name="initial_value">${initial_positions['rover_back_right_bogie_joint']}</param>
-                </state_interface>
-            </joint> -->
-
-            
-            <!--<joint name="rover_rear_bogie_joint">
-                <state_interface name="position">
-                    <param name="initial_value">${initial_positions['rover_rear_bogie_joint']}</param>
-                </state_interface>
-            </joint>-->
-
-
             
             <joint name="rover_front_left_wheel_joint">
                 <param name="node_id">0</param>
@@ -105,9 +48,6 @@
                 <state_interface name="velocity"/>
             </joint>
 
-
-
-
             <joint name="rover_front_right_wheel_joint">
                 <param name="node_id">1</param>
                 <param name="gear_ratio">50</param>
@@ -137,6 +77,71 @@
                     <param name="initial_value">${initial_positions['rover_back_right_wheel_joint']}</param>
                 </state_interface>
                 <state_interface name="velocity"/>
+            </joint>
+        </ros2_control>
+        <ros2_control  name="${name}_passive" type="system">
+            <hardware>
+                <xacro:if value="${ros2_control_hardware_type == 'main'}">
+                    <plugin>mock_components/GenericSystem</plugin>
+                </xacro:if>
+                <xacro:if value="${ros2_control_hardware_type == 'sim'}">
+                    <plugin>mock_components/GenericSystem</plugin>
+                </xacro:if>
+                <xacro:if value="${ros2_control_hardware_type == 'gazebo'}">
+                    <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+                </xacro:if>
+            </hardware>
+            <joint name="rover_front_left_link_joint">
+                <state_interface name="position">
+                    <param name="initial_value">${initial_positions['rover_front_left_link_joint']}</param>
+                </state_interface>
+            </joint>
+            <joint name="rover_back_left_link_joint">
+                <state_interface name="position">
+                    <param name="initial_value">${initial_positions['rover_back_left_link_joint']}</param>
+                </state_interface>
+            </joint>
+            <joint name="rover_front_left_bogie_joint">
+                <state_interface name="position">
+                    <param name="initial_value">${initial_positions['rover_front_left_bogie_joint']}</param>
+                </state_interface>
+            </joint>
+            <!-- Four Bar linkage doesn't exist in URDF's -->
+            <!-- <joint name="rover_back_left_bogie_joint">
+                <state_interface name="position">
+                    <param name="initial_value">${initial_positions['rover_back_left_bogie_joint']}</param>
+                </state_interface>
+            </joint> -->
+
+
+
+            <joint name="rover_front_right_link_joint">
+                <state_interface name="position">
+                    <param name="initial_value">${initial_positions['rover_front_right_link_joint']}</param>
+                </state_interface>
+            </joint>
+            <joint name="rover_back_right_link_joint">
+                <state_interface name="position">
+                    <param name="initial_value">${initial_positions['rover_back_right_link_joint']}</param>
+                </state_interface>
+            </joint>
+            <joint name="rover_front_right_bogie_joint">
+                <state_interface name="position">
+                    <param name="initial_value">${initial_positions['rover_front_right_bogie_joint']}</param>
+                </state_interface>
+            </joint>
+            <!-- Four Bar linkage doesn't exist in URDF's -->
+            <!-- <joint name="rover_back_right_bogie_joint">
+                <state_interface name="position">
+                    <param name="initial_value">${initial_positions['rover_back_right_bogie_joint']}</param>
+                </state_interface>
+            </joint> -->
+
+            
+            <joint name="rover_rear_bogie_joint">
+                <state_interface name="position">
+                    <param name="initial_value">${initial_positions['rover_rear_bogie_joint']}</param>
+                </state_interface>
             </joint>
         </ros2_control>
         <!-- <gazebo>

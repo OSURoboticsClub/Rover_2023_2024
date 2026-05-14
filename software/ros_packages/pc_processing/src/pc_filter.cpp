@@ -42,7 +42,7 @@ public:
 	FilterCloud() : Node("pc_filter"),
 		tf_buffer_(std::make_unique<tf2_ros::Buffer>(this->get_clock())),
 		tf_listener_(std::make_shared<tf2_ros::TransformListener>(*tf_buffer_)),
-		target_frame_("base_link") {
+		target_frame_("rover_arm_base_link") {
 		
 		//Subscribe to the rosbag stream
 		subscriber_ = this->create_subscription<PointCloud2>("raw_point_cloud", 5, std::bind(&FilterCloud::sub_callback, this, _1));
@@ -103,13 +103,13 @@ private:
 
 		//Create an output object in the robot frame:
 		pcl::PointCloud<pcl::PointXYZRGB>::Ptr rover_cloud_trunc(new pcl::PointCloud<pcl::PointXYZRGB>);
-		RCLCPP_INFO(this->get_logger(),"THis try is soo good");
+		// RCLCPP_INFO(this->get_logger(),"THis try is soo good");
 
 		//Try and get the transform tree
 		try {
 
 			geometry_msgs::msg::TransformStamped transform_stamped = tf_buffer_->lookupTransform(target_frame_, msg->header.frame_id, msg->header.stamp);
-			RCLCPP_INFO(this->get_logger(),"THis try sucks right here");
+			// RCLCPP_INFO(this->get_logger(),"THis try sucks right here");
 
 			if (gripper_cloud_trunc->empty()) {
 				RCLCPP_WARN(this->get_logger(), "Input cloud empty — skipping transform");
@@ -138,7 +138,7 @@ private:
 			RCLCPP_ERROR(this->get_logger(), "Unknown exception in transformPointCloud");
 			return;
 		}
-		RCLCPP_INFO(this->get_logger(),"THis try sucks");
+		// RCLCPP_INFO(this->get_logger(),"THis try sucks");
 
 
 		//Make two new box filters in front of the wheels (roughly where we see them show up in the scan)
