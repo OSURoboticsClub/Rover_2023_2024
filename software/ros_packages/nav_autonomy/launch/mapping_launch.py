@@ -74,7 +74,7 @@ def generate_launch_description():
         # Custom point cloud publishing for local map
         Node(
             package='rtabmap_util', executable='point_cloud_xyz', output='screen',
-            parameters=[{'min_depth': 0.3,
+            parameters=[{'min_depth': 0.4,
                          'max_depth': 6.0, #3.0,
 
                          'approx_sync': True,
@@ -82,7 +82,7 @@ def generate_launch_description():
                          'approx_sync_max_interval': 0.05,
 
                          'noise_filter_radius': 0.1,
-                         'noise_filtering_min_neighbors': 10,
+                         'noise_filtering_min_neighbors': 5,
                          'filter_nans': True,
 
                          'voxel_size': .05, 
