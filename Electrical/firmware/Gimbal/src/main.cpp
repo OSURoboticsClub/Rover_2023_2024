@@ -15,10 +15,10 @@ Adafruit_BNO08x bno08x(-1);
 sh2_SensorValue_t sensorValue;
 
 // --- LIVE TUNING GAINS ---
-float kp_yaw = 15.0f;    
-float kp_pitch = 15.0f;  
-float kp_roll = 15.0f;
-float ki = 25.0f;         
+float kp_yaw = 5.0f;    
+float kp_pitch = 5.0f;  
+float kp_roll = 5.0f;
+float ki = 10.0f;         
 
 // --- CONTINUOUS IMU TRACKING ---
 float continuous_imu_yaw = 0.0f;
@@ -40,6 +40,7 @@ struct CANMessage {
 
 bool Toggle_Stabilization = true;
 bool Toggle_IMU_Feedback = false;
+bool imu_data_fresh = false;
 
 unsigned long last_update = 0;
 const int update_interval = 10; // 10ms (100Hz)
@@ -86,7 +87,12 @@ void setup() {
         Serial.println(">>> CAN Bus Online (1Mbps) <<<");
     }
 
+    
+
     Wire.begin(I2C_SDA, I2C_SCL);
+    Wire.setClock(60000); // force slow 100kHz
+
+
     if (!bno08x.begin_I2C(0x4A, &Wire)) {
         Serial.println("BNO08x failed to start.");
         while(1) { delay(10); } 
@@ -142,6 +148,7 @@ void loop() {
     // --- IMU PROCESSING & UNWRAP ALGORITHM ---
     if (bno08x.getSensorEvent(&sensorValue)) {
         if (sensorValue.sensorId == SH2_GAME_ROTATION_VECTOR) {
+            imu_data_fresh = true; // Mark that we got fresh data
             float qw = sensorValue.un.gameRotationVector.real;
             float qx = sensorValue.un.gameRotationVector.i; 
             float qy = sensorValue.un.gameRotationVector.j; 
@@ -165,18 +172,22 @@ void loop() {
             static bool first_loop = true;
 
             if (first_loop) {
+                // Treat the very first IMU string reading as the structural zero
                 prev_raw_pitch = raw_pitch;
-                prev_raw_yaw = raw_yaw;
-                prev_raw_roll = raw_roll;
+                prev_raw_yaw   = raw_yaw;
+                prev_raw_roll  = raw_roll;
+                
                 continuous_imu_pitch = 0.0f; 
-                continuous_imu_yaw = 0.0f;
-                continuous_imu_roll = 0.0f;
-                // Sync Jetson anchors to Tare point
+                continuous_imu_yaw   = 0.0f;
+                continuous_imu_roll  = 0.0f;
+
+                // CRITICAL: Bind targets dynamically to 0.0 relative to its current boot spot
                 target_camera_pitch = 0.0f;
-                target_camera_yaw = 0.0f;
-                target_camera_roll = 0.0f;
+                target_camera_yaw   = 0.0f;
+                target_camera_roll  = 0.0f;
+                
                 first_loop = false;
-                Serial.println(">>> IMU ZEROED! <<<");
+                Serial.println("SENSORS ZEROED");
             }
 
             float delta_pitch = raw_pitch - prev_raw_pitch;
@@ -198,6 +209,7 @@ void loop() {
 
             prev_raw_pitch = raw_pitch;
             prev_raw_yaw = raw_yaw;
+            prev_raw_roll = raw_roll;
         }
     }
 
@@ -205,7 +217,7 @@ void loop() {
     if (millis() - last_update >= update_interval) {
         last_update = millis();
         
-        if (Toggle_Stabilization) {
+        if (Toggle_Stabilization && imu_data_fresh) {
             IMU_Stabilization_Velocity(); 
         } else {
             // Safety: if stabilization is toggled off, stop the motors
@@ -213,6 +225,8 @@ void loop() {
             sendODriveVelocity(4, 0.0f);
             sendODriveVelocity(5, 0.0f);
         }
+
+        imu_data_fresh = false;
 
         if (Toggle_IMU_Feedback) {
             FeedbackIMUData();
@@ -260,10 +274,11 @@ void IMU_Stabilization_Velocity() {
     // 3. Final Velocity Command Math
     float pitch_velocity = (pitch_error * kp_pitch) + (pitch_integral * ki);
     float yaw_velocity = (yaw_error * kp_yaw) + (yaw_integral * ki);
-    float roll_velocity = (roll_error * kp_roll) + (yaw_integral * ki);
+    float roll_velocity = (roll_error * kp_roll) + (roll_integral * ki);
 
-    // --- DIRECTION FIXES ---
-    yaw_velocity = -yaw_velocity;
+    roll_velocity  = constrain(roll_velocity,  -1.0f, 1.0f);
+    yaw_velocity  = constrain(yaw_velocity,  -1.0f, 1.0f);
+    pitch_velocity  = constrain(pitch_velocity,  -1.0f, 1.0f);
 
     // 4. Fire to CAN Bus
     sendODriveVelocity(3, roll_velocity);
@@ -320,16 +335,12 @@ float applyLowPass(float *hist, float new_sample)
         result += hist[i] * kernel[i];
         Serial.println(result);
 
-    
     return result;
-
-
 }
 
 void Jetson_position_control(CANMessage &msg) {
     // msg.data[0] = Axis ID (3, 4, or 5)
-    //msg.data[1] = direction (0 left, 1 right)
-    // msg.data[2-5] = Float Position (Little Endian)
+    // msg.data[1-4] = Float Position (Little Endian)
     
     if(msg.cmd_id == 1){
         float received_pos;
@@ -417,8 +428,6 @@ void checkODriveErrors() {
     }
 }
 
-
-
 void setODriveGains(uint32_t node_id, float pos_gain, float vel_gain) {
     uint8_t data[8];
     // Command 0x1A: Set Gains (This may vary by firmware, check 0x1A or 0x01B)
@@ -428,8 +437,6 @@ void setODriveGains(uint32_t node_id, float pos_gain, float vel_gain) {
     // If you can't set gains via CAN easily, we ensure it's in Position Control
     setODriveInputMode(node_id, 1); // 1 = Passthrough
 }
-
-
 
 void forceODriveConfiguration(uint32_t node_id) {
     uint8_t data[8] = {0};
@@ -446,8 +453,6 @@ void forceODriveConfiguration(uint32_t node_id) {
     // Some firmware versions require this explicitly via CAN
     // Note: If your ODrive is in Velocity mode, it ignores pos commands.
 }
-
-
 
 void setODriveControlMode(uint32_t node_id) {
     uint8_t data[8] = {0};
@@ -490,11 +495,13 @@ void checkSerialTuning() {
         
         if (input.equalsIgnoreCase("GO")) {
             Serial.println(">>> MANUALLY WAKING UP MOTORS <<<");
-            clearODriveErrors(0);
-            clearODriveErrors(1);
+            clearODriveErrors(3);
+            clearODriveErrors(4);
+            clearODriveErrors(5);
             delay(50);
-            setODriveState(0, 8);
-            setODriveState(1, 8);
+            setODriveState(3, 8);
+            setODriveState(4, 8);
+            setODriveState(5, 8);
         }
         else if (input.startsWith("py") || input.startsWith("PY")) {
             kp_yaw = input.substring(2).toFloat();
