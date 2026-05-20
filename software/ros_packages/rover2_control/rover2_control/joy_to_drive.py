@@ -29,7 +29,7 @@ class JoyToDriveNode(Node):
         super().__init__('joy_to_drive')
 
         # Publisher Drive Commands
-        self.wheel_pub = self.create_publisher(Twist, '/drive_controller/cmd_vel_unstamped', 1)
+        self.wheel_pub = self.create_publisher(TwistStamped, '/drive_controller/cmd_vel', 1)
 
         # Drive Command Subscribers
         self.groundstation_sub = self.create_subscription(
@@ -71,9 +71,11 @@ class JoyToDriveNode(Node):
                 self.angular_velocity = 0.0  
 
             #Publish current velocity commands 
-            twist = Twist()
-            twist.linear.x = self.linear_velocity * self.max_vel
-            twist.angular.z = self.angular_velocity * self.max_ang_vel 
+            twist = TwistStamped()
+            twist.header.frame_id = "rover_base_origin"
+            twist.header.stamp = self.get_clock().now().to_msg()
+            twist.twist.linear.x = self.linear_velocity * self.max_vel
+            twist.twist.angular.z = self.angular_velocity * self.max_ang_vel 
             self.wheel_pub.publish(twist)
 
     def start_teleop_cb(self, reqest, response):
