@@ -639,7 +639,7 @@ class YoloServer(Node):
             # Define model from action request
             model = YOLO(os.path.join(self.models_dir, "mallet.pt"))
             if goal_handle.request.search_object == YoloFind.Goal.BOTTLE:
-                model = YOLO(os.path.join(self.models_dir, "bottle.pt"))
+                model = YOLO(os.path.join(self.models_dir, "bottle_new.pt"))
             elif goal_handle.request.search_object == YoloFind.Goal.ORANGE_HAMMER:
                 model = YOLO(os.path.join(self.models_dir, "mallet.pt"))
             elif goal_handle.request.search_object == YoloFind.Goal.OG_HAMMER:
