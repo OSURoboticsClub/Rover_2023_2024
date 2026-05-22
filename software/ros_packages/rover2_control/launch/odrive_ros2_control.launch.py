@@ -145,6 +145,32 @@ def generate_launch_description():
         **config
     )
 
+    odrive_pan_tilt = Node(
+        package='rover2_control',
+        executable='odrive_pan_tilt',
+        name='odrive_pan_tilt',
+        parameters=[{
+            'can': 'can2',
+            'direction': 1,
+            'node_ids': [0, 1],
+            'board_id': 6
+        }],
+        **config
+    )
+
+    odrive_gimbal = Node(
+        package='rover2_control',
+        executable='odrive_pan_tilt',
+        name='odrive_gimbal',
+        parameters=[{
+            'can': 'can2',
+            'direction': 1,
+            'node_ids': [3, 5, 4],
+            'board_id': 2
+        }],
+        **config
+    )
+
     # gripper_can_control_node = Node(
     #     package='rover2_control',
     #     executable='gripper_control',
