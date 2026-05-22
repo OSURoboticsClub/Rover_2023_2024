@@ -2,8 +2,9 @@
 #include "driver/twai.h"
 #include <Wire.h>
 #include <Adafruit_BNO08x.h>
-#include <math.h> 
+#include <math.h>
 #include <cstring>
+#include <Preferences.h>
 
 #define CAN_TX_PIN GPIO_NUM_2
 #define CAN_RX_PIN GPIO_NUM_15
@@ -13,6 +14,8 @@
 
 Adafruit_BNO08x bno08x(-1);
 sh2_SensorValue_t sensorValue;
+
+Preferences prefs;
 
 // --- LIVE TUNING GAINS ---
 float kp_yaw = 5.0f;    
@@ -30,6 +33,10 @@ float target_camera_yaw = 0.0f;
 float target_camera_pitch = 0.0f;
 float target_camera_roll = 0.0f;
 
+float yaw_home = 0.0f;
+float roll_home = 0.0f;
+float pitch_home = 0.0f;
+
 struct CANMessage {
     uint32_t id;
     uint32_t node_id;
@@ -41,6 +48,7 @@ struct CANMessage {
 bool Toggle_Stabilization = true;
 bool Toggle_IMU_Feedback = false;
 bool imu_data_fresh = false;
+bool home_set = false;
 
 unsigned long last_update = 0;
 const int update_interval = 10; // 10ms (100Hz)
@@ -65,6 +73,12 @@ void sendODriveVelocity(uint32_t node_id, float velocity_turns_sec);
 void checkSerialTuning();
 void setReports(void);
 void IMU_Stabilization_Velocity();
+void sethome();
+
+
+
+
+void goHome();
 
 #define FILTER_TAPS 5
 
@@ -117,6 +131,17 @@ void setup() {
     setODriveState(3, 8);
     setODriveState(4, 8);
     setODriveState(5, 8);
+
+    // Load saved home from flash
+    prefs.begin("gimbal", true); // true = read-only
+    yaw_home   = prefs.getFloat("yaw_home",   0.0f); // 0.0 = default if nothing saved yet
+    pitch_home = prefs.getFloat("pitch_home", 0.0f);
+    roll_home  = prefs.getFloat("roll_home",  0.0f);
+    prefs.end();
+
+    target_camera_yaw   = yaw_home;
+    target_camera_pitch = pitch_home;
+    target_camera_roll  = roll_home;
 }
 
 void loop() {
@@ -137,6 +162,10 @@ void loop() {
             if(msg.cmd_id == 3)
             {
                 memcpy(&Toggle_IMU_Feedback, &msg.data[0], 1);
+            }
+            if(msg.cmd_id == 7){
+                home_set = true;
+                sethome();
             }
         }
     }
@@ -173,7 +202,7 @@ void loop() {
 
             if (first_loop) {
                 // Treat the very first IMU string reading as the structural zero
-                prev_raw_pitch = raw_pitch;
+                prev_raw_pitch = raw_pitch; 
                 prev_raw_yaw   = raw_yaw;
                 prev_raw_roll  = raw_roll;
                 
@@ -181,10 +210,9 @@ void loop() {
                 continuous_imu_yaw   = 0.0f;
                 continuous_imu_roll  = 0.0f;
 
-                // CRITICAL: Bind targets dynamically to 0.0 relative to its current boot spot
-                target_camera_pitch = 0.0f;
-                target_camera_yaw   = 0.0f;
-                target_camera_roll  = 0.0f;
+                target_camera_yaw   = yaw_home;
+                target_camera_pitch = pitch_home;
+                target_camera_roll  = roll_home;
                 
                 first_loop = false;
                 Serial.println("SENSORS ZEROED");
@@ -217,7 +245,7 @@ void loop() {
     if (millis() - last_update >= update_interval) {
         last_update = millis();
         
-        if (Toggle_Stabilization && imu_data_fresh) {
+        if (Toggle_Stabilization) {
             IMU_Stabilization_Velocity(); 
         } else {
             // Safety: if stabilization is toggled off, stop the motors
@@ -225,8 +253,6 @@ void loop() {
             sendODriveVelocity(4, 0.0f);
             sendODriveVelocity(5, 0.0f);
         }
-
-        imu_data_fresh = false;
 
         if (Toggle_IMU_Feedback) {
             FeedbackIMUData();
@@ -256,6 +282,8 @@ void IMU_Stabilization_Velocity() {
     float yaw_error = target_camera_yaw - continuous_imu_yaw;
     float roll_error = target_camera_roll - continuous_imu_roll;
 
+
+
     // 2. PI Loop Accumulator
     static float pitch_integral = 0.0f;
     static float yaw_integral = 0.0f;
@@ -276,9 +304,9 @@ void IMU_Stabilization_Velocity() {
     float yaw_velocity = (yaw_error * kp_yaw) + (yaw_integral * ki);
     float roll_velocity = (roll_error * kp_roll) + (roll_integral * ki);
 
-    roll_velocity  = constrain(roll_velocity,  -1.0f, 1.0f);
-    yaw_velocity  = constrain(yaw_velocity,  -1.0f, 1.0f);
-    pitch_velocity  = constrain(pitch_velocity,  -1.0f, 1.0f);
+    roll_velocity  = constrain(roll_velocity,  -0.5f, 0.5f);
+    yaw_velocity  = constrain(yaw_velocity,  -0.5f, 0.5f);
+    pitch_velocity  = constrain(pitch_velocity,  -0.5f, 0.5f);
 
     // 4. Fire to CAN Bus
     sendODriveVelocity(3, roll_velocity);
@@ -294,6 +322,23 @@ void FeedbackIMUData(){
     sendCANMessage(can_make_id(1, 0x05), 8, data);
     memcpy(&data[0], &continuous_imu_pitch, 4);
     sendCANMessage(can_make_id(1, 0x06), 8, data);
+}
+
+void sethome(){
+    yaw_home = continuous_imu_yaw;
+    roll_home = continuous_imu_roll;
+    pitch_home = continuous_imu_pitch;
+
+    target_camera_yaw   = continuous_imu_yaw;
+    target_camera_pitch = continuous_imu_pitch;
+    target_camera_roll  = continuous_imu_roll;
+
+    // Save to flash
+    prefs.begin("gimbal", false); // false = read/write
+    prefs.putFloat("yaw_home",   yaw_home);
+    prefs.putFloat("pitch_home", pitch_home);
+    prefs.putFloat("roll_home",  roll_home);
+    prefs.end();
 }
 
 float wrapAngle(float error)
@@ -343,20 +388,26 @@ void Jetson_position_control(CANMessage &msg) {
     // msg.data[1-4] = Float Position (Little Endian)
     
     if(msg.cmd_id == 1){
-        float received_pos;
+        float received_pos_rad;
         // Extract bytes 1 through 5 into the float variable
         //memcpy(&direction, &msg.data[1], 1);
-        memcpy(&received_pos, &msg.data[1], 4);
+        memcpy(&received_pos_rad, &msg.data[1], 4);
+
+        float received_pos = received_pos_rad / (2.0f * PI);
 
         if (msg.data[0] == 3) {
-            setODrivePosition(3, received_pos);
+            setODrivePosition(3, (roll_home + received_pos));
+            target_camera_roll = roll_home + received_pos;
         }
         else if (msg.data[0] == 4) {
-            setODrivePosition(4, received_pos);
+            setODrivePosition(4, (yaw_home + received_pos));
+            target_camera_yaw = yaw_home + received_pos;
         }
         else if (msg.data[0] == 5) {
-            setODrivePosition(5, received_pos);
+            setODrivePosition(5, (pitch_home + received_pos));
+            target_camera_pitch = pitch_home + received_pos;
         }
+        else{}
     }
 }
 
