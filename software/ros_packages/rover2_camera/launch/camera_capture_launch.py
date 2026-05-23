@@ -48,6 +48,8 @@ def generate_launch_description():
         "color_width": 1280,
         "color_height": 720,
         "pointcloud.enable": True,
+        "pointcloud__neon_.enable": True,
+        "pointcloud__neon_.stream_filter": 2,
         "align_depth.enable": True,
         "depth_fps": 10,
         "rgb_fps": 10,
@@ -66,13 +68,15 @@ def generate_launch_description():
             "color_width": 1280,
             "color_height": 720,
             "pointcloud.enable": True,
+            "pointcloud__neon_.enable": True,
+            "pointcloud__neon_.stream_filter": 2,
             "align_depth.enable": True,
             #"enable_rgbd": True,
             "decimation_filter": True,
             "decimation_filter.filter_magnitude": 8,
             "enable_sync": True,
             "pointcloud.stream_filter": 2,
-            # "enable_color": True,
+            "enable_color": True,
             # "enable_depth": True,
             "serial_no":"_218622273613",
             "depth_fps": 5,
@@ -169,6 +173,91 @@ def generate_launch_description():
         respawn=True
     )
 
+    tower_gimbal_cam_node = Node(
+        package='rover2_camera',
+        namespace='rover2_camera',
+        executable='camera_capture',
+        name='tower_gimbal_cam',
+        parameters=[{
+            'device': '/dev/rover/camera_tower_gimbal',
+            'cap_width': 640,
+            'cap_height': 480,
+            'cap_framerate': 30,
+            'preset_level': 1,
+            'bitrate': 4000000,
+            'stream_width': 640,
+            'stream_height': 480,
+            'fec_percentage': 100,
+            'udp_host': '192.168.1.103',
+            'udp_port': 42068,
+            'mux_port': 20003
+        }],
+        respawn=True
+    )
+    back_cam_node = Node(
+        package='rover2_camera',
+        namespace='rover2_camera',
+        executable='camera_capture',
+        name='back_cam',
+        parameters=[{
+            'device': '/dev/rover/camera_rear',
+            'cap_width': 640,
+            'cap_height': 480,
+            'cap_framerate': 25,
+            'preset_level': 1,
+            'bitrate': 4000000,
+            'stream_width': 640,
+            'stream_height': 480,
+            'fec_percentage': 100,
+            'udp_host': '192.168.1.103',
+            'udp_port': 42071,
+            'mux_port': 20003
+        }],
+        respawn=True
+    )
+    birds_eye_cam_node = Node(
+        package='rover2_camera',
+        namespace='rover2_camera',
+        executable='camera_capture',
+        name='birds_eye_cam',
+        parameters=[{
+            'device': '/dev/rover/camera_birds_eye',
+            'cap_width': 640,
+            'cap_height': 480,
+            'cap_framerate': 25,
+            'preset_level': 1,
+            'bitrate': 4000000,
+            'stream_width': 640,
+            'stream_height': 480,
+            'fec_percentage': 100,
+            'udp_host': '192.168.1.103',
+            'udp_port': 42072,
+            'mux_port': 20003
+        }],
+        respawn=True
+    )
+
+    pan_tilt_cam_node = Node(
+        package='rover2_camera',
+        namespace='rover2_camera',
+        executable='camera_capture',
+        name='pan_tilt_cam',
+        parameters=[{
+            'device': '/dev/rover/camera_pan_tilt',
+            'cap_width': 640,
+            'cap_height': 480,
+            'cap_framerate': 30,
+            'preset_level': 1,
+            'bitrate': 4000000,
+            'stream_width': 640,
+            'stream_height': 480,
+            'fec_percentage': 30,
+            'udp_host': '192.168.1.103',
+            'udp_port': 42067,
+            'mux_port': 20001
+        }],
+        respawn=True
+    )
     muxing_node = Node(
     package='rover2_camera',
     namespace='rover2_camera',
@@ -187,7 +276,11 @@ def generate_launch_description():
 #        gripper_rgb_node,
         chassis_right_cam_node,
         chassis_left_cam_node,
+        #birds_eye_cam_node,
+        tower_gimbal_cam_node,
+        #back_cam_node,
+        # pan_tilt_cam_node,
         muxing_node,
-#        d405_node
+        # d405_node
     ])
 
