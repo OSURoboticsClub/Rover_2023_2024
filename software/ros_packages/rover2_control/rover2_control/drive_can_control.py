@@ -22,7 +22,7 @@ LEFT_NODES = [0,2,4]
 RIGHT_NODES = [1,3,5]
 NODES = [0,1,2,3,4,5]
 WHEEL_CIRCUM = 0.942478
-TRACK_WIDTH = 0.815
+TRACK_WIDTH = 0.92      # making this bigger so auton turns better
 
 WATCHDOG_TIMEOUT = 3.0
 
