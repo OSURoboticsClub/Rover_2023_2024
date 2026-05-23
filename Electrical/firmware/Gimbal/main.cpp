@@ -69,15 +69,12 @@ float applyLowPass(float *hist, float new_sample);
 float wrapAngle(float error);
 void FeedbackIMUData();
 void setODriveVelocityMode(uint32_t node_id);
+void setODriveTrapTrajMode(uint32_t node_id);
 void sendODriveVelocity(uint32_t node_id, float velocity_turns_sec);
 void checkSerialTuning();
 void setReports(void);
 void IMU_Stabilization_Velocity();
 void sethome();
-
-
-
-
 void goHome();
 
 #define FILTER_TAPS 5
@@ -132,16 +129,9 @@ void setup() {
     setODriveState(4, 8);
     setODriveState(5, 8);
 
-    // Load saved home from flash
-    prefs.begin("gimbal", true); // true = read-only
-    yaw_home   = prefs.getFloat("yaw_home",   0.0f); // 0.0 = default if nothing saved yet
-    pitch_home = prefs.getFloat("pitch_home", 0.0f);
-    roll_home  = prefs.getFloat("roll_home",  0.0f);
-    prefs.end();
-
-    target_camera_yaw   = yaw_home;
-    target_camera_pitch = pitch_home;
-    target_camera_roll  = roll_home;
+    goHome();
+    delay(1000);
+    sethome();
 }
 
 void loop() {
@@ -254,10 +244,6 @@ void loop() {
             sendODriveVelocity(5, 0.0f);
         }
 
-        if (Toggle_IMU_Feedback) {
-            FeedbackIMUData();
-        }
-
         static int print_counter = 0;
         if (++print_counter >= 10) { 
             Serial.printf("Pitch Err: %.3f | Yaw Err: %.3f\n | Roll Err: %.3f\n",  
@@ -282,8 +268,6 @@ void IMU_Stabilization_Velocity() {
     float yaw_error = target_camera_yaw - continuous_imu_yaw;
     float roll_error = target_camera_roll - continuous_imu_roll;
 
-
-
     // 2. PI Loop Accumulator
     static float pitch_integral = 0.0f;
     static float yaw_integral = 0.0f;
@@ -304,9 +288,9 @@ void IMU_Stabilization_Velocity() {
     float yaw_velocity = (yaw_error * kp_yaw) + (yaw_integral * ki);
     float roll_velocity = (roll_error * kp_roll) + (roll_integral * ki);
 
-    roll_velocity  = constrain(roll_velocity,  -0.5f, 0.5f);
-    yaw_velocity  = constrain(yaw_velocity,  -0.5f, 0.5f);
-    pitch_velocity  = constrain(pitch_velocity,  -0.5f, 0.5f);
+    roll_velocity  = constrain(roll_velocity,  -0.4f, 0.4f);
+    yaw_velocity  = constrain(yaw_velocity,  -0.4f, 0.4f);
+    pitch_velocity  = constrain(pitch_velocity,  -0.4f, 0.4f);
 
     // 4. Fire to CAN Bus
     sendODriveVelocity(3, roll_velocity);
@@ -341,6 +325,34 @@ void sethome(){
     prefs.end();
 }
 
+void goHome(){
+    setODriveTrapTrajMode(3);
+    setODriveTrapTrajMode(4);
+    setODriveTrapTrajMode(5);
+
+    delay(500);
+
+    setODrivePosition(3,0);
+    setODrivePosition(4,0);
+    setODrivePosition(5,0);
+
+    delay(1000);
+
+    setODriveVelocityMode(3);
+    setODriveVelocityMode(4);
+    setODriveVelocityMode(5);
+
+    delay(500);
+
+    continuous_imu_yaw = 0.0f;
+    continuous_imu_pitch = 0.0f;
+    continuous_imu_roll = 0.0f;
+
+    target_camera_yaw = 0.0f;
+    target_camera_pitch = 0.0f;
+    target_camera_roll = 0.0f;
+}
+
 float wrapAngle(float error)
 {
     while (error > 180.0f) error -= 360.0f;
@@ -352,6 +364,15 @@ void setODriveVelocityMode(uint32_t node_id){
     uint8_t data[8] = {0};
     int32_t control_mode = 2; // VELOCITY_CONTROL
     int32_t input_mode = 1;   // PASSTHROUGH
+    memcpy(&data[0], &control_mode, 4);
+    memcpy(&data[4], &input_mode, 4);
+    sendCANMessage(can_make_id(node_id, 0x0B), 8, data);
+}
+
+void setODriveTrapTrajMode(uint32_t node_id){
+    uint8_t data[8] = {0};
+    int32_t control_mode = 3; // VELOCITY_CONTROL
+    int32_t input_mode = 5;   // PASSTHROUGH
     memcpy(&data[0], &control_mode, 4);
     memcpy(&data[4], &input_mode, 4);
     sendCANMessage(can_make_id(node_id, 0x0B), 8, data);
