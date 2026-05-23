@@ -62,14 +62,14 @@ Urdf of the rovers chassis and bogies
             <visual>
                 <origin xyz="-0.0 -0.0 -0.0" rpy="0 0 0"/>
                 <geometry>
-                <mesh filename="package://rover_urdf/urdf/stl_files/mr2526-Tower-URDF_Collision-Unsimplified.stl" scale="0.001 0.001 0.001"/>
+                <mesh filename="package://rover_urdf/urdf/stl_files/mr2526-Tower-Teli-URDF_Collision.stl" scale="0.001 0.001 0.001"/>
                 </geometry>
                 <material name="silver"/>
             </visual>
             <collision>
                 <origin xyz="-0.0 -0.0 -0.0" rpy="0 0 0"/>
                 <geometry>
-                <mesh filename="package://rover_urdf/urdf/stl_files/mr2526-Tower-URDF_Collision-Unsimplified.stl" scale="0.001 0.001 0.001"/>
+                <mesh filename="package://rover_urdf/urdf/stl_files/mr2526-Tower-Teli-URDF_Collision.stl" scale="0.001 0.001 0.001"/>
                 </geometry>
             </collision>
         </link>

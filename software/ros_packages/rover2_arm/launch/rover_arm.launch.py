@@ -315,9 +315,9 @@ def generate_launch_description():
         package="robot_state_publisher",
         executable="robot_state_publisher",
         parameters=[{
-            'use_sim_time': "False",
-            "robot_description": moveit_config.robot_description
-        }],
+            'use_sim_time': False,},
+            moveit_config.robot_description,
+            ],
         output="screen",
         condition=IfCondition(launch_ros2_control)
     )
