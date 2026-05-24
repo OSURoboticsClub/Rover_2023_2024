@@ -1,4 +1,9 @@
 #!/usr/bin/python3
+"""Drill cap CAN service node.
+
+Provides a ROS service that maps engaged/disengaged cap states to a single
+byte CAN command for the drill cap actuator.
+"""
 
 import struct
 
@@ -9,6 +14,8 @@ from std_srvs.srv import SetBool
 
 
 class DrillCapControl(Node):
+    """Bridge `SetBool` cap commands to CAN payloads."""
+
     def __init__(self):
         super().__init__("drill_cap_control")
 
@@ -29,9 +36,10 @@ class DrillCapControl(Node):
             self.get_parameter("send_on_change_only").value
         )
 
+        # Used when `send_on_change_only` is enabled.
         self.last_state = None
 
-
+        # Single CAN bus connection for cap state messages.
         self.bus = can.interface.Bus(self.can_bus, interface="socketcan")
 
         self.service = self.create_service(
@@ -40,10 +48,11 @@ class DrillCapControl(Node):
             self.set_cap_state_callback,
         )
 
-        # Default safe state: disengaged
+        # Default safe state at startup is disengaged.
         self.send_cap_state(False)
 
     def send_cap_state(self, desired_state):
+        """Send cap state to the actuator; optionally suppress duplicate writes."""
         if self.send_on_change_only and desired_state == self.last_state:
             return True
 
@@ -65,6 +74,7 @@ class DrillCapControl(Node):
             return False
 
     def set_cap_state_callback(self, request, response):
+        """Service callback wrapper around `send_cap_state`."""
         desired_state = bool(request.data)
         response.success = self.send_cap_state(desired_state)
         if response.success:

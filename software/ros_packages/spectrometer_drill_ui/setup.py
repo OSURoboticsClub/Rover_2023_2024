@@ -23,7 +23,10 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "drill_spectrometer_control_ui = spectrometer_drill_ui.drill_spectrometer_control_ui:main",
+            "drill_spectrometer_control_ui = "
+            "spectrometer_drill_ui.drill_spectrometer_control_ui:main",
+            "mechanical_telemetry_sim_publisher = "
+            "spectrometer_drill_ui.mechanical_telemetry_sim_publisher:main",
         ],
     },
 )

@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+"""CLI helper for publishing linear actuator velocity commands."""
 
 import argparse
 from time import sleep
@@ -9,6 +10,8 @@ from std_msgs.msg import Float32
 
 
 class LinearActuatorCommandNode(Node):
+    """Minimal ROS publisher node for manual command testing."""
+
     def __init__(self, topic_name):
         super().__init__("linear_actuator_command")
         self.publisher = self.create_publisher(Float32, topic_name, 10)
@@ -20,6 +23,7 @@ class LinearActuatorCommandNode(Node):
 
 
 def parse_args():
+    """Parse CLI arguments for topic, value, and burst settings."""
     parser = argparse.ArgumentParser(
         description="Publish velocity commands for linear actuator control"
     )
@@ -45,6 +49,7 @@ def parse_args():
 
 
 def main(args=None):
+    """Publish one or more command messages and exit."""
     cli = parse_args()
     rclpy.init(args=args)
     node = LinearActuatorCommandNode(cli.topic)

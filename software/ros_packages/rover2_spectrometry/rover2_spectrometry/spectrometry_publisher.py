@@ -102,7 +102,11 @@ class Spectrometry_Publisher(Node):
             plt.clf()
 
     def get_graph(self, feedNumber, reaction_type):
+        # Actual implementation
         cap = cv2.VideoCapture(f"dev/rover/spectrometer_camera_{feedNumber}")
+        # Local test
+        # cap = cv2.VideoCapture(feedNumber)
+
         ret, frame = cap.read()
         cropped = frame[int(self.r[1]):int(self.r[1] + self.r[3]), int(self.r[0]):int(self.r[0] + self.r[2])]
         # cv2.imshow('roi', cropped)
@@ -154,13 +158,16 @@ class Spectrometry_Publisher(Node):
         # 3) Ninhydrin Control
         # 4) Ninhydrin Experiment
 
-        if reaction_type == 1:
+        # This is to ensure compatibility with other commands that are floating around.
+        # 1 and 2 mean benedicts, 3 and 4 mean ninhydrin.
+        # 5 is a default value that shouldn't get used.
+        if (reaction_type == 1 or reaction_type == 2) and elapsed < 5:
             title = "Benedict's Control"
-        elif reaction_type == 2:
+        elif (reaction_type == 1 or reaction_type == 2) and elapsed > 5:
             title = "Benedict's Experiment"
-        elif reaction_type == 3:
+        elif (reaction_type == 3 or reaction_type == 4) and elapsed < 5:
             title = "Ninhydrin Control"
-        elif reaction_type == 4:
+        elif (reaction_type == 3 or reaction_type == 4) and elapsed > 5:
             title = "Ninhydrin Experiment"
         elif reaction_type == 5:
             title = "Spectroanalysis of Image"

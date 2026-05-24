@@ -1,4 +1,10 @@
 #!/usr/bin/python3
+"""Drill CAN control node.
+
+This node accepts high-level drill enable commands on a ROS topic, translates
+them into ODrive CAN torque commands, and republishes drill telemetry for UI
+and monitoring consumers.
+"""
 
 from time import monotonic
 import math
@@ -26,6 +32,8 @@ INPUT_MODE_TORQUE_RAMP = 6
 
 
 class DrillControl(Node):
+    """Manage drill command/telemetry over CAN with a periodic control loop."""
+
     def __init__(self):
         super().__init__("drill_control")
 
@@ -102,6 +110,7 @@ class DrillControl(Node):
         self.last_telemetry_request_time = monotonic()
         self.in_closed_loop = False
 
+        # Bring up the CAN interface and put controller into the expected mode.
         self.bus = can.interface.Bus(self.can_bus, interface="socketcan")
         self.flush_can_buffer()
         self.setup_controller()
@@ -133,6 +142,7 @@ class DrillControl(Node):
         )
 
     def setup_controller(self):
+        """Configure ODrive mode, limits, and ramp behavior at startup."""
         try:
             input_mode = (
                 INPUT_MODE_TORQUE_RAMP
@@ -178,6 +188,7 @@ class DrillControl(Node):
             self.get_logger().error(f"Drill CAN setup error: {exc}")
 
     def command_callback(self, msg):
+        """Latch the most recent command and keep command-timeout bookkeeping."""
         self.command_enabled = float(msg.data) >= self.command_on_threshold
         if self.command_enabled:
             self.enter_closed_loop()
@@ -194,6 +205,7 @@ class DrillControl(Node):
         self.last_command_time = monotonic()
 
     def timer_callback(self):
+        """Run one control cycle: safety, command output, telemetry IO, publish."""
         now = monotonic()
 
         if now >= self.last_command_time + self.command_timeout_s:
@@ -212,6 +224,7 @@ class DrillControl(Node):
         self.publish_telemetry()
 
     def read_can(self):
+        """Consume queued CAN responses and update cached telemetry fields."""
         for can_msg in self.get_can_buffer():
             node_id = (can_msg.arbitration_id >> 5) & ((1 << 6) - 1)
             if node_id != self.node_id:
@@ -229,6 +242,7 @@ class DrillControl(Node):
                 self.get_logger().warn(f"Malformed drill CAN frame: {exc}")
 
     def request_telemetry(self, now):
+        """Request speed/current updates at a bounded polling rate."""
         if now < self.last_telemetry_request_time + self.telemetry_request_period_s:
             return
 
@@ -252,6 +266,7 @@ class DrillControl(Node):
             self.get_logger().warn(f"Drill telemetry request error: {exc}")
 
     def publish_telemetry(self):
+        """Publish latest decoded drill telemetry onto ROS topics."""
         speed_msg = Float32()
         speed_msg.data = float(self.velocity_rps)
         self.speed_pub.publish(speed_msg)
@@ -261,6 +276,7 @@ class DrillControl(Node):
         self.current_pub.publish(current_msg)
 
     def send_torque(self, torque_nm):
+        """Send torque command when in closed loop; ignore invalid values safely."""
         if not self.in_closed_loop:
             return
         safe_torque = 0.0 if not math.isfinite(torque_nm) else float(torque_nm)
@@ -285,10 +301,12 @@ class DrillControl(Node):
         )
 
     def flush_can_buffer(self):
+        """Drop stale CAN frames during initialization/reset boundaries."""
         while self.bus.recv(timeout=0) is not None:
             pass
 
     def get_can_buffer(self):
+        """Read up to a capped number of CAN frames for this timer cycle."""
         can_msgs = []
         for _ in range(self.max_can_frames_per_cycle):
             can_msg = self.bus.recv(timeout=0)

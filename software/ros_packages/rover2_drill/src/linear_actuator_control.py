@@ -1,67 +1,9 @@
 #!/usr/bin/python3
+"""Linear actuator CAN control node.
 
-from time import time
-import math
-import struct
-
-import can
-import rclpy
-from rclpy.node import Node
-from std_msgs.msg import Bool, Float32
-from std_srvs.srv import SetBool
-
-
-AXIS_STATE_IDLE = 1
-AXIS_STATE_CLOSED_LOOP_CONTROL = 8
-
-CMD_SET_AXIS_STATE = 0x07
-CMD_GET_ENCODER_ESTIMATES = 0x09
-CMD_SET_CONTROLLER_MODE = 0x0b
-CMD_SET_INPUT_VEL = 0x0d
-CMD_GET_IQ = 0x14
-CMD_CLEAR_ERRORS = 0x18
-
-CONTROL_MODE_VELOCITY_CONTROL = 2
-INPUT_MODE_VEL_RAMP = 2
-
-
-class LinearActuatorControl(Node):
-    def __init__(self):
-        super().__init__("linear_actuator_control")
-        # Both of these need to be replaced, they do not need to be parameters
-        self.declare_parameter("can", "can0")
-        # check the node id
-        self.declare_parameter("node_id", 1)
-        self.declare_parameter("command_topic", "linear_actuator/control")
-        self.declare_parameter("position_topic", "linear_actuator/position")
-        self.declare_parameter("current_topic", "linear_actuator/current")
-        # check if this is needed
-        self.declare_parameter("failsafe_topic", "linear_actuator/failsafe_active")
-        self.declare_parameter("command_timeout_s", 1.0)
-        # 20 hz
-        self.declare_parameter("timer_period_s", 0.05)
-        self.declare_parameter("telemetry_request_period_s", 0.05)
-        # this should be -1 if going backwards? review needed
-        self.declare_parameter("velocity_scale", 1.0)
-        # this is obviously going to be higher - 11400 maximum rotations theoretically
-        self.declare_parameter("velocity_limit_rps", 300)
-        # this is also faster
-        self.declare_parameter("input_vel_ramp", 200.0)
-        # what is the current limit?
-        self.declare_parameter("current_limit_amps", 0.0)
-        self.declare_parameter("idle_on_failsafe", True)
-        self.declare_parameter("home_current_threshold_amps", 5.0)
-        self.declare_parameter("home_velocity_rps", -40.0)
-        self.declare_parameter("home_current_samples", 5)
-        self.declare_parameter("home_velocity_cutoff_ratio", 0.7)
-        self.declare_parameter("home_velocity_reach_ratio", 0.9)
-        self.declare_parameter("home_velocity_cutoff_samples", 3)
-        self.declare_parameter("home_rampup_margin_s", 0.1)
-        self.declare_parameter("home_backoff_rotations", 20.0)
-        self.declare_parameter("home_backoff_velocity_rps", 40.0)
-        self.declare_parameter("min_position_rotations", 0.0)
-        self.declare_parameter("max_position_rotations", 7300.0)
-#!/usr/bin/python3
+The node consumes velocity commands, enforces position/current safety checks,
+and republishes actuator telemetry for downstream tools and UIs.
+"""
 
 from time import time
 import math
@@ -248,6 +190,7 @@ class LinearActuatorControl(Node):
 
 
     def setup_controller(self):
+        """Set ODrive controller mode and velocity ramp parameters."""
         try:
             self.send_axis_state(AXIS_STATE_CLOSED_LOOP_CONTROL) # 8
             self.bus.send(
@@ -272,6 +215,7 @@ class LinearActuatorControl(Node):
             self.get_logger().error(f"Linear actuator CAN setup error: {exc}")
 
     def command_callback(self, msg):
+        """Store latest velocity command after scale/limit processing."""
         if self.failsafe_active:
             self.command_velocity_rps = 0.0
             return
@@ -281,6 +225,7 @@ class LinearActuatorControl(Node):
         self.last_command_time = time()
 
     def timer_callback(self):
+        """Periodic loop: telemetry IO, safety handling, then velocity output."""
         self.read_can()
         self.request_telemetry()
         if not self.assumed_home_set:
@@ -312,6 +257,7 @@ class LinearActuatorControl(Node):
         self.publish_telemetry()
 
     def home_linear_actuator(self):
+        """Legacy homing state machine (currently not invoked by timer loop)."""
         if self.failsafe_active:
             return
 
@@ -399,6 +345,7 @@ class LinearActuatorControl(Node):
         return time() >= self.home_start_time + rampup_time_s + self.home_rampup_margin_s
 
     def reset_failsafe_callback(self, request, response):
+        """Service callback to clear ODrive errors and re-arm closed loop."""
         if not request.data:
             response.success = True
             response.message = "Failsafe state unchanged"
@@ -426,6 +373,7 @@ class LinearActuatorControl(Node):
         return response
 
     def check_current_failsafe(self):
+        """Trip failsafe when measured current exceeds configured limit."""
         if self.current_limit_amps <= 0.0 or self.failsafe_active:
             return
 
@@ -443,6 +391,7 @@ class LinearActuatorControl(Node):
         )
 
     def read_can(self):
+        """Drain CAN frames and refresh cached position/velocity/current values."""
         for can_msg in self.get_can_buffer():
             node_id = (can_msg.arbitration_id >> 5) & ((1 << 6) - 1)
             if node_id != self.node_id:
@@ -464,6 +413,7 @@ class LinearActuatorControl(Node):
                 self.get_logger().warn(f"Malformed linear actuator CAN frame: {exc}")
 
     def request_telemetry(self):
+        """Poll encoder/current telemetry at bounded request rate."""
         if time() < self.last_telemetry_request_time + self.telemetry_request_period_s:
             return
 
@@ -487,10 +437,7 @@ class LinearActuatorControl(Node):
             self.get_logger().warn(f"Linear actuator telemetry request error: {exc}")
 
     def publish_telemetry(self):
-        """
-        This could potentially be unneeded. We can scrap the publishers if we don't need to access the telemetry
-        data elseswhere, though Unity tie-ins may appreciate this.
-        """
+        """Publish relative position, current draw, and failsafe state."""
         position_msg = Float32()
         position_msg.data = float(self.get_relative_position_rotations())
         self.position_pub.publish(position_msg)
@@ -504,6 +451,7 @@ class LinearActuatorControl(Node):
         self.failsafe_pub.publish(failsafe_msg)
 
     def send_velocity(self, velocity_rps):
+        """Transmit velocity command to ODrive."""
         try:
             self.bus.send(
                 can.Message(
@@ -525,10 +473,12 @@ class LinearActuatorControl(Node):
         )
 
     def flush_can_buffer(self):
+        """Remove stale CAN frames during startup/reset phases."""
         while self.bus.recv(timeout=0) is not None:
             pass
 
     def get_can_buffer(self):
+        """Read available CAN frames up to a fixed per-cycle cap."""
         can_msgs = []
         for _ in range(1000):
             can_msg = self.bus.recv(timeout=0)
@@ -541,10 +491,7 @@ class LinearActuatorControl(Node):
         return self.node_id << 5 | cmd_id
 
     def clamp_velocity(self, velocity_rps):
-        """
-        Returns 0 if not a number, otherwise returns the maximum of the negative of the velocity
-        limit; and the velocity limit or the given velocity requested, to prevent going too fast.
-        """
+        """Return finite velocity clamped to configured symmetric limits."""
         if not math.isfinite(velocity_rps):
             return 0.0
         return max(-self.velocity_limit_rps, min(self.velocity_limit_rps, velocity_rps))
@@ -553,6 +500,7 @@ class LinearActuatorControl(Node):
         return self.position_rev - self.home_zero_position_rev
 
     def limit_velocity_by_position(self, requested_velocity_rps):
+        """Reduce commanded speed as soft end-stops are approached."""
         limited_velocity = self.clamp_velocity(requested_velocity_rps)
         rel_pos = self.get_relative_position_rotations()
         accel_limit = max(self.input_vel_ramp, 1e-6)
