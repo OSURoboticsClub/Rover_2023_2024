@@ -7,9 +7,35 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(rclpy REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
+
+install(PROGRAMS
+  src/linear_actuator_control.py
+  DESTINATION lib/${PROJECT_NAME}
+  # TODO: remove rename
+  RENAME linear_actuator_control
+)
+# TODO: remove following install block
+install(PROGRAMS
+  src/linear_actuator_command.py
+  DESTINATION lib/${PROJECT_NAME}
+  RENAME linear_actuator_command
+)
+install(PROGRAMS
+  src/drill_control.py
+  DESTINATION lib/${PROJECT_NAME}
+  RENAME drill_control
+)
+install(PROGRAMS
+  src/drill_cap_control.py
+  DESTINATION lib/${PROJECT_NAME}
+  RENAME drill_cap_control
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
