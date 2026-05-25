@@ -1,4 +1,4 @@
-\import rclpy
+import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float64MultiArray
 from geometry_msgs.msg import Twist
@@ -88,7 +88,7 @@ class DriveCanControlNode(Node):
                 is_extended_id=False
                 ))
             except Exception as e:
-                self.get_logger().info(f"Drive Can error: {e}")
+                self.get_logger().debug(f"Drive Can error: {e}")
                 
 
     #This callback is called as a 50hz loop, as configured on node init.
@@ -152,7 +152,7 @@ class DriveCanControlNode(Node):
                 is_extended_id=False
                 ))
         except Exception as e:
-            self.get_logger().info(f"Drive Can error: {e}")
+            self.get_logger().debug(f"Drive Can error: {e}")
 
     #Function to compute the actual Differential drive commanded speeds from the forward/angular velocity intput
     def compute_drive_sides(self):
