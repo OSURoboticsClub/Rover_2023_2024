@@ -6,7 +6,7 @@ def generate_launch_description():
         Node (
             package = 'camera_gimbal_controller',
             namespace = 'tower_gimbal',
-            executable = 'controller',
+            executable = 'tower_controller',
             name = 'tower_gimbal_controller',
             parameters = [
                 {"gimbal_topic": "/tower_gimbal/control"}
