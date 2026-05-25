@@ -34,7 +34,7 @@ class LinearActuatorControl(Node):
     def __init__(self):
         super().__init__("linear_actuator_control")
         # Both of these need to be replaced, they do not need to be parameters
-        self.declare_parameter("can", "can0")
+        self.declare_parameter("can", "can_arm")
         # check the node id
         self.declare_parameter("node_id", 1)
         self.declare_parameter("command_topic", "linear_actuator/control")
