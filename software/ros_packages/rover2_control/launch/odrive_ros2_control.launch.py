@@ -150,7 +150,7 @@ def generate_launch_description():
         executable='odrive_pan_tilt',
         name='odrive_pan_tilt',
         parameters=[{
-            'can': 'can2',
+            'can': 'can_cam',
             'direction': 1,
             'node_ids': [0, 1],
             'board_id': 6
@@ -163,10 +163,11 @@ def generate_launch_description():
         executable='odrive_pan_tilt',
         name='odrive_gimbal',
         parameters=[{
-            'can': 'can2',
+            'can': 'can_cam',
             'direction': 1,
             'node_ids': [3, 5, 4],
-            'board_id': 2
+            'board_id': 2,
+            'control_topic': "/tower_gimbal/control",
         }],
         **config
     )

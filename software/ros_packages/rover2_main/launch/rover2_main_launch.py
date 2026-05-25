@@ -40,40 +40,46 @@ def generate_launch_description():
 
     arm = IncludeLaunchDescription(
       PythonLaunchDescriptionSource([os.path.join(
-         get_package_share_directory('rover2_arm'),
-         'launch'), '/rover_arm.launch.py']
+         get_package_share_directory('rover2_arm'), 
+         'launch'),'/rover_arm.launch.py']
       ),
       launch_arguments={
           "launch_ros2_control":"False"
       }.items()
-   )
+    )
+    arm_control = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([os.path.join(
+            get_package_share_directory('rover_arm_control')),
+            '/rover_arm_control.launch.py']
+        ),
+    )
 
     status = IncludeLaunchDescription(
       PythonLaunchDescriptionSource([os.path.join(
          get_package_share_directory('rover2_status'),
          'launch'), '/rover2_status_launch.py'])
-      )
+    )
 
     mapping = IncludeLaunchDescription(
       PythonLaunchDescriptionSource([os.path.join(
          get_package_share_directory('nav_autonomy'),
          'launch'), '/mapping_launch.py'])
-      )
+    )
    # Timer action to delay the listener node
     delay_mapping = TimerAction(
          period=5.0,  # Delay in seconds
          actions=[mapping]
-      )
+    )
     nav_autonomy = IncludeLaunchDescription(
       PythonLaunchDescriptionSource([os.path.join(
          get_package_share_directory('nav_autonomy'),
          'launch'), '/nav_launch.py'])
-      )
+    )
     state_publisher = IncludeLaunchDescription(
       PythonLaunchDescriptionSource([os.path.join(
          get_package_share_directory('nav_autonomy'),
          'launch'), '/state_publisher_launch.py'])
-      )
+    )
 
 
 
@@ -146,6 +152,7 @@ def generate_launch_description():
       arm,
       status,
       cameras,
-      nav_autonomy,
+      arm_control,
+    #   nav_autonomy,
       delay_mapping,
    ])

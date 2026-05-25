@@ -114,7 +114,6 @@ public:
     ~JoyToServoPub() override;
 
 private:
-    auto joint_params = this->list_parameters({"joint_limits"}, 3)
     void joyCB(const sensor_msgs::msg::Joy::ConstSharedPtr& msg);
 
     rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joy_sub_;

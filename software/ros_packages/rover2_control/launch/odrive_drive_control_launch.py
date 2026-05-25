@@ -70,7 +70,7 @@ def generate_launch_description():
         parameters=[{
             'is_position_control': False,
             'joy_publish_rate': 50,
-            'can': 'can1'
+            'can': 'can_arm'
         }],
         **config
     )

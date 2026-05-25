@@ -34,7 +34,7 @@ def generate_launch_description():
         parameters=[{
             'is_position_control': False,
             'joy_publish_rate': 50,
-            'can': "can0"
+            'can': "can_arm"
         }],
         **config
     )
@@ -69,9 +69,9 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        #gripper_can_control_node,
-        relative_move_node,
-        absolute_move_node,
-        pc_filter_node,
-        pc_plane_node,
+        gripper_can_control_node,
+        # relative_move_node,
+        # absolute_move_node,
+        # pc_filter_node,
+        # pc_plane_node,
     ])

@@ -237,25 +237,25 @@ def generate_launch_description():
                 ],
                 extra_arguments=[{'use_intra_process_comms': False}],
             ),
-            ComposableNode(
-                package="tf2_ros",
-                plugin="tf2_ros::StaticTransformBroadcasterNode",
-                name="static_tf2_broadcaster",
-                parameters=[{"child_frame_id": "/rover_base_origin", "frame_id": "/world"}],
-            ),
+            # ComposableNode(
+            #     package="tf2_ros",
+            #     plugin="tf2_ros::StaticTransformBroadcasterNode",
+            #     name="static_tf2_broadcaster",
+            #     parameters=[{"child_frame_id": "/rover_base_origin", "frame_id": "/map"}],
+            # ),
             ComposableNode(
                 package="joy",
                 plugin="joy::Joy",
                 name="joy_node",
             ),
-            # ComposableNode(
-            #     package="rover_arm_control_interface",
-            #     plugin="moveit_servo::JoyToServoPub",
-            #     name="joy_to_servo_pub_node",
-            #     parameters=[{
-            #         'controller_type': LaunchConfiguration('controller_type')
-            #     }],
-            # ),
+            ComposableNode(
+                package="rover_arm_control_interface",
+                plugin="moveit_servo::JoyToServoPub",
+                name="joy_to_servo_pub_node",
+                parameters=[{
+                    'controller_type': LaunchConfiguration('controller_type')
+                }],
+            ),
         ],
         output="screen",
     )
@@ -346,7 +346,7 @@ def generate_launch_description():
             moveit_arm_controller_spawner,
             controller_switcher_node,
             rviz_node,
-            joy_to_servo_node,
+            #joy_to_servo_node,
             # d405_node,
             #d455_node,
         ]

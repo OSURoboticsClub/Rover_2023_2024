@@ -125,15 +125,15 @@ bool convertJoyToCmd(const std::vector<float>& axes, const std::vector<int>& but
   }
   else{ //joint by joint control
     joint->joint_names.push_back("rover_arm_base_joint");
-    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("D_PAD_X")] * -0.30);
+    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("D_PAD_X")] * -1.0);
     joint->joint_names.push_back("rover_arm_shoulder_joint");
-    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("D_PAD_Y")] * -0.25);
+    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("D_PAD_Y")] * -1.0);
     joint->joint_names.push_back("rover_arm_elbow_pitch_joint");
-    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("LEFT_STICK_Y")] * -0.30); //THIS JOINT IS BACKWARDS
+    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("LEFT_STICK_Y")] * -1.0); //THIS JOINT IS BACKWARDS
     joint->joint_names.push_back("rover_arm_elbow_roll_joint");
-    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("LEFT_STICK_X")] * -0.25);
+    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("LEFT_STICK_X")] * -1.0);
     joint->joint_names.push_back("rover_arm_wrist_pitch_joint");
-    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("RIGHT_STICK_Y")] * -0.30);
+    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("RIGHT_STICK_Y")] * -1.0);
     joint->joint_names.push_back("rover_arm_wrist_roll_joint");
     joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("RIGHT_STICK_X")]);
 
