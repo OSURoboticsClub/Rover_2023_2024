@@ -78,7 +78,7 @@ def generate_launch_description():
             "pointcloud.stream_filter": 2,
             "enable_color": True,
             # "enable_depth": True,
-            "serial_no":"_218622273613",
+            "serial_no":"218622273613",
             "depth_fps": 5,
             "rgb_fps": 5,
         }],
@@ -102,9 +102,9 @@ def generate_launch_description():
             'stream_width': 640,
             'stream_height': 480,
             'fec_percentage': 30,
-            'udp_host': '192.168.1.103',
+            'udp_host': '192.168.1.6',
             'udp_port': 42067,
-            'mux_port': 20001
+            'mux_port': 20000
         }],
         respawn=True
     )
@@ -124,7 +124,7 @@ def generate_launch_description():
             'stream_width': 640,
             'stream_height': 480,
             'fec_percentage': 30,
-            'udp_host': '192.168.1.103',
+            'udp_host': '192.168.1.6',
             'udp_port': 42068,
             'mux_port': 20000
         }],
@@ -145,7 +145,7 @@ def generate_launch_description():
             'stream_width': 640,
             'stream_height': 480,
             'fec_percentage': 30,
-            'udp_host': '192.168.1.100',
+            'udp_host': '192.168.1.6',
             'udp_port': 42069,
             'mux_port': 20002
         }],
@@ -166,7 +166,7 @@ def generate_launch_description():
             'stream_width': 640,
             'stream_height': 480,
             'fec_percentage': 100,
-            'udp_host': '192.168.1.100',
+            'udp_host': '192.168.1.6',
             'udp_port': 42070,
             'mux_port': 20003
         }],
@@ -188,9 +188,9 @@ def generate_launch_description():
             'stream_width': 640,
             'stream_height': 480,
             'fec_percentage': 100,
-            'udp_host': '192.168.1.103',
+            'udp_host': '192.168.1.6',
             'udp_port': 42068,
-            'mux_port': 20003
+            'mux_port': 20000
         }],
         respawn=True
     )
@@ -209,9 +209,9 @@ def generate_launch_description():
             'stream_width': 640,
             'stream_height': 480,
             'fec_percentage': 100,
-            'udp_host': '192.168.1.100',
+            'udp_host': '192.168.1.6',
             'udp_port': 42071,
-            'mux_port': 20003
+            'mux_port': 20000
         }],
         respawn=True
     )
@@ -230,9 +230,9 @@ def generate_launch_description():
             'stream_width': 640,
             'stream_height': 480,
             'fec_percentage': 100,
-            'udp_host': '192.168.1.100',
+            'udp_host': '192.168.1.6',
             'udp_port': 42072,
-            'mux_port': 20003
+            'mux_port': 20000
         }],
         respawn=True
     )
@@ -252,9 +252,31 @@ def generate_launch_description():
             'stream_width': 640,
             'stream_height': 480,
             'fec_percentage': 30,
-            'udp_host': '192.168.1.103',
+            'udp_host': '192.168.1.6',
             'udp_port': 42067,
-            'mux_port': 20001
+            'mux_port': 20000
+        }],
+        respawn=True
+    )
+
+    realsense_gstream = Node(
+        package='rover2_camera',
+        namespace='rover2_camera',
+        executable='camera_ros2_conversion',
+        name='realsense_conversion',
+        parameters=[{
+            'image_topic': '/camera/d405/color/image_raw',
+            'cap_width': 640,
+            'cap_height': 480,
+            'cap_framerate': 30,
+            'preset_level': 1,
+            'bitrate': 4000000,
+            'stream_width': 640,
+            'stream_height': 480,
+            'fec_percentage': 30,
+            'udp_host': '192.168.1.6',
+            'udp_port': 42074,
+            'mux_port': 20000
         }],
         respawn=True
     )
@@ -273,13 +295,14 @@ def generate_launch_description():
 #        ir_camera_node,
 #        ir_camera_node,
 #        main_nav_node,
-	chassis_right_cam_node,
+        chassis_right_cam_node,
         chassis_left_cam_node,
         birds_eye_cam_node,
 #        tower_gimbal_cam_node,
         back_cam_node,
         # pan_tilt_cam_node,
         muxing_node,
-        # d405_node
+        d405_node,
+        realsense_gstream,
     ])
 
