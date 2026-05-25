@@ -69,8 +69,7 @@ def generate_launch_description():
     camera_gimbals = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [os.path.join(
-                get_package_share_directory('rover2_control'),
-                'launch'), '/gimbal_launch.py']
+                get_package_share_directory('rover2_control')), '/gimbal_launch.py']
         )
     )
 
@@ -83,6 +82,11 @@ def generate_launch_description():
       PythonLaunchDescriptionSource([os.path.join(
          get_package_share_directory('nav_autonomy'),
          'launch'), '/nav_launch.py'])
+    )
+    driller = IncludeLaunchDescription(
+      PythonLaunchDescriptionSource([os.path.join(
+         get_package_share_directory('rover2_drill'),
+         'launch'), '/drill_launch.py'])
     )
     state_publisher = IncludeLaunchDescription(
       PythonLaunchDescriptionSource([os.path.join(
@@ -152,7 +156,7 @@ def generate_launch_description():
 
 
     return LaunchDescription([
-#      state_publisher,
+    #   state_publisher,
       ros2_control_node,
       robot_state_publisher_node,
       joint_state_broadcaster_spawner,
@@ -160,9 +164,10 @@ def generate_launch_description():
       imu,
       arm,
       status,
-      cameras,
+    #   cameras,
       arm_control,
-      camera_gimbals,
-    #   nav_autonomy,
-    #   delay_mapping,
+    #   camera_gimbals,
+    #    driller,
+       nav_autonomy,
+       delay_mapping,
    ])

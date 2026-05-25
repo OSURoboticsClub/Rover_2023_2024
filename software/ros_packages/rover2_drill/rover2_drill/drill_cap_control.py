@@ -19,7 +19,7 @@ class DrillCapControl(Node):
     def __init__(self):
         super().__init__("drill_cap_control")
 
-        self.declare_parameter("can", "can0")
+        self.declare_parameter("can", "can_arm")
         self.declare_parameter("node_id", 0)
         self.declare_parameter("cmd_id", 1)
         self.declare_parameter("service_name", "drill/cap/set_engaged")
