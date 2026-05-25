@@ -248,14 +248,14 @@ def generate_launch_description():
                 plugin="joy::Joy",
                 name="joy_node",
             ),
-            ComposableNode(
-                package="rover_arm_control_interface",
-                plugin="moveit_servo::JoyToServoPub",
-                name="joy_to_servo_pub_node",
-                parameters=[{
-                    'controller_type': LaunchConfiguration('controller_type')
-                }],
-            ),
+            # ComposableNode(
+            #     package="rover_arm_control_interface",
+            #     plugin="moveit_servo::JoyToServoPub",
+            #     name="joy_to_servo_pub_node",
+            #     parameters=[{
+            #         'controller_type': LaunchConfiguration('controller_type')
+            #     }],
+            # ),
         ],
         output="screen",
     )
@@ -310,6 +310,14 @@ def generate_launch_description():
         output='screen'
     )
 
+    joy_to_servo_node = Node(
+        package="joy_to_servo",
+        executable="joy_to_servo_node",
+        parameters=[{
+            'controller_type': LaunchConfiguration('controller_type')
+        }]
+    )
+
 
     robot_state_publisher_node = Node(
         package="robot_state_publisher",
@@ -338,6 +346,7 @@ def generate_launch_description():
             moveit_arm_controller_spawner,
             controller_switcher_node,
             rviz_node,
+            joy_to_servo_node,
             # d405_node,
             #d455_node,
         ]
