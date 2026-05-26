@@ -5,7 +5,7 @@ Authors: Jared Northrop
 Year: 2526
 
 This node implement the full moveit trajectory pipeline for end-effector movements relative to the 
-base/world frame. 
+base frame. 
 
 Notes
 -----
