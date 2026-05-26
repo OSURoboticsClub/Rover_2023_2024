@@ -6,6 +6,9 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 
+DRIVE_IP = '192.168.1.6'
+ARM_IP = '192.168.1.8'
+
 def generate_launch_description():
     # Replace these with your camera serial numbers
     # You can find them with `rs-enumerate-devices`
@@ -145,7 +148,7 @@ def generate_launch_description():
             'stream_width': 640,
             'stream_height': 480,
             'fec_percentage': 30,
-            'udp_host': '192.168.1.6',
+            'udp_host': DRIVE_IP,
             'udp_port': 42069,
             'mux_port': 20002
         }],
@@ -166,7 +169,7 @@ def generate_launch_description():
             'stream_width': 640,
             'stream_height': 480,
             'fec_percentage': 100,
-            'udp_host': '192.168.1.6',
+            'udp_host': DRIVE_IP,
             'udp_port': 42070,
             'mux_port': 20003
         }],
@@ -209,7 +212,7 @@ def generate_launch_description():
             'stream_width': 640,
             'stream_height': 480,
             'fec_percentage': 100,
-            'udp_host': '192.168.1.6',
+            'udp_host': DRIVE_IP,
             'udp_port': 42071,
             'mux_port': 20000
         }],
@@ -230,7 +233,7 @@ def generate_launch_description():
             'stream_width': 640,
             'stream_height': 480,
             'fec_percentage': 100,
-            'udp_host': '192.168.1.6',
+            'udp_host': ARM_IP,
             'udp_port': 42072,
             'mux_port': 20000
         }],
@@ -274,7 +277,7 @@ def generate_launch_description():
             'stream_width': 640,
             'stream_height': 480,
             'fec_percentage': 30,
-            'udp_host': '192.168.1.6',
+            'udp_host': ARM_IP,
             'udp_port': 42074,
             'mux_port': 20000
         }],
