@@ -24,6 +24,7 @@ setup(
         'console_scripts': [
             'system_statuses_node = rover2_status.system_statuses_node:main',
             'led_node = rover2_status.led_node:main',
+            'led_node_serial = rover2_status.led_node_serial:main',
             'drivetrain_telemetry = rover2_status.odrive_telemetry:drivetrain_telem',
             'arm_telem = rover2_status.odrive_telemetry:arm_telem',
             'drive_slip = rover2_status.drive_slip_detection:main',
