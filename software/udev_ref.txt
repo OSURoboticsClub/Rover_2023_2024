@@ -1,0 +1,51 @@
+# udevadm info -a -p $(udevadm info -q path -n /dev/video2)
+# ATTRS{serial}=="B9A8A5FF", MODE="0660",GROUP="nvidia",
+# SUBSYSTEM=="video4linux",ATTRS{idVendor}=="0x046d",ATTRS{idProduct}=="0x082d",NAME="videoext"
+
+# The zed camera
+KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", ATTRS{idVendor}=="2b03", ATTRS{idProduct}=="f580", SYMLINK+="rover/camera_zed"
+
+# The first C920 Webcam
+KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="082d", ATTRS{serial}=="B9A8A5FF", SYMLINK+="rover/camera_undercarriage"
+
+# The second C920 Webcam
+KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="08e5", ATTRS{serial}=="3B10172F", SYMLINK+="rover/camera_chassis"
+
+# second cam backup
+KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="082d", ATTRS{serial}=="A98AA5FF", SYMLINK+="rover/camera_chassis_backup"
+
+# The special main nav cam
+KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", ATTRS{idVendor}=="32e4", ATTRS{idProduct}=="9422", ATTRS{serial}=="2020032801", ATTR{index}=="0", SYMLINK+="rover/camera_main_navigation"
+
+# main nav backup
+KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", ATTRS{idVendor}=="05a3", ATTRS{idProduct}=="9422", ATTRS{serial}=="SN0001", ATTR{index}=="0", SYMLINK+="rover/camera_main_navigation_backup"
+
+# lights/gps infrared camera
+KERNEL=="video[0-9]*", SUBSYSTEM=="video4linux", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="6369", ENV{ID_V4L_CAPABILITIES}==":capture:", SYMLINK+="rover/camera_infrared"
+
+
+#Cameras 2025-2026
+# Chassis Left
+#SUBSYSTEM=="video4linux", KERNELS=="6-1", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="64ab", ATTR{index}=="0", SYMLINK+="rover/camera_right_chassis"
+SUBSYSTEM=="video4linux", KERNELS=="8-1", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="64ab", ATTR{index}=="0", SYMLINK+="rover/camera_left_chassis"
+
+# Chassis Right
+#SUBSYSTEM=="video4linux", KERNELS=="8-1", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="64ab", ATTR{index}=="0", SYMLINK+="rover/camera_left_chassis"
+
+SUBSYSTEM=="video4linux", KERNELS=="10-1", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="64ab", ATTR{index}=="0", SYMLINK+="rover/camera_right_chassis"
+
+
+#Birds eye view camera
+#SUBSYSTEM=="video4linux", ENV{ID_PATH}=="platform-3610000.usb-usb-0:2.2.4.2:1.0", ATTR{index}=="0", SYMLINK+="rover/camera_heaven"
+SUBSYSTEM=="video4linux", KERNELS=="6-1", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="64ab", ATTR{index}=="0", SYMLINK+="rover/camera_bird_eye"
+
+#Rearview camera
+#SUBSYSTEM=="video4linux", ENV{ID_PATH}=="platform-3610000.usb-usb-0:2.2.4.3:1.0", ATTR{index}=="0", SYMLINK+="rover/camera_rear"
+SUBSYSTEM=="video4linux", KERNELS=="4-1", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="64ab", ATTR{index}=="0", SYMLINK+="rover/camera_rear"
+
+#Tower Gimbal
+SUBSYSTEM=="video4linux", KERNELS=="4-1.3", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="6366", ATTR{index}=="0", SYMLINK+="rover/camera_tower_gimbal"
+#Pantilt IR (Not set yet)
+SUBSYSTEM=="video4linux", KERNELS=="8-1.2", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="6369", ATTR{index}=="0", ENV{ID_V4L_CAPABILITIES}==":capture:", SYMLINK+="rover/camera_pan_tilt"
+
+#CAN bus 2025-2026
