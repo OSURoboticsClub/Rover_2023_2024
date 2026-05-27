@@ -19,6 +19,7 @@ from nav_msgs.msg import Odometry
 
 from nav_autonomy_interface.action import Mission, YoloFind
 from nav_autonomy.utils.search_fsm import SearchFSM, SearchState, SearchPattern
+from nav_autonomy.utils.lights_controller import LightsController
 
 
 def get_yaw_from_quaternion(q) -> float:
@@ -32,6 +33,8 @@ class MissionManager(Node):
         super().__init__('mission_manager')
 
         self.callback_group = ReentrantCallbackGroup()
+
+        self.lights = LightsController(self)
 
         self.navigator = BasicNavigator("basic_navigator")
         self.fromLL_client = self.navigator.create_client(FromLL, '/fromLL')
@@ -149,6 +152,8 @@ class MissionManager(Node):
         self.yolo_goal_handle = None
         self.yolo_result_future = None
 
+        self.lights.auton_on()
+
         try:
             req = goal_handle.request
 
@@ -248,6 +253,8 @@ class MissionManager(Node):
                 goal_handle.abort()
                 result.ack = Mission.Result.FAILED
 
+            self.lights.success()
+            
             return result
 
         finally:
