@@ -31,7 +31,6 @@ SUBSYSTEM=="video4linux", KERNELS=="8-1", ATTRS{idVendor}=="0c45", ATTRS{idProdu
 
 # Chassis Right
 #SUBSYSTEM=="video4linux", KERNELS=="8-1", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="64ab", ATTR{index}=="0", SYMLINK+="rover/camera_left_chassis"
-
 SUBSYSTEM=="video4linux", KERNELS=="10-1", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="64ab", ATTR{index}=="0", SYMLINK+="rover/camera_right_chassis"
 
 
@@ -49,4 +48,3 @@ SUBSYSTEM=="video4linux", KERNELS=="4-1.3", ATTRS{idVendor}=="0c45", ATTRS{idPro
 SUBSYSTEM=="video4linux", KERNELS=="8-1.2", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="6369", ATTR{index}=="0", ENV{ID_V4L_CAPABILITIES}==":capture:", SYMLINK+="rover/camera_pan_tilt"
 
 #CAN bus 2025-2026
-

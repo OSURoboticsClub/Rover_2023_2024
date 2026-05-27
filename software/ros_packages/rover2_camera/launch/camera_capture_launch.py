@@ -14,19 +14,6 @@ def generate_launch_description():
     # You can find them with `rs-enumerate-devices`
 
 
-#    realsense_launch_nav = Node(
-#        package='realsense2_camera',
-#        executable='realsense2_camera_node',
-#        name='d455',
-#        parameters=[{
-#            "camera_name": "d455",
-#            
-#            "pointcloud.enable": True,
-#            "align_depth.enable": True,
-#            "serial_no":"318122302525",
-#        }],
-#        output='screen'
-#    )
     realsense_launch_nav = Node(
         package='realsense2_camera',
         executable='realsense2_camera_node',
@@ -88,51 +75,6 @@ def generate_launch_description():
         output='screen'
     )
 
-
-   # Your rover2_camera nodes
-    ir_camera_node = Node(
-        package='rover2_camera',
-        namespace='rover2_camera',
-        executable='camera_capture',
-        name='ir',
-        parameters=[{
-            'device': '/dev/rover/camera_infrared',
-            'cap_width': 640,
-            'cap_height': 480,
-            'cap_framerate': 30,
-            'preset_level': 1,
-            'bitrate': 4000000,
-            'stream_width': 640,
-            'stream_height': 480,
-            'fec_percentage': 30,
-            'udp_host': '192.168.1.6',
-            'udp_port': 42067,
-            'mux_port': 20000
-        }],
-        respawn=True
-    )
-
-    main_nav_node = Node(
-        package='rover2_camera',
-        namespace='rover2_camera',
-        executable='camera_capture',
-        name='main_navigation',
-        parameters=[{
-            'device': '/dev/rover/camera_main_navigation',
-            'cap_width': 640,
-            'cap_height': 480,
-            'cap_framerate': 30,
-            'preset_level': 1,
-            'bitrate': 4000000,
-            'stream_width': 640,
-            'stream_height': 480,
-            'fec_percentage': 30,
-            'udp_host': '192.168.1.6',
-            'udp_port': 42068,
-            'mux_port': 20000
-        }],
-        respawn=True
-    )
     chassis_left_cam_node = Node(
         package='rover2_camera',
         namespace='rover2_camera',
@@ -191,12 +133,13 @@ def generate_launch_description():
             'stream_width': 640,
             'stream_height': 480,
             'fec_percentage': 100,
-            'udp_host': '192.168.1.6',
+            'udp_host': DRIVE_IP,
             'udp_port': 42068,
             'mux_port': 20000
         }],
         respawn=True
     )
+
     back_cam_node = Node(
         package='rover2_camera',
         namespace='rover2_camera',
@@ -240,27 +183,28 @@ def generate_launch_description():
         respawn=True
     )
 
-    pan_tilt_cam_node = Node(
-        package='rover2_camera',
-        namespace='rover2_camera',
-        executable='camera_capture',
-        name='pan_tilt_cam',
-        parameters=[{
-            'device': '/dev/rover/camera_pan_tilt',
-            'cap_width': 640,
-            'cap_height': 480,
-            'cap_framerate': 30,
-            'preset_level': 1,
-            'bitrate': 4000000,
-            'stream_width': 640,
-            'stream_height': 480,
-            'fec_percentage': 30,
-            'udp_host': '192.168.1.6',
-            'udp_port': 42067,
-            'mux_port': 20000
-        }],
-        respawn=True
-    )
+    #pan_tilt_ir
+    #pan_tilt_cam_node = Node(
+    #    package='rover2_camera',
+    #    namespace='rover2_camera',
+    #    executable='camera_capture',
+    #    name='pan_tilt_cam',
+    #    parameters=[{
+    #        'device': '/dev/rover/camera_pan_tilt',
+    #        'cap_width': 640,
+    #        'cap_height': 480,
+    #        'cap_framerate': 30,
+    #        'preset_level': 1,
+    #        'bitrate': 4000000,
+    #        'stream_width': 640,
+    #        'stream_height': 480,
+    #        'fec_percentage': 30,
+    #        'udp_host': DRIVE_IP,
+    #        'udp_port': 42073,
+    #        'mux_port': 20000
+    #    }],
+    #    respawn=True
+    #)
 
     realsense_gstream = Node(
         package='rover2_camera',
@@ -301,9 +245,9 @@ def generate_launch_description():
         chassis_right_cam_node,
         chassis_left_cam_node,
         birds_eye_cam_node,
-#        tower_gimbal_cam_node,
+        #tower_gimbal_cam_node,
         back_cam_node,
-        # pan_tilt_cam_node,
+        #pan_tilt_cam_node,
         muxing_node,
         d405_node,
         realsense_gstream,
