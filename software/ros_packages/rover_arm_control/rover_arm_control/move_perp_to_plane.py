@@ -98,6 +98,12 @@ class PerpToPlane(Node):
     def find_tool_orientation(self, z):
         """Determine the inward vector perpendicular to the tangent line. 
 
+        This function is the main logic in this node. It uses the plane coefficients to determine the z-axis 
+        of gripper. It then chooses the x and y on the global x-axis and y-axis. Currently 5/26 it was seen 
+        that the gripper gets flipped upsidown. This can probably be fixed by 1. negating the x vector, 2. 
+        negating the x_ref vector, or 3. switching the order of the cross product when finding x 
+        (i.e., x = np.cross(x_ref, z) -> np.cross(z, x_ref))
+
         Parameters
         ----------
         z : array
