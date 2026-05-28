@@ -10,10 +10,10 @@ def generate_launch_description():
             name = 'tower_gimbal',
             parameters = [
                 {"control_topic": "/tower_gimbal/control"},
-                {"can", "can0"},
+                {"can", "can_cam"},
                 {"direction": 1},
-                {"node_ids": [0, 1, 2]},
-                {"board_id": 0}
+                {"node_ids": [5, 3, 4]},
+                {"board_id": 2}
             ]
         ),
         Node (
@@ -23,10 +23,10 @@ def generate_launch_description():
             name = 'chassis_gimbal',
             parameters = [
                 {"control_topic": "/chassis_gimbal/control"},
-                {"can", "can0"},
+                {"can", "can_cam"},
                 {"direction": 1},
-                {"node_ids": [0, -1, 1]},
-                {"board_id": 1}
+                {"node_ids": [1, -1, 0]},
+                {"board_id": 6}
             ]
         )
     ])
