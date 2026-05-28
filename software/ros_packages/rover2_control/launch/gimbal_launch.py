@@ -4,7 +4,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
     return LaunchDescription([
         Node (
-            package = 'rover2_control_interface',
+            package = 'rover2_control',
             namespace = 'tower_gimbal',
             executable = 'odrive_pan_tilt',
             name = 'tower_gimbal',
@@ -17,7 +17,7 @@ def generate_launch_description():
             ]
         ),
         Node (
-            package = 'rover2_control_interface',
+            package = 'rover2_control',
             namespace = 'chassis_gimbal',
             executable = 'odrive_pan_tilt',
             name = 'chassis_gimbal',
