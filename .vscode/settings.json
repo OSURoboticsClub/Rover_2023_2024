@@ -1,3 +1,14 @@
 {
-    "cmake.sourceDirectory": "/home/jn2/Rover_2023_2024/software/build/rover2_control_interface/rover2_control_interface__py"
+    "cmake.sourceDirectory": "/home/jn2/Rover_2023_2024/software/build/rover2_control_interface/rover2_control_interface__py",
+    "ROS2.distro": "humble",
+    "python.autoComplete.extraPaths": [
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages",
+        "/home/nolan/source/osurc/Rover_2023_2024/software/install/rover2_control_interface/local/lib/python3.10/dist-packages/",
+        "/home/nolan/source/osurc/Rover_2023_2024/software/ros_packages/camera_gimbal_controller/camera_gimbal_controller"
+    ]
 }
