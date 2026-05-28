@@ -70,7 +70,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             [os.path.join(
                 get_package_share_directory('rover2_control'),
-                'launch'), '/tower_gimbal_launch.py']
+                'launch'), '/gimbal_launch.py']
         )
     )
 
