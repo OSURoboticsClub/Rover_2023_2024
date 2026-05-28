@@ -237,6 +237,11 @@ class MissionManager(Node):
                 goal_handle.publish_feedback(self._map_search_feedback())
                 time.sleep(0.4)
 
+                # Fallback to green even if nav stuck
+                if self.search_fsm.get_state() in (SearchState.SUCCESS, SearchState.FAILED):
+                    self.lights.success()
+
+
             # ==============================
             # Complete action
             # ==============================
