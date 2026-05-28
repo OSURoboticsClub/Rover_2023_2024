@@ -74,6 +74,8 @@ class OdrivePanTilt(Node):
     def send_angles(self):
         try:
             for i, node_id in enumerate(self.node_ids):
+                if node_id < 0:
+                    continue
                 self.bus.send(can.Message(
                     arbitration_id = (self.board_id << 5 | 0x01), #Motor control
                     data = struct.pack('<Bf', node_id, self.angles[i]),

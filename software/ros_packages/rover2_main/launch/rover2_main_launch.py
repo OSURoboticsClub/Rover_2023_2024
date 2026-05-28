@@ -65,6 +65,15 @@ def generate_launch_description():
          get_package_share_directory('nav_autonomy'),
          'launch'), '/mapping_launch.py'])
     )
+
+    camera_gimbals = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            [os.path.join(
+                get_package_share_directory('rover2_control'),
+                'launch'), '/tower_gimbal_launch.py']
+        )
+    )
+
    # Timer action to delay the listener node
     delay_mapping = TimerAction(
          period=5.0,  # Delay in seconds
@@ -153,6 +162,7 @@ def generate_launch_description():
       status,
       cameras,
       arm_control,
+      #camera_gimbals,
     #   nav_autonomy,
     #   delay_mapping,
    ])
