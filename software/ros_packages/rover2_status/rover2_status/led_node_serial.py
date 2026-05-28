@@ -6,6 +6,8 @@ import time
 import serial
 import numpy as np
 
+# To Test
+# ros2 topic pub /autonomous_LED/color rover2_status_interface/msg/LED "{red: 0, green: 0, blue: 1}"
 
 NODE_NAME = "autonomous_LED"
 
@@ -14,15 +16,16 @@ OFF = 0
 RED = 1
 GREEN = 2
 BLUE = 3
+COLORFUL = 4
 
 class AutonomousLEDSubscriber(Node):
 
     def __init__(self):
         super().__init__(NODE_NAME)
 
-        self.arduino = serial.Serial(port="/dev/ttyUSB0",baudrate=9600, timeout=0.1)
+        self.arduino = serial.Serial(port="/dev/ttyACM1",baudrate=9600, timeout=0.1)
         time.sleep(2)
-        self.arduino.write("0".encode('utf-8'))
+        self.arduino.write(str(BLUE).encode('utf-8'))
         self.subscription = self.create_subscription(
             LED,
             '/autonomous_LED/color',
