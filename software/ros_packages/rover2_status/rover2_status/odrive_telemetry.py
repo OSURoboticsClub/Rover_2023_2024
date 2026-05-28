@@ -102,7 +102,7 @@ class OdriveTelemetry(Node):
 	def clear_can_callback(self, request, response):
             nodes = [1,2,3,4,5]
             #If wanting to clear arm bus
-            if(self.bus_name == "can1"):
+            if(self.bus_name == "can_arm"):
                 nodes = [1,2,3,4,5,6]
             for node_id in nodes:
                 self.bus.send(can.Message(
@@ -250,7 +250,7 @@ def drivetrain_telem(args = None):
 #Used for ODrives on the Arm (can1) network:
 def arm_telem(args = None):
 	rclpy.init()
-	odrive_telem = OdriveTelemetry("can1")
+	odrive_telem = OdriveTelemetry("can_arm")
 	rclpy.spin(odrive_telem)
 	rclpy.shutdown
 

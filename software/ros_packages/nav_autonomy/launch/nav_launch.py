@@ -67,6 +67,11 @@ def generate_launch_description():
             executable='mission_manager',
     )
 
+    yolo_server = Node(
+            package='nav_autonomy',
+            executable='yolo_server',
+    )
+
     return LaunchDescription([
         DeclareLaunchArgument('use_sim_time', default_value='false', description='Use simulation (Gazebo) clock if true'),
         # DeclareLaunchArgument('ros2_control', default_value='true', description='Use ros2_control'),
@@ -79,5 +84,6 @@ def generate_launch_description():
         # rtabmap_point_cloud,
         # rtabmap_obstacles,
         nav2,
-#        mission_manager,
+        mission_manager,
+        yolo_server,
     ])
