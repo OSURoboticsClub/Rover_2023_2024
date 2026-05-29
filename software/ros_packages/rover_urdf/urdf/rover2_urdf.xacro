@@ -30,6 +30,39 @@ Urdf for the rover of the DAM Robotics Rover triple bogie system.
                 <!-- For older urdf <origin xyz="0 0.04075 0.1" rpy="0 -1.3963 -1.5708"/> -->
                 <origin xyz="-0.001611 -0.040711 0.099525" rpy="0.0 -1.3963635 1.5707963"/> 
             </xacro:sensor_d405>
+
+            <gazebo reference="d405_depth_frame">
+                <sensor name="d405" type="rgbd_camera">
+                    <ignition_frame_id>d405_depth_frame</ignition_frame_id>
+                    <camera name="d405">
+                        <horizontal_fov>1.518436</horizontal_fov>
+                        <image>
+                            <width>1280</width>
+                            <height>720</height>
+                            <format>R_FLOAT32</format>
+                        </image>
+                        <clip>
+                            <near>0.1</near>
+                            <far>10</far>
+                        </clip>
+                        <depth_camera>
+                            <clip>
+                                <near>0.2</near>
+                                <far>6</far>
+                            </clip>
+                        </depth_camera>
+                        <noise>
+                            <type>gaussian</type>
+                            <mean>0</mean>
+                            <stddev>0.01</stddev>
+                        </noise>
+                    </camera>
+                    <always_on>1</always_on>
+                    <update_rate>15</update_rate>
+                    <visualize>true</visualize>
+                    <topic>/camera/d405/depth/color</topic>
+                </sensor>
+            </gazebo>
         </xacro:if>
 
         <xacro:if value="${attachment== 'northrop_arm'}">

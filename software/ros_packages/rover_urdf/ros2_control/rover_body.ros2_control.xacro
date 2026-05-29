@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-    <xacro:macro name="rover_body_ros2_control" params="name initial_positions_file ros2_control_hardware_type:=main">
+    <xacro:macro name="rover_body_ros2_control" params="name initial_positions_file ros2_control_hardware_type:=main controller_config_path:='$(find rover2_control)/config/rover_drive.yaml'">
         <xacro:property name="initial_positions" value="${xacro.load_yaml(initial_positions_file)['initial_positions']}"/>
 
         <ros2_control name="${name}" type="system">
@@ -151,7 +151,7 @@
         </gazebo> -->
         <gazebo>
             <plugin filename="libgz_ros2_control-system.so" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
-                <parameters>$(find rover2_control)/config/rover_drive.yaml</parameters>
+                <parameters>${controller_config_path}</parameters>
             </plugin>
         </gazebo>
 

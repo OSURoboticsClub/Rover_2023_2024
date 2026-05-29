@@ -135,6 +135,7 @@ def generate_launch_description():
         executable="move_group",
         output="screen", 
         parameters=[
+            {"use_sim_time": use_sim_time},
             moveit_config.to_dict(),
             octomap_config,
             # octomap_sensor_config,            
@@ -199,6 +200,7 @@ def generate_launch_description():
         output="log",
         arguments=["-d", rviz_config_file],
         parameters=[
+            {"use_sim_time": use_sim_time},
             moveit_config.robot_description,
             moveit_config.robot_description_semantic,
             moveit_config.robot_description_kinematics,
@@ -226,6 +228,7 @@ def generate_launch_description():
                 plugin="moveit_servo::ServoNode",
                 name="servo_node",
                 parameters=[
+                    {"use_sim_time": use_sim_time},
                     servo_params,
                     moveit_config.robot_description,
                     moveit_config.robot_description_semantic,
@@ -247,14 +250,16 @@ def generate_launch_description():
                 package="joy",
                 plugin="joy::Joy",
                 name="joy_node",
+                parameters=[{"use_sim_time": use_sim_time}],
             ),
             ComposableNode(
                 package="rover_arm_control_interface",
                 plugin="moveit_servo::JoyToServoPub",
                 name="joy_to_servo_pub_node",
-                parameters=[{
-                    'controller_type': LaunchConfiguration('controller_type')
-                }],
+                parameters=[
+                    {"use_sim_time": use_sim_time},
+                    {'controller_type': LaunchConfiguration('controller_type')},
+                ],
             ),
         ],
         output="screen",
@@ -263,6 +268,7 @@ def generate_launch_description():
     controller_switcher_node = Node(
         package="joy_to_servo",
         executable="controller_switcher",
+        parameters=[{"use_sim_time": use_sim_time}],
     )
 
     d405_node = Node(
@@ -315,6 +321,8 @@ def generate_launch_description():
         executable="joy_to_servo_node",
         parameters=[{
             'controller_type': LaunchConfiguration('controller_type')
+        }, {
+            'use_sim_time': use_sim_time,
         }]
     )
 
@@ -323,7 +331,7 @@ def generate_launch_description():
         package="robot_state_publisher",
         executable="robot_state_publisher",
         parameters=[{
-            'use_sim_time': False,},
+            'use_sim_time': use_sim_time,},
             moveit_config.robot_description,
             ],
         output="screen",

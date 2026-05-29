@@ -37,10 +37,10 @@ def generate_launch_description():
         'respawn': True
     }
 
-    use_sim_time = LaunchConfiguration('use_sim_time', default='false')
+    use_sim_time = LaunchConfiguration('use_sim_time', default='true')
     use_sim_time_arg = DeclareLaunchArgument(
             'use_sim_time',
-            default_value='false',
+            default_value='true',
             description='Use simulation (Gazebo) clock if true'
     )
 
@@ -92,18 +92,22 @@ def generate_launch_description():
         executable="spawner",
         arguments=[
             "joint_state_broadcaster",
-            "--controller-manager-timeout",
-            "300",
-            "--controller-manager",
-            "/controller_manager",
+            "--controller-manager-timeout", "300",
+            "--switch-timeout", "60",
+            "--controller-manager", "/controller_manager",
         ],
     )
     
+
     drive_controller_node = Node(
-        package='controller_manager',
-        executable='spawner',
-        arguments=['drive_controller', "-c", "/controller_manager"],
-        output='screen'
+        package="controller_manager",
+        executable="spawner",
+        arguments=[
+            "drive_controller",
+            "--switch-timeout", "60",
+            "-c", "/controller_manager",
+        ],
+        output="screen",
     )
 
     tf2_node = Node(
@@ -123,7 +127,9 @@ def generate_launch_description():
     gazebo_node = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(gz_launch_path),
         launch_arguments={
-            'gz_args': os.path.join(rover_gazebo_path, 'worlds/rubicon_model.sdf') +' -r -v 1',
+            'gz_args': os.path.join(rover_gazebo_path, 'worlds/rubicon_model.sdf')
+            + ' -r -v 1 --gui-config '
+            + os.path.join(rover_gazebo_path, 'config/gazebo_gui.config'),
             'on_exit_shutdown': 'True'
         }.items(),
     )

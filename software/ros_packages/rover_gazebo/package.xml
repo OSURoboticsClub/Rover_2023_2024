@@ -7,6 +7,12 @@
   <maintainer email="jar3dnorth51@gmail.com">jn2</maintainer>
   <license>Apache-2.0</license>
 
+  <exec_depend>rover_arm_urdf</exec_depend>
+  <exec_depend>rover_urdf</exec_depend>
+  <exec_depend>rover2_arm</exec_depend>
+  <exec_depend>rover2_main</exec_depend>
+  <exec_depend>ros_gz_sim</exec_depend>
+
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
   <test_depend>ament_pep257</test_depend>
