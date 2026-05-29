@@ -82,6 +82,7 @@ class GPSNode(Node):
         future.add_done_callback(self.datum_response_callback)
         
         self.get_logger().info(f"Calling SetDatum with lat={lat}, lon={lon}, alt={alt}")
+        self.datum_set = True
 
     def datum_response_callback(self, future):
         """Handle SetDatum service response"""

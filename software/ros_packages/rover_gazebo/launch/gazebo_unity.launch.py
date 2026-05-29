@@ -189,6 +189,55 @@ def generate_launch_description():
         arguments=["-d", os.path.join(rover_gazebo_path, "config/rviz_config.rviz")],
     )
 
+    d405_stream_node = Node(
+        package="rover2_camera",
+        namespace="rover2_camera",
+        executable="camera_ros2_conversion",
+        name="d405_sim_conversion",
+        parameters=[{
+            "image_topic": "/camera/d405/color/image_raw",
+            "cap_width": 640,
+            "cap_height": 480,
+            "cap_framerate": 30,
+            "preset_level": 1,
+            "bitrate": 4000000,
+            "stream_width": 640,
+            "stream_height": 480,
+            "fec_percentage": 30,
+            "udp_host": "127.0.0.1",
+            "udp_port": 42074,
+            "mux_port": 20000,
+            "encoder_type": "software",
+        }],
+        output="screen",
+        respawn=True,
+        condition=IfCondition(PythonExpression(["'", attachment, "' == 'arm'"])),
+    )
+
+    d455_stream_node = Node(
+        package="rover2_camera",
+        namespace="rover2_camera",
+        executable="camera_ros2_conversion",
+        name="d455_sim_conversion",
+        parameters=[{
+            "image_topic": "/camera/d455/color/image_raw",
+            "cap_width": 640,
+            "cap_height": 480,
+            "cap_framerate": 30,
+            "preset_level": 1,
+            "bitrate": 4000000,
+            "stream_width": 640,
+            "stream_height": 480,
+            "fec_percentage": 30,
+            "udp_host": "127.0.0.1",
+            "udp_port": 42075,
+            "mux_port": 20001,
+            "encoder_type": "software",
+        }],
+        output="screen",
+        respawn=True,
+    )
+
     return LaunchDescription([
         use_sim_time_arg,
         attachment_arg,
@@ -213,7 +262,14 @@ def generate_launch_description():
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=drive_controller_node,
-                on_exit=[rover_arm_launch, gps_node, imu_node, rviz_node],
+                on_exit=[
+                    rover_arm_launch,
+                    gps_node,
+                    imu_node,
+                    rviz_node,
+                    d405_stream_node,
+                    d455_stream_node,
+                ],
             )
         ),
     ])

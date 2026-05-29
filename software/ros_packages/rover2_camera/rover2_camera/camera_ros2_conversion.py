@@ -1,25 +1,42 @@
 import sys
 import threading
-import numpy as np
 import rclpy
+from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from sensor_msgs.msg import Image
-from cv_bridge import CvBridge
-import cv2
-
-import gi
-gi.require_version('Gst', '1.0')
-from gi.repository import Gst, GLib
 
 from rover2_camera_interface.srv import CamParams
 
-Gst.init(sys.argv)
+Gst = None
+GLib = None
+CvBridge = None
+cv2 = None
+
+
+def load_camera_libraries():
+    global Gst, GLib, CvBridge, cv2
+    if Gst is not None:
+        return
+
+    from cv_bridge import CvBridge as CvBridgeClass
+    import cv2 as cv2_module
+    import gi
+
+    gi.require_version('Gst', '1.0')
+    from gi.repository import Gst as GstModule, GLib as GLibModule
+
+    GstModule.init(None)
+    Gst = GstModule
+    GLib = GLibModule
+    CvBridge = CvBridgeClass
+    cv2 = cv2_module
 
 
 class CameraCaptureNode(Node):
     def __init__(self):
         super().__init__('camera_capture_node')
         self.get_logger().info('Camera Capture Node has started!')
+        load_camera_libraries()
 
         # Declare parameters
         self.declare_parameter('image_topic', '/camera/d455/color/image_raw')
@@ -34,6 +51,7 @@ class CameraCaptureNode(Node):
         self.declare_parameter('udp_host', '192.168.1.100')
         self.declare_parameter('udp_port', 42073)
         self.declare_parameter('mux_port', 20000)
+        self.declare_parameter('encoder_type', 'nvidia')
 
         self.bridge    = CvBridge()
         self.pipeline  = None
@@ -92,9 +110,23 @@ class CameraCaptureNode(Node):
         udp_host       = self.get_parameter('udp_host').value
         udp_port       = self.get_parameter('udp_port').value
         mux_port       = self.get_parameter('mux_port').value
+        encoder_type   = self.get_parameter('encoder_type').value
 
         self.frame_duration = Gst.SECOND // cap_framerate
         self.pts = 0
+
+        if encoder_type == 'software':
+            bitrate_kbps = max(1, int(bitrate) // 1000)
+            encoder_pipeline = (
+                f'videoconvert ! video/x-raw,format=I420 ! '
+                f'x265enc tune=zerolatency speed-preset=ultrafast '
+                f'bitrate={bitrate_kbps} key-int-max={cap_framerate} ! '
+            )
+        else:
+            encoder_pipeline = (
+                f'nvvidconv ! video/x-raw(memory:NVMM),format=NV12 ! '
+                f'nvv4l2h265enc preset-level={preset_level} bitrate={bitrate} ! '
+            )
 
         pipeline_str = (
             f'appsrc name=src is-live=true block=false format=time '
@@ -105,15 +137,17 @@ class CameraCaptureNode(Node):
             f'rtpvrawpay ! udpsink host=127.0.0.1 port={mux_port} sync=false async=false '
             f't. ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 leaky=downstream ! '
             f'videoscale ! video/x-raw,width={stream_width},height={stream_height} ! '
-            f'nvvidconv ! video/x-raw(memory:NVMM),format=NV12 ! '
-            f'nvv4l2h265enc preset-level={preset_level} bitrate={bitrate} ! '
+            f'{encoder_pipeline}'
             f'h265parse ! rtph265pay config-interval=1 ! '
             f'rtpulpfecenc percentage={fec_percentage} ! '
             f'udpsink host={udp_host} port={udp_port} sync=false'
         )
 
         self.get_logger().info(f'Launching pipeline:\n{pipeline_str}')
-        self.pipeline = Gst.parse_launch(pipeline_str)
+        try:
+            self.pipeline = Gst.parse_launch(pipeline_str)
+        except GLib.Error as e:
+            raise RuntimeError(f"Failed to create GStreamer pipeline: {e}") from e
 
         self.appsrc = self.pipeline.get_by_name('src')
         self.appsrc.connect('need-data', self.on_need_data)
@@ -199,12 +233,13 @@ def main(args=None):
     node = CameraCaptureNode()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
-        node.get_logger().info("KeyboardInterrupt: shutting down.")
+    except (KeyboardInterrupt, ExternalShutdownException):
+        node.get_logger().info("Shutdown requested.")
     finally:
         node.stop_pipeline()
         node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
 
 
 if __name__ == '__main__':

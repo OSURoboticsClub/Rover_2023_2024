@@ -10,6 +10,7 @@
   <exec_depend>rover_arm_urdf</exec_depend>
   <exec_depend>rover_urdf</exec_depend>
   <exec_depend>rover2_arm</exec_depend>
+  <exec_depend>rover2_camera</exec_depend>
   <exec_depend>rover2_main</exec_depend>
   <exec_depend>ros_gz_sim</exec_depend>
 

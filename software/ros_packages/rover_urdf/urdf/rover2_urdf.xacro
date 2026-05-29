@@ -39,16 +39,16 @@ Urdf for the rover of the DAM Robotics Rover triple bogie system.
                         <image>
                             <width>1280</width>
                             <height>720</height>
-                            <format>R_FLOAT32</format>
+                            <format>R8G8B8</format>
                         </image>
                         <clip>
                             <near>0.1</near>
-                            <far>10</far>
+                            <far>30</far>
                         </clip>
                         <depth_camera>
                             <clip>
-                                <near>0.2</near>
-                                <far>6</far>
+                                <near>0.07</near>
+                                <far>0.5</far>
                             </clip>
                         </depth_camera>
                         <noise>
@@ -129,7 +129,7 @@ Urdf for the rover of the DAM Robotics Rover triple bogie system.
                 </image>
                 <clip>
                     <near>0.1</near>
-                    <far>10</far>
+                    <far>30</far>
                 </clip>
                 <depth_camera>
                     <clip>

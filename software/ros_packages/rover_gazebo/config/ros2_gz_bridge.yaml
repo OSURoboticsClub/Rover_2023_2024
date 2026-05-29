@@ -13,6 +13,11 @@
   ros_type_name: "sensor_msgs/msg/Image"
   gz_type_name: "ignition.msgs.Image"
   direction: GZ_TO_ROS  # BIDIRECTIONAL or ROS_TO_IGN
+- ros_topic_name: "camera/d455/color/image_raw"
+  gz_topic_name: "/camera/d455/depth/color/image"
+  ros_type_name: "sensor_msgs/msg/Image"
+  gz_type_name: "ignition.msgs.Image"
+  direction: GZ_TO_ROS
 - ros_topic_name: "camera/d455/color/camera_info"
   gz_topic_name: "/camera/d455/depth/color/camera_info"
   ros_type_name: "sensor_msgs/msg/CameraInfo"
@@ -33,12 +38,27 @@
   ros_type_name: "sensor_msgs/msg/Image"
   gz_type_name: "ignition.msgs.Image"
   direction: GZ_TO_ROS
+- ros_topic_name: "camera/d405/depth/image_rect_raw"
+  gz_topic_name: "/camera/d405/depth/color/depth_image"
+  ros_type_name: "sensor_msgs/msg/Image"
+  gz_type_name: "ignition.msgs.Image"
+  direction: GZ_TO_ROS
 - ros_topic_name: "camera/d405/color/image"
   gz_topic_name: "/camera/d405/depth/color/image"
   ros_type_name: "sensor_msgs/msg/Image"
   gz_type_name: "ignition.msgs.Image"
   direction: GZ_TO_ROS
+- ros_topic_name: "camera/d405/color/image_raw"
+  gz_topic_name: "/camera/d405/depth/color/image"
+  ros_type_name: "sensor_msgs/msg/Image"
+  gz_type_name: "ignition.msgs.Image"
+  direction: GZ_TO_ROS
 - ros_topic_name: "camera/d405/color/camera_info"
+  gz_topic_name: "/camera/d405/depth/color/camera_info"
+  ros_type_name: "sensor_msgs/msg/CameraInfo"
+  gz_type_name: "ignition.msgs.CameraInfo"
+  direction: GZ_TO_ROS
+- ros_topic_name: "camera/d405/depth/camera_info"
   gz_topic_name: "/camera/d405/depth/color/camera_info"
   ros_type_name: "sensor_msgs/msg/CameraInfo"
   gz_type_name: "ignition.msgs.CameraInfo"

@@ -405,7 +405,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: world
+    Fixed Frame: rover_base_origin
     Frame Rate: 30
   Name: root
   Tools:
@@ -436,7 +436,7 @@ Visualization Manager:
       Name: Current View
       Near Clip Distance: 0.009999999776482582
       Pitch: 0.5
-      Target Frame: world
+      Target Frame: rover_base_origin
       Value: Orbit (rviz_default_plugins)
       Yaw: 5.66018533706665
     Saved: ~
