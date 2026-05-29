@@ -12,7 +12,7 @@ def generate_launch_description():
                 {"control_topic": "/tower_gimbal/control"},
                 {"can", "can_cam"},
                 {"direction": 1},
-                {"node_ids": [5, 3, 4]},
+                {"node_ids": [3, 5, 4]},
                 {"board_id": 2}
             ]
         ),

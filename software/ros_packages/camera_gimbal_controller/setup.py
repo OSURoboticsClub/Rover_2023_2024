@@ -27,7 +27,7 @@ setup(
     entry_points={
         'console_scripts': [
             'tower_controller = camera_gimbal_controller.tower_gimbal_control:main',
-            'chassis_controller = camera_gimbal_controller.chasssis_gimbal_control:main'
+            'chassis_controller = camera_gimbal_controller.chassis_gimbal_control:main'
         ],
     },
 )
