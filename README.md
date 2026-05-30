@@ -179,7 +179,7 @@ source install/setup.bash
 
 ---
 
-## Miscellaneous Notes
+## Miscellaneous Notes and Stuff
 
 - **NVENC vs. Software Encoding:** This code uses `nvh265enc` (NVENC H.265 hardware acceleration) for camera pipelines, which requires an Nvidia Jetson. To run on other hardware, replace `nvh265enc` with `x265enc` in the relevant GStreamer pipeline definitions.
 - Follow all installation guides closely — ROS2 and its ecosystem have strict environment and dependency requirements.
