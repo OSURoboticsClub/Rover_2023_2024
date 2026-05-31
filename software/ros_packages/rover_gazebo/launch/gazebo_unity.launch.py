@@ -33,6 +33,7 @@ def generate_launch_description():
 
     use_sim_time = LaunchConfiguration("use_sim_time", default="true")
     attachment = LaunchConfiguration("attachment", default="arm")
+    launch_local_joystick = LaunchConfiguration("launch_local_joystick", default="false")
 
     use_sim_time_arg = DeclareLaunchArgument(
         "use_sim_time",
@@ -43,6 +44,11 @@ def generate_launch_description():
         "attachment",
         default_value="arm",
         description="Front attachment to load on the rover model",
+    )
+    launch_local_joystick_arg = DeclareLaunchArgument(
+        "launch_local_joystick",
+        default_value="false",
+        description="Launch local physical joystick nodes instead of using Unity-published commands",
     )
 
     controller_config_path = PathJoinSubstitution([
@@ -136,10 +142,18 @@ def generate_launch_description():
         launch_arguments={
             "hardware_type": "gazebo",
             "launch_ros2_control": "False",
+            "launch_joy_node": launch_local_joystick,
             "use_sim_time": use_sim_time,
             "attachment": attachment,
         }.items(),
         condition=IfCondition(PythonExpression(["'", attachment, "' == 'arm'"])),
+    )
+
+    joint_position_node = Node(
+        package="rover_arm_control",
+        executable="joint_position_control",
+        name="joint_position",
+        output="screen",
     )
 
     gazebo_bridge_node = Node(
@@ -159,6 +173,7 @@ def generate_launch_description():
         executable="joy_node",
         name="joy_node",
         output="screen",
+        condition=IfCondition(launch_local_joystick),
     )
 
     joy_to_drive = Node(
@@ -241,12 +256,14 @@ def generate_launch_description():
     return LaunchDescription([
         use_sim_time_arg,
         attachment_arg,
+        launch_local_joystick_arg,
         gazebo_node,
         robot_state_publisher_node,
         gazebo_bridge_node,
         spawn_robot,
         joy_node,
         joy_to_drive,
+        joint_position_node,
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=spawn_robot,
