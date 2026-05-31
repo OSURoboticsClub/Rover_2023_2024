@@ -53,6 +53,13 @@ def generate_launch_description():
         description="Ros2 Control Hardware Interface Type [xbox, ps, flight]",
     )
 
+    launch_joy_node = LaunchConfiguration('launch_joy_node', default='true')
+    launch_joy_node_arg = DeclareLaunchArgument(
+        'launch_joy_node',
+        default_value='true',
+        description='Launch a physical joystick reader for arm teleop'
+    )
+
     launch_ros2_control = LaunchConfiguration('launch_ros2_control', default='true')
     launch_ros2_control_arg = DeclareLaunchArgument(
             'launch_ros2_control',
@@ -251,6 +258,7 @@ def generate_launch_description():
                 plugin="joy::Joy",
                 name="joy_node",
                 parameters=[{"use_sim_time": use_sim_time}],
+                condition=IfCondition(launch_joy_node),
             ),
             ComposableNode(
                 package="rover_arm_control_interface",
@@ -342,6 +350,7 @@ def generate_launch_description():
         [
             use_sim_time_arg,
             launch_ros2_control_arg,
+            launch_joy_node_arg,
             ros2_control_hardware_type, 
             attachment_arg, 
             controller_type,
