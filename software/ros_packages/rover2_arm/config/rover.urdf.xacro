@@ -24,7 +24,7 @@
     </xacro:if>
 
     <xacro:if value="${front_attachment == 'northrop_arm'}">
-        <xacro:rover_ros2_control name="rover_arm" initial_positions_file="$(arg initial_positions_file)" ros2_control_hardware_type="$(arg ros2_control_hardware_type)"/>
+        <xacro:rover_ros2_control name="rover_arm" initial_positions_file="$(arg initial_positions_file)" ros2_control_hardware_type="$(arg ros2_control_hardware_type)" attachment="northrop_arm"/>
     </xacro:if>
     <!-- Include rover drive ros2_control -->
     <xacro:rover_body_ros2_control name="rover_drive" initial_positions_file="$(arg drive_initial_positions_file)" ros2_control_hardware_type="$(arg ros2_control_hardware_type)" controller_config_path="$(arg ros2_control_config_path)"/>
