@@ -35,3 +35,10 @@ SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6015", ATTRS{seria
 SUBSYSTEM=="tty", ATTRS{idVendor}=="1234", ATTRS{idProduct}=="5678", ATTRS{serial}=="ABC123", SYMLINK+="ttyIRIS"
 SUBSYSTEM=="tty", ATTRS{idVendor}=="1234", ATTRS{idProduct}=="5678", ATTRS{serial}=="DEF456", SYMLINK+="ttyARMLEFT"
 SUBSYSTEM=="tty", ATTRS{idVendor}=="1234", ATTRS{idProduct}=="5678", ATTRS{serial}=="GHI789", SYMLINK+="ttyARMRIGHT"
+
+
+# lights
+SUBSYSTEM=="tty", KERNEL=="ttyACM*", KERNELS=="1-2.3.4.3", SYMLINK+="rover/lights", MODE="0666"
+
+# gps
+SUBSYSTEM=="tty", KERNEL=="ttyACM*", KERNELS=="1-2.3.3.3", SYMLINK+="rover/gps", MODE="0666"
