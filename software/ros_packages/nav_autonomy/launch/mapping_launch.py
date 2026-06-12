@@ -42,9 +42,6 @@ def generate_launch_description():
         DeclareLaunchArgument('vo',       default_value='false', description='Visual Odometry Node for testing'),
         DeclareLaunchArgument('rviz_cfg',   default_value=config_rviz,  description='Configuration path of rviz2.'),
 
-        # Make sure IR emitter is enabled
-        SetParameter(name='depth_module.emitter_enabled', value=1),
-
         # Launch visual odom for testing
         Node(
             package='rtabmap_odom', executable='rgbd_odometry', output='screen',
