@@ -227,7 +227,7 @@ global_costmap:
       robot_base_frame: rover_base_origin
       robot_radius: 0.7
       resolution: 0.1
-      track_unknown_space: False
+      track_unknown_space: True
       always_send_full_costmap: False
       
       rolling_window: True

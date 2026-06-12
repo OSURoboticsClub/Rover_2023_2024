@@ -31,8 +31,7 @@ import torch
 import time
 
 torch.backends.cudnn.enabled = False
-torch.backends.cuda.matmul.allow_tf32 = True  # use TF32 instead, faster on Jetson                   
-
+hub_utils.ONLINE = False
 
 class ActionCanceled(Exception):
     """Custom exception to handle action cancellation"""
@@ -83,11 +82,76 @@ class YoloServer(Node):
         self.switch_camera_client = self.create_client(SwitchCamera, f'/rover2_camera/switch_camera')
 
         self.get_logger().info("YoloServer action server ready.")
+        self.marker_pub = self.create_publisher(Marker, '/visualization_marker', 10)
+        self.target_pose_pub = self.create_publisher(PoseStamped, '/yolo_target_pose', 10)
 
-        # YOLO PARAMETERS
-        self.num_cameras = 1
-        self.source = "/dev/rover/camera_infrared"
-        self.quit = False
+        self.models_dir = os.path.join(
+            get_package_share_directory('nav_autonomy'), 'yolo_models'
+        )
+
+        # ROS2 Parameters
+        self.declare_parameter(
+            "num_cameras",
+            2,
+            ParameterDescriptor(
+                description="Number of cameras carouselling through MUXing node"
+            ),
+        )
+        self.declare_parameter(
+            "source",
+            "/dev/video64",
+            ParameterDescriptor(
+                description="Camera source, default to normal camera - change to muxing node"
+            ),
+        )
+        self.declare_parameter(
+            "stop_threshold",
+            0.85,
+            ParameterDescriptor(
+                description="Threshold to search entire camera stack for to stop server and send back result"
+            ),
+        )
+        self.declare_parameter(
+            "detect_threshold",
+            0.60,
+            ParameterDescriptor(
+                description="Threshold to start search pattern to check for object in environment"
+            ),
+        )
+        self.declare_parameter(
+            "max_frames",
+            3,
+            ParameterDescriptor(
+                description="Number of frames stored for history per camera, full history checked for stop_threshold"
+            ),
+        )
+        self.declare_parameter(
+            "check_frames",
+            10,
+            ParameterDescriptor(
+                description="Number of frames checked in history for detect_threshold"
+            ),
+        )
+
+        self.declare_parameter(
+            "left_camera_frame",
+            "camera_left_chassis",
+            ParameterDescriptor(description="TF frame name for left camera"),
+        )
+        self.declare_parameter(
+            "right_camera_frame",
+            "camera_right_chassis",
+            ParameterDescriptor(description="TF frame name for right camera"),
+        )
+        self.declare_parameter(
+            "nav_frame",
+            "map",
+            ParameterDescriptor(description="Frame for returned feedback poses for navigation"),
+        )
+
+        # Internal Parameters
+        self.num_cameras = self.get_parameter("num_cameras").value
+        self.source = self.get_parameter("source").value
         
         # Camera frame names
         self.left_camera_frame = self.get_parameter("left_camera_frame").value
@@ -387,231 +451,8 @@ class YoloServer(Node):
         )
 
         return annotated
-
-
-    async def action_callback(self, goal_handle):
-        class ActionCanceled(Exception):
-            """Custom exception to handle action cancellation"""
-            pass
-
-        self.xc = None
-        self.yc = None
-        
-        self.bbox_dims = None
-        
-        cap = None
-
-        try:
-            goal = goal_handle.request
-            model = YOLO("yolo_models/mallet.pt")
-            
-            # Define model from action request
-            if goal.search_object == YoloFind.Goal.BOTTLE:
-                model = YOLO("yolo_models/bottle.pt")
-            elif goal.search_object == YoloFind.Goal.ORANGE_HAMMER:
-                model = YOLO("yolo_models/mallet.pt")
-            elif goal.search_object == YoloFind.Goal.OG_HAMMER:
-                model = YOLO("yolo_models/hammer.pt")
-            model.overrides['verbose'] = False
-
-            # Run Yolo or Aruco
-            if goal.search_object == YoloFind.Goal.ARUCO:
-                await self.do_aruco(goal_handle)
-                return
-            else:
-                cap = cv2.VideoCapture(self.source, cv2.CAP_V4L2)
-
-                camera_stacks = [deque(maxlen=self.max_frames) for _ in range(self.num_cameras)]
-                # Start searching in camera stream for object(s)
-                
-                frame_id = 0
-                cam_idx = 0
-
-                while cap.isOpened():
-                    if goal_handle.is_cancel_requested:
-                        goal_handle.canceled()
-                        self.busy = False
-    #                    cv2.destroyAllWindows()
-                        cap.release()
-                        return YoloFind.Result()
-
-                    # Switch Camera
-                    while True:
-                        cam_idx = (cam_idx + 1) % self.num_cameras
-                        if self.switch_camera(cam_idx) == SwitchCamera.Response.SUCCESS:
-                            break
-                        self.get_logger().warn("Failed to switch cameras")
-                        camera_stacks[cam_idx].append(0.0)
-
-                    # Get Frame
-                    ret, frame = cap.read()
-                    if not ret:
-                        self.get_logger().warn("Failed to read frame")
-                        continue
-
-                    # Run YOLO on frame
-                    result = model(frame, device=0)[0]
-
-                    display_frame = frame.copy()
-
-                    # Check if detection in frame
-                    if result.boxes is None or len(result.boxes) == 0:
-                        # No detection
-                        camera_stacks[cam_idx].append(0.0)
-                    else:
-                        # Get best detection from the frame
-                        boxes_xyxy = result.boxes.xyxy.tolist()
-                        conf_scores = result.boxes.conf.tolist()
-                        best_idx = np.argmax(conf_scores)
-                        current_conf = conf_scores[best_idx]
-
-                        # Draw bounding boxes on display frame
-                        display_frame = self._draw_detections(
-                            frame, boxes_xyxy, conf_scores, best_idx
-                        )
-                        
-                        camera_stacks[cam_idx].append(current_conf)
-
-                    # Grab average of list and check against thresholds
-                    total_mean = sum(camera_stacks[cam_idx]) / len(camera_stacks[cam_idx])
-
-                    # Check if this camera has better detection
-                    if self.best_cam_idx == cam_idx or total_mean > self.best_mean_conf:
-                        self.best_cam_idx = cam_idx
-                        self.best_mean_conf = total_mean
-
-                        # recent_stack = camera_stacks[current_cam][-self.check_frames :]:
-                        # recent_mean = sum(recent_stack) / self.check_frames
-
-                        # Overlay stats on display frame
-#                        cv2.putText(
-#                            display_frame,
-#                            f"Total Mean: {total_mean:.2f}  Recent Mean: {recent_mean:.2f}",
-#                            (10, 30),
-#                            cv2.FONT_HERSHEY_SIMPLEX,
-#                            0.6,
-#                            (255, 255, 0),
-#                            2,
-#                        )
-
-                        if total_mean >= self.stop_threshold:
-                            # Show final frame before breaking
- #                           cv2.imshow("YOLO Detection", display_frame)
- #                           cv2.waitKey(1)
-                            break
-
-                        center, top_left, bottom_right = self.get_points()
-                        feedback = YoloFind.Feedback()
-                        feedback.confidence = current_conf
-                        feedback.frame_id = frame_id
-                        feedback.detected = True
-                        feedback.total_conf = total_mean
-                        feedback.center = center
-                        feedback.top_left = top_left
-                        feedback.bottom_right = bottom_right
-                        feedback.pose = PoseStamped()
-
-                        if self.xc and self.yc:
-                            # Estimate depth from bounding box size
-                            estimated_depth = self.estimate_depth_from_bbox(
-                                self.bbox_dims[0], 
-                                self.bbox_dims[1],
-                                known_object_size=0.3  # Adjust based on your object
-                            )
-                            
-                            self.get_logger().info(f"Estimated depth: {estimated_depth:.2f}m")
-                            
-                            # Convert pixel to 3D point in camera frame
-                            point_camera = self.pixel_to_3d_point(
-                                self.xc, 
-                                self.yc, 
-                                estimated_depth,
-                                cam_idx
-                            )
-                            
-                            if point_camera is not None:
-                                self.get_logger().info(f"Point in camera frame: {point_camera}")
-                                
-                                # Transform to base_link frame
-                                pose_base = self.transform_to_base_frame(
-                                    point_camera,
-                                    cam_idx
-                                )
-                                
-                                if pose_base is not None:
-                                    self.get_logger().info(
-                                        f"Object position in map: "
-                                        f"x={pose_base.pose.position.x:.2f}, "
-                                        f"y={pose_base.pose.position.y:.2f}, "
-                                        f"z={pose_base.pose.position.z:.2f}"
-                                    )
-                                    marker = Marker()
-                                    marker.header.frame_id = self.base_frame  # "map"
-                                    marker.header.stamp = self.get_clock().now().to_msg()
-
-                                    marker.ns = "yolo"
-                                    marker.id = 0
-                                    marker.type = Marker.SPHERE
-                                    marker.action = Marker.ADD
-
-                                    marker.pose = pose_base.pose
-
-                                    marker.scale.x = 0.2
-                                    marker.scale.y = 0.2
-                                    marker.scale.z = 0.2
-
-                                    marker.color.r = 1.0
-                                    marker.color.g = 0.0
-                                    marker.color.b = 0.0
-                                    marker.color.a = 1.0
-
-                                    self.marker_pub.publish(marker)
-                                    self.target_pose_pub.publish(pose_base)
-                                    feedback.pose = pose_base
-
-                        goal_handle.publish_feedback(feedback)
-
-                    else:
-                        # No detections - publish feedback with no detection
-                        feedback = YoloFind.Feedback()
-                        feedback.confidence = 0.0
-                        feedback.frame_id = frame_id
-                        feedback.detected = False
-                        goal_handle.publish_feedback(feedback)
-
-                    # Display the frame (with or without detections)
-  #                  cv2.imshow("YOLO Detection", display_frame)
-
-                    # Press 'q' to manually quit the window
-                    if cv2.waitKey(1) & 0xFF == ord("q"):
-                        break
-
-                    frame_id += 1
-
-                cap.release()
-   #             cv2.destroyAllWindows()
-
-                # ==============================
-                # Calculate 3D position
-                # ==============================
-                    
-                        
-        except ActionCanceled:
-            self.get_logger().info("Yolo search canceled")
-            result = YoloFind.Result()
-            result.header = Header()
-            result.ack = YoloFind.Result.CANCELED
-            self.busy = False
-            return result
-        except Exception as e:
-            self.get_logger().error(f"Action callback error: {e}")
-            self.busy = False
-            if cap is not None:
-                cap.release()
-            cv2.destroyAllWindows()
-            raise
-
-    def get_points(self):
+    
+    def get_points(self, best_boxes, xc, yc):
         center = Point()
         center.x = xc
         center.y = yc
