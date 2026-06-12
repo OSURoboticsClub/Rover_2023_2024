@@ -76,7 +76,7 @@ Urdf of the rovers chassis and bogies
 
 
         <!-- KRJ TODO: namespace these and update them everywhere e.g. {name}_camera_left_chassis -->
-        <link name="gps_link"/>
+        <link name="gps"/>
         <link name="imu_link"/>
         <link name="camera_left_chassis_link"/>      
         <link name="camera_right_chassis_link"/>
@@ -383,7 +383,7 @@ Urdf of the rovers chassis and bogies
 
         <joint name="gps_joint" type="fixed">
             <parent link="${name}_base_origin"/>
-            <child link="gps_link"/>
+            <child link="gps"/>
             <origin xyz="-.1524 0 0"/>
         </joint>
         
