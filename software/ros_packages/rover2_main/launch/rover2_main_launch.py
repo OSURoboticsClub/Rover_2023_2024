@@ -7,6 +7,7 @@ from launch_xml.launch_description_sources import XMLLaunchDescriptionSource
 from launch.substitutions import Command, FindExecutable, PathJoinSubstitution, TextSubstitution
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
@@ -136,7 +137,10 @@ def generate_launch_description():
         executable="robot_state_publisher",
         parameters=[{
             'use_sim_time': False,
-            "robot_description": robot_description
+            "robot_description": ParameterValue(
+                robot_description,
+                value_type=str
+            )
         }],
         output="screen",
     )
