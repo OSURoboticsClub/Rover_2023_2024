@@ -1,120 +1,79 @@
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, TimerAction
+from launch.actions import IncludeLaunchDescription, TimerAction, DeclareLaunchArgument, GroupAction
+from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch_xml.launch_description_sources import XMLLaunchDescriptionSource
-from launch.substitutions import Command, FindExecutable, PathJoinSubstitution, TextSubstitution
+from launch.substitutions import Command, FindExecutable, PathJoinSubstitution, TextSubstitution, LaunchConfiguration
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
+from launch.substitutions import PythonExpression
+
 
 
 def generate_launch_description():
+
     config = {
         'emulate_tty': True,
         'output': 'screen',
         'respawn': True
     }
 
-    drive_control = IncludeLaunchDescription(
-      PythonLaunchDescriptionSource([os.path.join(
-         get_package_share_directory('rover2_control')),
-         '/odrive_ros2_control.launch.py']
-      ),
-      launch_arguments={
-          "launch_ros2_control":"False"
-      }.items()
-   )
-
-    cameras = IncludeLaunchDescription(
-      PythonLaunchDescriptionSource([os.path.join(
-         get_package_share_directory('rover2_camera'),
-         'launch'), '/camera_capture_launch.py'])
-      )
-
-    imu = IncludeLaunchDescription(
-      PythonLaunchDescriptionSource([os.path.join(
-         get_package_share_directory('rover2_odometry')),
-         '/rover2_odometry_launch.py'])
-      )
-
-    arm = IncludeLaunchDescription(
-      PythonLaunchDescriptionSource([os.path.join(
-         get_package_share_directory('rover2_arm'), 
-         'launch'),'/rover_arm.launch.py']
-      ),
-      launch_arguments={
-          "launch_ros2_control":"False"
-      }.items()
+    # -------------------------
+    # Launch arguments
+    # -------------------------
+    arm_arg = DeclareLaunchArgument(
+        'arm',
+        default_value='True',
+        description='Launch arm and arm control'
     )
-    arm_control = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([os.path.join(
-            get_package_share_directory('rover_arm_control')),
-            '/rover_arm_control.launch.py']
+
+    auton_arg = DeclareLaunchArgument(
+        'auton',
+        default_value='False',
+        description='Launch autonomy stack (nav + mapping)'
+    )
+
+    arm = LaunchConfiguration('arm')
+    auton = LaunchConfiguration('auton')
+
+    arm_enabled = PythonExpression([
+        arm,
+        " == True and ",
+        auton,
+        " == False"
+    ])
+
+    # -------------------------
+    # Core systems (always on)
+    # -------------------------
+    drive_control = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory('rover2_control'),
+                'odrive_ros2_control.launch.py'
+            )
         ),
+        launch_arguments={
+            "launch_ros2_control": "False"
+        }.items()
+    )
+
+    odom = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory('rover2_odometry'),
+                'rover2_odometry_launch.py'
+            )
+        )
     )
 
     status = IncludeLaunchDescription(
       PythonLaunchDescriptionSource([os.path.join(
          get_package_share_directory('rover2_status'),
          'launch'), '/rover2_status_launch.py'])
-    )
-
-    mapping = IncludeLaunchDescription(
-      PythonLaunchDescriptionSource([os.path.join(
-         get_package_share_directory('nav_autonomy'),
-         'launch'), '/mapping_launch.py'])
-    )
-
-    camera_gimbals = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [os.path.join(
-                get_package_share_directory('rover2_control')), '/gimbal_launch.py']
-        )
-    )
-
-   # Timer action to delay the listener node
-    delay_mapping = TimerAction(
-         period=5.0,  # Delay in seconds
-         actions=[mapping]
-    )
-    nav_autonomy = IncludeLaunchDescription(
-      PythonLaunchDescriptionSource([os.path.join(
-         get_package_share_directory('nav_autonomy'),
-         'launch'), '/nav_launch.py'])
-    )
-    driller = IncludeLaunchDescription(
-      PythonLaunchDescriptionSource([os.path.join(
-         get_package_share_directory('rover2_drill'),
-         'launch'), '/drill_launch.py'])
-    )
-    state_publisher = IncludeLaunchDescription(
-      PythonLaunchDescriptionSource([os.path.join(
-         get_package_share_directory('nav_autonomy'),
-         'launch'), '/state_publisher_launch.py'])
-    )
-
-
-
-
-
-
-    robot_description = Command([
-        FindExecutable(name="xacro"), 
-        ' ',
-        PathJoinSubstitution([
-            FindPackageShare('rover2_arm'),
-            'config',
-            'rover.urdf.xacro'
-        ]),
-        ' ',
-        TextSubstitution(text='ros2_control_hardware_type:=main'),
-        ' ',
-        TextSubstitution(text='attachment:=arm'),
-    ])
-
-
+      )
 
     ros2_controllers_path = os.path.join(
         get_package_share_directory("rover2_main"),
@@ -132,20 +91,30 @@ def generate_launch_description():
         **config
     )
 
+    robot_description = Command([
+        FindExecutable(name="xacro"),
+        ' ',
+        PathJoinSubstitution([
+            FindPackageShare('rover2_arm'),
+            'config',
+            'rover.urdf.xacro'
+        ]),
+        ' ',
+        TextSubstitution(text='ros2_control_hardware_type:=main'),
+        ' ',
+        TextSubstitution(text='attachment:=arm'),
+    ])
+
     robot_state_publisher_node = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
         parameters=[{
             'use_sim_time': False,
-            "robot_description": ParameterValue(
-                robot_description,
-                value_type=str
-            )
+            "robot_description": ParameterValue(robot_description, value_type=str)
         }],
         output="screen",
     )
-    
-    # Load joint_state_broadcaster after ros2_control_node is up
+
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
@@ -158,20 +127,125 @@ def generate_launch_description():
         ],
     )
 
+    # -------------------------
+    # Cameras (always on, but get auton flag)
+    # -------------------------
+    cameras = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory('rover2_camera'),
+                'launch',
+                'camera_capture_launch.py'
+            )
+        ),
+        launch_arguments={
+            "d455": auton,
+            "d405": arm_enabled,
+            "muxing": auton
+        }.items()
+    )
 
+    # -------------------------
+    # Arm stack (conditional)
+    # -------------------------
+    arm_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory('rover2_arm'),
+                'launch',
+                'rover_arm.launch.py'
+            )
+        ),
+        condition=IfCondition(arm_enabled),
+        launch_arguments={
+            "launch_ros2_control": "False"
+        }.items()
+    )
+
+    arm_control = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory('rover_arm_control'),
+                'rover_arm_control.launch.py'
+            )
+        ),
+        condition=IfCondition(arm_enabled),
+    )
+
+    # -------------------------
+    # Autonomy stack (conditional)
+    # -------------------------
+    mapping = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory('nav_autonomy'),
+                'launch',
+                'mapping_launch.py'
+            )
+        ),
+        condition=IfCondition(auton)
+    )
+
+    nav_autonomy = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory('nav_autonomy'),
+                'launch',
+                'nav_launch.py'
+            )
+        ),
+        condition=IfCondition(auton)
+    )
+
+    delay_mapping = TimerAction(
+        period=5.0,
+        actions=[mapping]
+    )
+
+    # -------------------------
+    # Other stuff I don't need rn
+    # -------------------------
+    driller = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory('rover2_drill'),
+                'launch',
+                'drill_launch.py'
+            )
+        )
+    )
+
+    camera_gimbals = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory('rover2_control'),
+                'gimbal_launch.py'
+            )
+        )
+    )
+
+    # -------------------------
+    # Launch description
+    # -------------------------
     return LaunchDescription([
-    #   state_publisher,
-      ros2_control_node,
-      robot_state_publisher_node,
-      joint_state_broadcaster_spawner,
-      drive_control,
-      imu,
-      arm,
-      status,
-      cameras,
-      arm_control,
-    #   camera_gimbals,
-    #    driller,
-       nav_autonomy,
-       delay_mapping,
-   ])
+        arm_arg,
+        auton_arg,
+
+        ros2_control_node,
+        robot_state_publisher_node,
+        joint_state_broadcaster_spawner,
+
+        drive_control,
+        odom,
+        status,
+        cameras,
+
+        arm_launch,
+        arm_control,
+
+        nav_autonomy,
+        delay_mapping,
+
+        # camera_gimbals,
+        # driller,
+    ])

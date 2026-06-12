@@ -1,10 +1,13 @@
 import os
 
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
+from launch.conditions import IfCondition
+from launch.substitutions import LaunchConfiguration
+
 
 DRIVE_IP = '192.168.1.6'
 ARM_IP = '192.168.1.8'
@@ -15,6 +18,28 @@ def generate_launch_description():
     pkg_share = get_package_share_directory('rover2_camera')
     left_calib = os.path.join(pkg_share, 'calibration', 'camera_left_chassis', 'calibration_data.yaml')
     right_calib = os.path.join(pkg_share, 'calibration', 'camera_right_chassis', 'calibration_data.yaml')
+
+    launch_d455_arg = DeclareLaunchArgument(
+        'd455',
+        default_value='True',
+        description='Launch D455 RealSense camera'
+    )
+
+    launch_d405_arg = DeclareLaunchArgument(
+        'd405',
+        default_value='True',
+        description='Launch D405 RealSense camera'
+    )
+
+    launch_muxing_arg = DeclareLaunchArgument(
+        'muxing',
+        default_value='True',
+        description='Launch chassis muxing node for Yolo'
+    )
+
+    launch_d455 = LaunchConfiguration('d455')
+    launch_d405 = LaunchConfiguration('d405')
+    launch_muxing = LaunchConfiguration('muxing')
     
     realsense_launch_nav = Node(
         package='realsense2_camera',
@@ -40,7 +65,8 @@ def generate_launch_description():
             "spatial_filter.enable": True,
             "spatial_filter.holes_fill": 1,
         }],
-        output='screen'
+        output='screen',
+        condition=IfCondition(launch_d455)
     )
 
     d405_node = Node(
@@ -68,7 +94,8 @@ def generate_launch_description():
             "depth_fps": 5,
             "rgb_fps": 5,
         }],
-        output='screen'
+        output='screen',
+        condition=IfCondition(launch_d405)
     )
 
     chassis_left_cam_node = Node(
@@ -222,19 +249,27 @@ def generate_launch_description():
             'udp_port': 42074,
             'mux_port': 20000
         }],
-        respawn=True
+        respawn=True,
+        condition=IfCondition(launch_d405)
     )
+
     muxing_node = Node(
         package='rover2_camera',
         namespace='rover2_camera',
         executable='camera_muxing',
         name='muxing_node',
-        respawn=True
+        respawn=True,
+        condition=IfCondition(launch_muxing)
+
     )
 
 
 
     return LaunchDescription([
+        launch_d455_arg,
+        launch_d405_arg,
+        launch_muxing_arg,
+
         realsense_launch_nav,
         chassis_right_cam_node,
         chassis_left_cam_node,
