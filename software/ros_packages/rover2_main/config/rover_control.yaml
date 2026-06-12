@@ -55,7 +55,8 @@ drive_controller:
       - rover_middle_right_wheel_joint
       - rover_back_right_wheel_joint
     wheel_radius: 0.146
-    wheel_separation: 0.85    # KRJ TODO: Update this one too
+    wheel_separation: 1.03    # This value gives decent odom yaw
+    
     # odometry covariance values, Untuned 2/8/2025
     pose_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]
     twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]
