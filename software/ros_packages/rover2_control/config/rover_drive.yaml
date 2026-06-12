@@ -13,6 +13,9 @@ controller_manager:
 drive_controller:
   ros__parameters:
     publish_rate: 30.0
+
+    enable_odom_tf: false   # Let ekf do odom. This still published the odom topic we could put into the ekf tho as wheel odom
+
     left_wheel_names:
       - rover_front_left_wheel_joint
       - rover_middle_left_wheel_joint

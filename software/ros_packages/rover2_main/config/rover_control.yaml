@@ -46,6 +46,9 @@ rover_arm_controller_moveit:
 drive_controller:
   ros__parameters:
     publish_rate: 30.0
+
+    enable_odom_tf: false   # Let ekf do odom. This still published the odom topic we could take as wheel odom tho
+
     left_wheel_names:
       - rover_front_left_wheel_joint
       - rover_middle_left_wheel_joint
