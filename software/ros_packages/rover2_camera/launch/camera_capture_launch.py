@@ -12,8 +12,10 @@ ARM_IP = '192.168.1.8'
 def generate_launch_description():
     # Replace these with your camera serial numbers
     # You can find them with `rs-enumerate-devices`
-
-
+    pkg_share = get_package_share_directory('rover2_camera')
+    left_calib = os.path.join(pkg_share, 'calibration', 'camera_left_chassis', 'calibration_data.yaml')
+    right_calib = os.path.join(pkg_share, 'calibration', 'camera_right_chassis', 'calibration_data.yaml')
+    
     realsense_launch_nav = Node(
         package='realsense2_camera',
         executable='realsense2_camera_node',
@@ -21,31 +23,25 @@ def generate_launch_description():
         parameters=[{
             "camera_name": "d455",
             "serial_no": "318122302525",
-            # "depth_module.depth_profile": "424x240x5",  
-            # "depth_module.infra_profile": "424x240x5", 
-            # "rgb_camera.color_profile": "424x240x5",
-            
-            # Test for better costmap clearing
-            #"depth_module.profile": "848x480x15",
-            #"rgb_camera.profile": "848x480x15",
-            # "depth_module.emitter_enabled": True, 
-            # "depth_module.laser_power": 360,
-            # "depth_module.enable_auto_exposure": True,
-            # "pointcloud.enable": False,
 
-        "depth_width": 1280,
-        "depth_height": 720,
-        "color_width": 1280,
-        "color_height": 720,
-        "pointcloud.enable": True,
-        "pointcloud__neon_.enable": True,
-        "pointcloud__neon_.stream_filter": 2,
-        "align_depth.enable": True,
-        "depth_fps": 10,
-        "rgb_fps": 10,
-	}],
+            "depth_module.depth_profile": "424x240x30", # Camera depth fps caps out around 15. Setting this to 20 just makes camera info publish faster = easier sync for nodes down the line
+                                                        # Note: enabling filtering ignores fps cap and defaults to 30
+            "pointcloud.enable": False,
+
+            "enable_depth": True,
+            "enable_color": False,
+            "enable_infra": False,
+            "enable_infra1": False,
+            "enable_infra2": False,
+            "enable_rgbd": False,
+
+            "decimation_filter.enable": True,
+            "decimation_filter.filter_magnitude": 4,
+            "spatial_filter.enable": True,
+            "spatial_filter.holes_fill": 1,
+        }],
         output='screen'
-    ) 
+    )
 
     d405_node = Node(
         package='realsense2_camera',
@@ -239,10 +235,7 @@ def generate_launch_description():
 
 
     return LaunchDescription([
-        # realsense_launch_nav,
-#        ir_camera_node,
-#        ir_camera_node,
-#        main_nav_node,
+        realsense_launch_nav,
         chassis_right_cam_node,
         chassis_left_cam_node,
         birds_eye_cam_node,
