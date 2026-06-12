@@ -76,10 +76,10 @@ Urdf of the rovers chassis and bogies
 
 
         <!-- KRJ TODO: namespace these and update them everywhere e.g. {name}_camera_left_chassis -->
-        <link name="$gps_link"></link>
-        <link name="$imu_link"></link>
-        <link name="camera_left_chassis"/>      
-        <link name="camera_right_chassis"/>
+        <link name="gps_link"/>
+        <link name="imu_link"/>
+        <link name="camera_left_chassis_link"/>      
+        <link name="camera_right_chassis_link"/>
         
 
         <!-- Rear Bogie -->
@@ -369,26 +369,26 @@ Urdf of the rovers chassis and bogies
         </joint>
 
         <!-- KRJ TODO: Verify that this offset is correct -->
-        <joint name="camera_left_chassis" type="fixed"> 
-            <parent link="{name}_base_origin"/>
-            <child link="camera1"/>
+        <joint name="camera_left_chassis_joint" type="fixed"> 
+            <parent link="${name}_base_origin"/>
+            <child link="camera_left_chassis_link"/>
             <origin xyz="0.419803 -0.020767 0.361924" rpy="0 0 0.785"/>
         </joint>
 
         <joint name="camera_right_chassis_joint" type="fixed">
-            <parent link="{name}_base_origin"/>
+            <parent link="${name}_base_origin"/>
             <child link="camera_right_chassis_link"/>
             <origin xyz="-0.072197 -0.020767 0.361924" rpy="0 0 -0.785"/>
         </joint>
 
         <joint name="gps_joint" type="fixed">
-            <parent link="{name}_base_origin"/>
+            <parent link="${name}_base_origin"/>
             <child link="gps_link"/>
             <origin xyz="-.1524 0 0"/>
         </joint>
         
         <joint name="imu_joint" type="fixed">
-            <parent link="{name}_base_origin"/>
+            <parent link="${name}_base_origin"/>
             <child link="imu_link"/>
             <origin rpy="-0.0556722 0.116731 -1.5708" xyz=".1524 .1016 0"/>
         </joint>
@@ -574,5 +574,6 @@ Urdf of the rovers chassis and bogies
         </gazebo>
 
     </xacro:macro>
+    <!-- <xacro:rover_body name="rover" hardware_type="main"/> -->
 </robot>
 
