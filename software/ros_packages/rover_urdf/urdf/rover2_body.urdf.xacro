@@ -74,6 +74,14 @@ Urdf of the rovers chassis and bogies
             </collision>
         </link>
 
+
+        <!-- KRJ TODO: namespace these and update them everywhere e.g. {name}_camera_left_chassis -->
+        <link name="$gps_link"></link>
+        <link name="$imu_link"></link>
+        <link name="camera_left_chassis"/>      
+        <link name="camera_right_chassis"/>
+        
+
         <!-- Rear Bogie -->
         <link name="${name}_rear_bogie">
             <inertial>
@@ -358,6 +366,31 @@ Urdf of the rovers chassis and bogies
             <origin xyz="-0.065047 -0.020767 0.065565" rpy="0 0 1.5708"/>
             <parent link="${name}_base_origin"/>
             <child link="${name}_ebox"/>
+        </joint>
+
+        <!-- KRJ TODO: Verify that this offset is correct -->
+        <joint name="camera_left_chassis" type="fixed"> 
+            <parent link="{name}_base_origin"/>
+            <child link="camera1"/>
+            <origin xyz="0.419803 -0.020767 0.361924" rpy="0 0 0.785"/>
+        </joint>
+
+        <joint name="camera_right_chassis_joint" type="fixed">
+            <parent link="{name}_base_origin"/>
+            <child link="camera_right_chassis_link"/>
+            <origin xyz="-0.072197 -0.020767 0.361924" rpy="0 0 -0.785"/>
+        </joint>
+
+        <joint name="gps_joint" type="fixed">
+            <parent link="{name}_base_origin"/>
+            <child link="gps_link"/>
+            <origin xyz="-.1524 0 0"/>
+        </joint>
+        
+        <joint name="imu_joint" type="fixed">
+            <parent link="{name}_base_origin"/>
+            <child link="imu_link"/>
+            <origin rpy="-0.0556722 0.116731 -1.5708" xyz=".1524 .1016 0"/>
         </joint>
 
         <joint name="${name}_tower_joint" type="fixed">
