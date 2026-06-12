@@ -96,7 +96,7 @@ def generate_launch_description():
                 'world_frame': 'odom',
                 
                 # Local odometry 
-                'odom0': '/wheel_odom',
+                'odom0': '/wheel_odom',                 # KRJ TODO: in rover_drive.yaml it does odometry. Take that topic instead, possibly, EVALUATE
                 'odom0_config': [False, False, False,
                                 False, False, False,
                                 True,  True,  False,
