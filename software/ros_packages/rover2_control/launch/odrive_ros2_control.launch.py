@@ -9,6 +9,8 @@ from launch_ros.substitutions import FindPackageShare
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
 from launch.conditions import IfCondition
+from launch_ros.parameter_descriptions import ParameterValue
+
 
 import os
 
@@ -43,10 +45,10 @@ def generate_launch_description():
         'output': 'screen',
         'respawn': True
     }
-    use_sim_time = LaunchConfiguration('use_sim_time', default='True')
+    use_sim_time = LaunchConfiguration('control_use_sim_time', default='False')
     use_sim_time_arg = DeclareLaunchArgument(
-            'use_sim_time',
-            default_value='True',
+            'control_use_sim_time',
+            default_value='False',
             description='Use simulation (Gazebo) clock if true'
     )
     hardware_type = LaunchConfiguration('hardware_type', default='main')
@@ -79,15 +81,13 @@ def generate_launch_description():
         TextSubstitution(text='attachment:=arm'),
     ])
 
-    
-
     #robot state publisher node
     robot_state_publisher_node = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
         parameters=[{
             'use_sim_time': use_sim_time,
-            "robot_description": robot_description
+            "robot_description": ParameterValue(robot_description, value_type=str)
         }],
         output="screen",
         condition=IfCondition(launch_ros2_control)
@@ -130,7 +130,6 @@ def generate_launch_description():
         **config
     )
 
-
     joy_to_drive = Node(
         package="rover2_control",
         executable="joy_to_drive",
@@ -138,40 +137,25 @@ def generate_launch_description():
         **config
     )
 
-    auton_controller = Node(
+    legacy_control = Node(              # KRJ TODO: Idk what this node actually does. Evaulate why this is necessary. Then refactor and rename
         package='rover2_control',
-        executable="auton_controller",
-        name="auton_controller",
-        **config
-    )
-
-    odrive_pan_tilt = Node(
-        package='rover2_control',
-        executable='odrive_pan_tilt',
-        name='odrive_pan_tilt',
+        executable='iris_controller',
+        name='iris_controller',
         parameters=[{
-            'can': 'can_cam',
-            'direction': 1,
-            'node_ids': [0, 1],
-            'board_id': 6
+            '~port': '/dev/ttyUSB0',
+            '~hertz': 30
         }],
         **config
     )
 
-    odrive_gimbal = Node(
+    joint_position_controler = Node(
         package='rover2_control',
-        executable='odrive_pan_tilt',
-        name='odrive_gimbal',
-        parameters=[{
-            'can': 'can_cam',
-            'direction': 1,
-            'node_ids': [3, 5, 4],
-            'board_id': 2,
-            'control_topic': "/tower_gimbal/control",
-        }],
+        executable='joint_position_control',
+        name='joint_position',
         **config
     )
 
+    # OLD?
     # gripper_can_control_node = Node(
     #     package='rover2_control',
     #     executable='gripper_control',
@@ -185,61 +169,16 @@ def generate_launch_description():
     # )
 
     return LaunchDescription([
-        # Robot State Publisher
-        
-        # Joy Node to convert joystick input to velocities
-
-        # Node(
-        #     package='rover2_control',  # Replace with your package name
-        #     executable='drive_can_control',  # This is the node you created above
-        #     name='drive_can_control',
-        #     **config
-        # ),
-        # IRIS controller
-        use_sim_time_arg,
+        use_sim_time_arg,           # WARNING: creating launch params with general names (such as use_sim_time) will overwrite that param value in any place the launch file is imported (for instance nav2 config through rover2_main_launch) 
         hardware_type_arg,
         launch_ros2_control_arg,
-        Node(
-            package='rover2_control',
-            executable='iris_controller',
-            name='iris_controller',
-            parameters=[{
-                '~port': '/dev/ttyUSB0',
-                '~hertz': 30
-            }],
-            **config
-        ),
-        # Load joint_state_broadcaster after ros2_control_node is up
-  
-        #Node(
-        #    package='rover2_control',
-        #    executable='chassis_pan_tilt_control',
-        #    name='chassis_pan_tilt',
-        #    **config
-        #),
-#        Node(
-#            package='rover2_control',
-#            executable='monitor_aruco',
-#            name='monitor_aruco',
-#            **config
-#        ),
-        # Node(
-        #     package='rover2_control',
-        #     executable='tower_pan_tilt_control',
-        #     name='tower_pan_tilt',
-        #     **config
-        # ),
-        Node(
-            package='rover2_control',
-            executable='joint_position_control',
-            name='joint_position',
-            **config
-        ),
+        
+        legacy_control,
+        joint_position_controler,
         robot_state_publisher_node,
         ros2_control_node,
         joint_state_broadcaster_spawner,
         drive_controller,
         joy_to_drive,
         # gripper_can_control_node,
-#        auton_controller
     ])

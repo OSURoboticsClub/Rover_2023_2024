@@ -25,7 +25,7 @@ class AutonomousLEDSubscriber(Node):
 
         self.arduino = serial.Serial(port="/dev/rover/lights",baudrate=9600, timeout=0.1)
         time.sleep(2)
-        self.arduino.write(str(BLUE).encode('utf-8'))
+        self.arduino.write(str(COLORFUL).encode('utf-8'))
         self.subscription = self.create_subscription(
             LED,
             '/autonomous_LED/color',

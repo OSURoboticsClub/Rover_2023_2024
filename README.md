@@ -13,6 +13,9 @@
 
 ---
 
+## Architecture Overview
+<img src="assets/general_architecture.svg" alt="Diagram showing nav architecture. Sensors pass information to processing nodes." width="100%">
+
 ## Groundstation Setup
 
 ### Getting Started With Groundstation Code

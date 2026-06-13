@@ -15,6 +15,7 @@ setup(
         
         (os.path.join('share', package_name, 'launch'), glob('launch/*')),
         (os.path.join('share', package_name, 'config'), glob('config/*')),
+        (os.path.join('share', package_name, 'yolo_models'), glob('nav_autonomy/yolo_models/*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
