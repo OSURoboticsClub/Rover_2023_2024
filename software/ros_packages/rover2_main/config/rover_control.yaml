@@ -66,7 +66,7 @@ drive_controller:
     # topmost frame of the robot  
     odom_frame_id: odom
     base_frame_id: rover_base_origin
-    use_stamped_velocities: true
+    use_stamped_velocities: false
     linear:
       x:
         has_velocity_limits: true
@@ -77,8 +77,8 @@ drive_controller:
     angular:
       z:
         has_velocity_limits: true
-        max_velocity: 11.684
-        min_velocity: -11.684
+        max_velocity: 1.5
+        min_velocity: -1.5
         has_acceleration_limits: true
-        max_acceleration: 40.0
-        min_acceleration: -40.0
+        max_acceleration: 4.0
+        min_acceleration: -4.0
