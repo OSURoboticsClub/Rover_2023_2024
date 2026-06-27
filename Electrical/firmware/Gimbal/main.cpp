@@ -6,8 +6,8 @@
 #include <cstring>
 #include <Preferences.h>
 
-#define CAN_TX_PIN GPIO_NUM_2
-#define CAN_RX_PIN GPIO_NUM_15
+#define CAN_TX_PIN GPIO_NUM_32
+#define CAN_RX_PIN GPIO_NUM_33
 #define I2C_SDA 21
 #define I2C_SCL 22
 
@@ -45,7 +45,7 @@ struct CANMessage {
     uint8_t data[8];
 };
 
-bool Toggle_Stabilization = true;
+bool Toggle_Stabilization = false;
 bool Toggle_IMU_Feedback = false;
 bool imu_data_fresh = false;
 bool home_set = false;
@@ -76,6 +76,7 @@ void setReports(void);
 void IMU_Stabilization_Velocity();
 void sethome();
 void goHome();
+void setODrivePositionMode(uint32_t node_id);
 
 #define FILTER_TAPS 5
 
@@ -88,7 +89,6 @@ static const float kernel[FILTER_TAPS] = {0.2f, 0.2f, 0.2f, 0.2f, 0.2f};
 void setup() {
     Serial.begin(115200); 
     delay(100);
-
     twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(CAN_TX_PIN, CAN_RX_PIN, TWAI_MODE_NORMAL);
     twai_timing_config_t t_config = TWAI_TIMING_CONFIG_1MBITS(); 
     twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
@@ -114,10 +114,10 @@ void setup() {
     Serial.println("Waiting 3 seconds for ODrives to fully wake up...");
     delay(3000); 
     
-    // Set to Velocity Mode
-    setODriveVelocityMode(3);
-    setODriveVelocityMode(4);
-    setODriveVelocityMode(5);
+    // Set to Position Mode
+    setODriveTrapTrajMode(3);
+    setODriveTrapTrajMode(4);
+    setODriveTrapTrajMode(5);
     delay(50);
 
     Serial.println(">>> AUTO-WAKING MOTORS <<<");
@@ -129,9 +129,7 @@ void setup() {
     setODriveState(4, 8);
     setODriveState(5, 8);
 
-    goHome();
     delay(1000);
-    sethome();
 }
 
 void loop() {
@@ -141,11 +139,19 @@ void loop() {
 
     // Check for incoming Jetson Commands
     if(receiveCANMessage(msg)){ //check for messages
-        
-        // 3. Print a new line for the next message
-        Serial.println(); 
 
         if (msg.node_id == 2){
+            /*
+            Serial.printf("Node ID: %d, Cmd ID: %d, Len: %d | Data: ", msg.node_id, msg.cmd_id, msg.len);
+
+            // 2. Loop through the data array and print each byte in Hex format
+            for (int i = 0; i < msg.len; i++) {
+                Serial.printf("%02X ", msg.data[i]);
+            }
+
+            Serial.println(); 
+            */
+
             if(msg.cmd_id == 1){
                 Serial.println("CAN Message Received");
                 Jetson_position_control(msg); //if jetson sends CAN command to change position, 
@@ -247,9 +253,9 @@ void loop() {
             IMU_Stabilization_Velocity(); 
         } else {
             // Safety: if stabilization is toggled off, stop the motors
-            sendODriveVelocity(3, 0.0f);
-            sendODriveVelocity(4, 0.0f);
-            sendODriveVelocity(5, 0.0f);
+           //sendODriveVelocity(3, 0.0f);
+            //sendODriveVelocity(4, 0.0f);
+            //sendODriveVelocity(5, 0.0f);
         }
 
         /*
@@ -303,9 +309,10 @@ void IMU_Stabilization_Velocity() {
     pitch_velocity  = constrain(pitch_velocity,  -0.4f, 0.4f);
 
     // 4. Fire to CAN Bus
-    sendODriveVelocity(3, roll_velocity);
-    sendODriveVelocity(4, yaw_velocity);
-    sendODriveVelocity(5, pitch_velocity);
+    setODrivePosition(3, target_camera_roll, (roll_velocity * 1000));
+    setODrivePosition(4, target_camera_yaw, (yaw_velocity * 1000));
+    setODrivePosition(5, target_camera_pitch, (pitch_velocity * 1000));
+    delay(50);
 }
 
 void FeedbackIMUData(){
@@ -336,21 +343,9 @@ void sethome(){
 }
 
 void goHome(){
-    setODriveTrapTrajMode(3);
-    setODriveTrapTrajMode(4);
-    setODriveTrapTrajMode(5);
-
-    delay(500);
-
     setODrivePosition(3,0);
     setODrivePosition(4,0);
     setODrivePosition(5,0);
-
-    delay(1000);
-
-    setODriveVelocityMode(3);
-    setODriveVelocityMode(4);
-    setODriveVelocityMode(5);
 
     delay(500);
 
@@ -373,6 +368,15 @@ float wrapAngle(float error)
 void setODriveVelocityMode(uint32_t node_id){
     uint8_t data[8] = {0};
     int32_t control_mode = 2; // VELOCITY_CONTROL
+    int32_t input_mode = 1;   // PASSTHROUGH
+    memcpy(&data[0], &control_mode, 4);
+    memcpy(&data[4], &input_mode, 4);
+    sendCANMessage(can_make_id(node_id, 0x0B), 8, data);
+}
+
+void setODrivePositionMode(uint32_t node_id){
+    uint8_t data[8] = {0};
+    int32_t control_mode = 3; // VELOCITY_CONTROL
     int32_t input_mode = 1;   // PASSTHROUGH
     memcpy(&data[0], &control_mode, 4);
     memcpy(&data[4], &input_mode, 4);
@@ -423,7 +427,6 @@ void Jetson_position_control(CANMessage &msg) {
         // Extract bytes 1 through 5 into the float variable
         //memcpy(&direction, &msg.data[1], 1);
         memcpy(&received_pos_rad, &msg.data[1], 4);
-
         float received_pos = received_pos_rad / (2.0f * PI);
 
         if (msg.data[0] == 3) {
@@ -442,9 +445,10 @@ void Jetson_position_control(CANMessage &msg) {
     }
 }
 
-void setODrivePosition(uint32_t node_id, float position) {
+void setODrivePosition(uint32_t node_id, float position, float velff) {
     uint8_t data[8] = {0};
     memcpy(&data[0], &position, 4); // Position (Float)
+    memcpy(&data[4], &velff, 2); // VElocity FF (Float)
     // data[4-5] Vel FF, data[6-7] Torque FF (set to 0)
     uint32_t id = (node_id << 5) | 0x0c; // 0x0c = Set_Input_Pos
     sendCANMessage(id, 8, data);
