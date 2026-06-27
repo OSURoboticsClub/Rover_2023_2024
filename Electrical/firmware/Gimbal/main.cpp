@@ -55,7 +55,7 @@ const int update_interval = 10; // 10ms (100Hz)
 
 bool sendCANMessage(uint32_t id, uint8_t len, uint8_t* data);
 void setODriveState(uint32_t node_id, uint32_t state);
-void setODrivePosition(uint32_t node_id, float position);
+void setODrivePosition(uint32_t node_id, float position, float velff);
 uint32_t can_make_id(uint32_t node_id, uint32_t cmd_id);
 void setODriveInputMode(uint32_t node_id, uint32_t mode);
 void clearODriveErrors(uint32_t node_id);
@@ -304,14 +304,14 @@ void IMU_Stabilization_Velocity() {
     float yaw_velocity = (yaw_error * kp_yaw) + (yaw_integral * ki);
     float roll_velocity = (roll_error * kp_roll) + (roll_integral * ki);
 
-    roll_velocity  = constrain(roll_velocity,  -0.4f, 0.4f);
-    yaw_velocity  = constrain(yaw_velocity,  -0.4f, 0.4f);
-    pitch_velocity  = constrain(pitch_velocity,  -0.4f, 0.4f);
+    roll_velocity  = 1000 * constrain(roll_velocity,  -0.4f, 0.4f);
+    yaw_velocity  = 1000 * constrain(yaw_velocity,  -0.4f, 0.4f);
+    pitch_velocity  = 1000 * constrain(pitch_velocity,  -0.4f, 0.4f);
 
     // 4. Fire to CAN Bus
-    setODrivePosition(3, target_camera_roll, (roll_velocity * 1000));
-    setODrivePosition(4, target_camera_yaw, (yaw_velocity * 1000));
-    setODrivePosition(5, target_camera_pitch, (pitch_velocity * 1000));
+    setODrivePosition(3, target_camera_roll, roll_velocity);
+    setODrivePosition(4, target_camera_yaw, yaw_velocity);
+    setODrivePosition(5, target_camera_pitch, pitch_velocity);
     delay(50);
 }
 
@@ -343,9 +343,9 @@ void sethome(){
 }
 
 void goHome(){
-    setODrivePosition(3,0);
-    setODrivePosition(4,0);
-    setODrivePosition(5,0);
+    setODrivePosition(3,0,0);
+    setODrivePosition(4,0,0);
+    setODrivePosition(5,0,0);
 
     delay(500);
 
@@ -430,15 +430,15 @@ void Jetson_position_control(CANMessage &msg) {
         float received_pos = received_pos_rad / (2.0f * PI);
 
         if (msg.data[0] == 3) {
-            setODrivePosition(3, (roll_home + received_pos));
+            setODrivePosition(3, (roll_home + received_pos), 0);
             target_camera_roll = roll_home + received_pos;
         }
         else if (msg.data[0] == 4) {
-            setODrivePosition(4, (yaw_home + received_pos));
+            setODrivePosition(4, (yaw_home + received_pos), 0);
             target_camera_yaw = yaw_home + received_pos;
         }
         else if (msg.data[0] == 5) {
-            setODrivePosition(5, (pitch_home + received_pos));
+            setODrivePosition(5, (pitch_home + received_pos), 0);
             target_camera_pitch = pitch_home + received_pos;
         }
         else{}
