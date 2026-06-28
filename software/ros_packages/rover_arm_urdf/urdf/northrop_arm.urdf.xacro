@@ -190,7 +190,7 @@
       <origin xyz="0.0 0.0 0.0545" rpy="0 0 0"/>
       <parent link="${name}_base_link"/>
       <child link="${name}_shoulder"/>
-      <axis xyz="0.0 0.0 -1.0"/>
+      <axis xyz="0.0 0.0 1.0"/>
       <limit upper="6.283185" lower="-6.283185" effort="100" velocity="1.863787"/>
     </joint>
 
@@ -198,7 +198,7 @@
       <origin xyz="-0.076 0.0 0.07775" rpy="0 0 0"/>
       <parent link="${name}_shoulder"/>
       <child link="${name}_long_arm"/>
-      <axis xyz="1.0 0.0 0.0"/>
+      <axis xyz="-1.0 0.0 0.0"/>
       <limit upper="6.283185" lower="-6.283185" effort="100" velocity="0.879645"/>
     </joint>
 
@@ -206,7 +206,7 @@
       <origin xyz="0.00725 0.0 0.36646" rpy="0 0 0"/>
       <parent link="${name}_long_arm"/>
       <child link="${name}_elbow_roll"/>
-      <axis xyz="-1.0 -0.0 -0.0"/>
+      <axis xyz="1.0 -0.0 -0.0"/>
       <limit upper="6.283185" lower="-6.283185" effort="100" velocity="1.310805"/>
     </joint>
 
@@ -214,7 +214,7 @@
       <origin xyz="-0.00725 0.0 0.24962" rpy="0 0 0"/>
       <parent link="${name}_elbow_roll"/>
       <child link="${name}_short_arm"/>
-      <axis xyz="1.0 0.0 0.0"/>
+      <axis xyz="-1.0 0.0 0.0"/>
       <limit upper="6.283185" lower="-6.283185" effort="100" velocity="1.779038"/>
     </joint>
 
@@ -222,7 +222,7 @@
       <origin xyz="-0.054 0.0 0.0685" rpy="0 0 0"/>
       <parent link="${name}_short_arm"/>
       <child link="${name}_wrist_roll"/>
-      <axis xyz="-0.0 -0.0 -1.0"/>
+      <axis xyz="-0.0 -0.0 1.0"/>
       <limit upper="6.283185" lower="-6.283185" effort="100" velocity="1.897521"/>
     </joint>
 
@@ -230,7 +230,7 @@
       <origin xyz="-0.0625 0.0 0.054" rpy="0 0 0"/>
       <parent link="${name}_wrist_roll"/>
       <child link="${name}_tool0"/>
-      <axis xyz="1.0 0.0 -0.0"/>
+      <axis xyz="-1.0 0.0 -0.0"/>
       <limit upper="6.283185" lower="-6.283185" effort="100" velocity="1.863787"/>
     </joint>
 
