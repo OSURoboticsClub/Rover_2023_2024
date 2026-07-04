@@ -34,6 +34,38 @@ struct CANMessage {
     uint8_t data[8];
 };
 
+// --- HEARTBEAT DECODE ---
+struct ODriveStatus {
+    uint32_t axis_error = 0;
+    uint8_t axis_state = 0;
+    uint8_t procedure_result = 0;
+    bool trajectory_done = false;
+    unsigned long last_seen = 0;
+};
+
+ODriveStatus odrive_status[2]; // index 0 = node 0, index 1 = node 1
+
+const char* axisStateName(uint8_t state) {
+    switch (state) {
+        case 0: return "UNDEFINED";
+        case 1: return "IDLE";
+        case 2: return "STARTUP_SEQUENCE";
+        case 3: return "FULL_CALIBRATION_SEQUENCE";
+        case 4: return "MOTOR_CALIBRATION";
+        case 6: return "ENCODER_INDEX_SEARCH";
+        case 7: return "ENCODER_OFFSET_CALIBRATION";
+        case 8: return "CLOSED_LOOP_CONTROL";
+        case 9: return "LOCKIN_SPIN";
+        case 10: return "ENCODER_DIR_FIND";
+        case 11: return "HOMING";
+        case 12: return "ENCODER_HALL_POLARITY_CALIBRATION";
+        case 13: return "ENCODER_HALL_PHASE_CALIBRATION";
+        default: return "UNKNOWN";
+    }
+}
+
+static unsigned long last_status_print = 0;
+
 bool Toggle_Stabilization = false;
 bool Toggle_IMU_Feedback = false;
 
@@ -56,6 +88,8 @@ uint32_t can_make_id(uint32_t node_id, uint32_t cmd_id);
 void setODriveTrapTrajMode(uint32_t node_id);
 void setODrivePositionMode(uint32_t node_id);
 void setODrivePosition(uint32_t node_id, float position,float velff);
+void printODriveStatus();
+void handleHeartbeat(uint32_t node_id, uint8_t* data);
 
 void checkSerialTuning() {
     if (Serial.available() > 0) {
@@ -69,6 +103,11 @@ void checkSerialTuning() {
             delay(50);
             setODriveState(0, 8);
             setODriveState(1, 8);
+            delay(50);
+            // Set to position Mode
+            setODrivePositionMode(0);
+            setODrivePositionMode(1);
+            delay(50);
         }
         else if (input.startsWith("py") || input.startsWith("PY")) {
             kp_yaw = input.substring(2).toFloat();
@@ -114,11 +153,6 @@ void setup() {
     
     Serial.println("Waiting 3 seconds for ODrives to fully wake up...");
     delay(3000); 
-    
-    // Set to position Mode
-    setODrivePositionMode(0);
-    setODrivePositionMode(1);
-    delay(50);
 
     Serial.println(">>> AUTO-WAKING MOTORS <<<");
     clearODriveErrors(0);
@@ -126,6 +160,11 @@ void setup() {
     delay(50);
     setODriveState(0, 8);
     setODriveState(1, 8);
+    delay(50);
+    // Set to position Mode
+    setODrivePositionMode(0);
+    setODrivePositionMode(1);
+    delay(1000);
 }
 
 void loop() {
@@ -135,7 +174,17 @@ void loop() {
 
     // Check for incoming Jetson Commands
     if (receiveCANMessage(msg)) {
-        Jetson_position_control(msg);
+        if(msg.node_id == 6){
+            Jetson_position_control(msg);
+        }
+        else if ((msg.node_id == 0 || msg.node_id == 1) && msg.cmd_id == 0x01) {
+            handleHeartbeat(msg.node_id, msg.data);
+        }
+    }
+    
+    if (millis() - last_status_print >= 500) {
+        last_status_print = millis();
+        printODriveStatus();
     }
 
     if (bno08x.wasReset()) {
@@ -322,9 +371,9 @@ bool receiveCANMessage(CANMessage &msg) {
 }
 
 void setODriveState(uint32_t node_id, uint32_t state) {
-    uint8_t data[4];
-    memcpy(data, &state, 4);
-    sendCANMessage(can_make_id(node_id, 0x07), 4, data);
+    uint8_t data[8] = {0};
+    memcpy(&data[0], &state, sizeof(uint32_t));
+    sendCANMessage(can_make_id(node_id, 0x07), 8, data);
 }
 
 void setODriveVelocityMode(uint32_t node_id) {
@@ -365,4 +414,29 @@ void setODriveTrapTrajMode(uint32_t node_id){
     memcpy(&data[0], &control_mode, 4);
     memcpy(&data[4], &input_mode, 4);
     sendCANMessage(can_make_id(node_id, 0x0B), 8, data);
+}
+
+void handleHeartbeat(uint32_t node_id, uint8_t* data) {
+    if (node_id > 1) return; // only tracking node 0 and 1
+
+    ODriveStatus &s = odrive_status[node_id];
+    memcpy(&s.axis_error, &data[0], 4);
+    s.axis_state = data[4];
+    s.procedure_result = data[5];
+    s.trajectory_done = data[6] & 0x01;
+    s.last_seen = millis();
+}
+
+void printODriveStatus() {
+    for (int i = 0; i < 2; i++) {
+        ODriveStatus &s = odrive_status[i];
+        unsigned long age = millis() - s.last_seen;
+        if (s.last_seen == 0) {
+            Serial.printf("Node %d: NO HEARTBEAT RECEIVED YET\n", i);
+        } else {
+            Serial.printf("Node %d: state=%s (%d) error=0x%08lX proc_result=%d traj_done=%d last_seen=%lums ago\n",
+                i, axisStateName(s.axis_state), s.axis_state,
+                (unsigned long)s.axis_error, s.procedure_result, s.trajectory_done, age);
+        }
+    }
 }
