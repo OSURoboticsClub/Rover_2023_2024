@@ -130,7 +130,7 @@ void setup() {
 
 void loop() {
     CANMessage msg;
-
+    Serial.println(">>> LOOP START <<<");
     checkSerialTuning();
 
     // Check for incoming Jetson Commands
@@ -296,6 +296,7 @@ bool sendCANMessage(uint32_t id, uint8_t len, uint8_t* data) {
     twai_message_t message;
     message.identifier = id;
     message.extd = 0;
+    message.flags = TWAI_MSG_FLAG_NONE;
     message.data_length_code = len;
     for (int i = 0; i < len; i++) message.data[i] = data[i];
 

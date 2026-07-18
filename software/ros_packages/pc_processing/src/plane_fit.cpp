@@ -73,7 +73,7 @@ private:
 	//Where the magic is supposed to happen...
 	void sub_callback(const PointCloud2::SharedPtr msg) {
 		//Log that we've recieved a msg
-		RCLCPP_INFO(this->get_logger(),"Point Cloud Recieved");
+		// RCLCPP_INFO(this->get_logger(),"Point Cloud Recieved");
 
 		//First, pull in the point cloud, translate from ROS PC2 to PCL:
 		//We get RGB data with this camera, as specified in the PC2 message fields
@@ -125,7 +125,7 @@ private:
 
 		//Publish and log the resulting point cloud:
 		this->publisher_->publish(msg_out);
-		RCLCPP_INFO(this->get_logger(), "point cloud truncated.");
+		// RCLCPP_INFO(this->get_logger(), "point cloud truncated.");
 
 		//Also Publish the ground plane:
 		Plane plane_params;

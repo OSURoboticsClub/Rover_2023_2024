@@ -93,7 +93,7 @@ Urdf for the rover of the DAM Robotics Rover triple bogie system.
 
         <xacro:sensor_d455 parent="rover_base_origin" name="d455" use_nominal_extrinsics="true">
             <origin xyz="0.26 0.11 0.15" rpy="3.1415926536 0.2618 0"/>      
-            <!-- KRJ TODO: CHECK IF THIS IS CORRECT TRANSFORM. IS FROM CAD, SHOULD BE GOOD -->
+            <!-- KRJ: CHECK IF THIS IS CORRECT TRANSFORM. IS FROM CAD, SHOULD BE GOOD -->
         </xacro:sensor_d455>
 
             <!-- Arm option for gripper -->

@@ -131,7 +131,7 @@ class PerpToPlane(Node):
         if np.fabs(z.dot(x_ref)) > 0.99:
             x_ref = np.array([0.0, 1.0, 0.0])
         #Find the perpendicular vector and set to be the x axis
-        x = np.cross(x_ref, z)
+        x = np.cross(z, x_ref)
         x = x / np.linalg.norm(x)
         #Find the y axis
         y = np.cross(z, x)

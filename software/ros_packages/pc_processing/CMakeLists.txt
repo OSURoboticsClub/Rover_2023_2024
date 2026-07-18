@@ -70,11 +70,11 @@ install(TARGETS
 
 
 # Install the include files so that other pacakges can find them.
-install(DIRECTORY
-  include
+# install(DIRECTORY
+#   include
 
-  DESTINATION include/${PROJECT_NAME}
-)
+#   DESTINATION include/${PROJECT_NAME}
+# )
 
 install(DIRECTORY
 	launch
