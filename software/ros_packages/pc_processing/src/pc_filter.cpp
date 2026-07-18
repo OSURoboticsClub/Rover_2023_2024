@@ -66,13 +66,13 @@ private:
 	//Where the magic is supposed to happen...
 	void sub_callback(const PointCloud2::SharedPtr msg) {
 		//Log that we've recieved a msg
-		RCLCPP_INFO(this->get_logger(),"Point Cloud Recieved");
+		// RCLCPP_INFO(this->get_logger(),"Point Cloud Recieved");
 
 		//First, pull in the point cloud, translate from ROS PC2 to PCL:
 		//We get RGB data with this camera, as specified in the PC2 message fields
 		pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_cloud_in(new pcl::PointCloud<pcl::PointXYZRGB>); //Create the point cloud object
 		pcl::fromROSMsg(*msg, *pcl_cloud_in); //pass it and the msg by reference for conversion
-		RCLCPP_INFO(this->get_logger(),"Unpacked");
+		// RCLCPP_INFO(this->get_logger(),"Unpacked");
 
 		//Second, we want to remove any points that are close enough that it sees the gripper fingers, 
 		//or far enough that its significantly bebyond the accuarate range of the camera 
@@ -96,7 +96,7 @@ private:
 		
 		//Apply the box filter and save to the output object
 		box_filter.filter(*gripper_cloud_trunc);
-		RCLCPP_INFO(this->get_logger(),"filtered gripper");
+		// RCLCPP_INFO(this->get_logger(),"filtered gripper");
 
 
 		//Third, we want to transform the could into the robot frame, and use some bounding boxes to get rid any points related to the wheels:
@@ -160,14 +160,14 @@ private:
 		right_wheel.setMax(Eigen::Vector4f(x_offset+wheel_r,-y_offset+(wheel_w/2),z_offset+wheel_r,1.0f));
 		left_wheel.setMin(Eigen::Vector4f(x_offset-wheel_r,y_offset-(wheel_w/2),z_offset-wheel_r,1.0f));
 		left_wheel.setMax(Eigen::Vector4f(x_offset+wheel_r,y_offset+(wheel_w/2),z_offset+wheel_r,1.0f));
-		RCLCPP_INFO(this->get_logger(), "Prefilter length: %zu", rover_cloud_trunc->size());
+		// RCLCPP_INFO(this->get_logger(), "Prefilter length: %zu", rover_cloud_trunc->size());
 
 		//Remove the right wheel:
 		//pcl::PointCloud<pcl::PointXYZRGB>::Ptr right_removed(new pcl::PointCloud<pcl::PointXYZRGB>);
 		right_wheel.setInputCloud(rover_cloud_trunc);
 		right_wheel.setNegative(true);
 		right_wheel.filter(*rover_cloud_trunc);
-		RCLCPP_INFO(this->get_logger(), "Post_filter length: %zu", rover_cloud_trunc->size());
+		// RCLCPP_INFO(this->get_logger(), "Post_filter length: %zu", rover_cloud_trunc->size());
 
 
 		//And the left:
@@ -175,7 +175,7 @@ private:
 		left_wheel.setInputCloud(rover_cloud_trunc);
 		left_wheel.setNegative(true);
 		left_wheel.filter(*rover_cloud_trunc);
-		RCLCPP_INFO(this->get_logger(), "Post_filter length: %zu", rover_cloud_trunc->size());
+		// RCLCPP_INFO(this->get_logger(), "Post_filter length: %zu", rover_cloud_trunc->size());
 
 
 		//TODO: make these use the transform tree to snap to the wheel locations
@@ -189,7 +189,7 @@ private:
 
 		//Publish and log the result:
 		this->publisher_->publish(msg_out);
-		RCLCPP_INFO(this->get_logger(), "point cloud truncated.");
+		// RCLCPP_INFO(this->get_logger(), "point cloud truncated.");
 
 	}
 };

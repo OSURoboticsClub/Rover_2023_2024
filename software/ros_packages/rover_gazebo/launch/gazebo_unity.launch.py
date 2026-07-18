@@ -12,6 +12,7 @@ from launch.substitutions import (
     TextSubstitution,
 )
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
 from ament_index_python.packages import get_package_share_directory
 import os
@@ -80,7 +81,7 @@ def generate_launch_description():
         executable="robot_state_publisher",
         parameters=[{
             "use_sim_time": use_sim_time,
-            "robot_description": robot_description,
+            "robot_description": ParameterValue(robot_description, value_type=str),
         }],
         output="screen",
     )

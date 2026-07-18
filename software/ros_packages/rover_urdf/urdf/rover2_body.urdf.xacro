@@ -377,7 +377,7 @@ Urdf of the rovers chassis and bogies
             <child link="${name}_ebox"/>
         </joint>
 
-        <!-- KRJ TODO: Verify that this offset is correct -->
+        <!-- KRJ : Verify that this offset is correct -->
         <joint name="camera_left_chassis_joint" type="fixed"> 
             <parent link="${name}_base_origin"/>
             <child link="camera_left_chassis_link"/>

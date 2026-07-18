@@ -4,9 +4,10 @@
 #include <Adafruit_BNO08x.h>
 #include <math.h>
 #include <cstring>
+#include <Preferences.h>
 
-#define CAN_TX_PIN GPIO_NUM_2
-#define CAN_RX_PIN GPIO_NUM_15
+#define CAN_TX_PIN GPIO_NUM_32
+#define CAN_RX_PIN GPIO_NUM_33
 #define I2C_SDA 21
 #define I2C_SCL 22
 
@@ -14,11 +15,13 @@
 Adafruit_BNO08x bno08x(-1);
 sh2_SensorValue_t sensorValue;
 
+Preferences prefs;
+
 // --- LIVE TUNING GAINS ---
-float kp_yaw = 15.0f;    
-float kp_pitch = 15.0f;  
-float kp_roll = 15.0f;
-float ki = 25.0f;         
+float kp_yaw = 5.0f;    
+float kp_pitch = 5.0f;  
+float kp_roll = 5.0f;
+float ki = 10.0f;         
 
 // --- CONTINUOUS IMU TRACKING ---
 float continuous_imu_yaw = 0.0f;
@@ -30,6 +33,10 @@ float target_camera_yaw = 0.0f;
 float target_camera_pitch = 0.0f;
 float target_camera_roll = 0.0f;
 
+float yaw_home = 0.0f;
+float roll_home = 0.0f;
+float pitch_home = 0.0f;
+
 struct CANMessage {
     uint32_t id;
     uint32_t node_id;
@@ -38,15 +45,17 @@ struct CANMessage {
     uint8_t data[8];
 };
 
-bool Toggle_Stabilization = true;
+bool Toggle_Stabilization = false;
 bool Toggle_IMU_Feedback = false;
+bool imu_data_fresh = false;
+bool home_set = false;
 
 unsigned long last_update = 0;
 const int update_interval = 10; // 10ms (100Hz)
 
 bool sendCANMessage(uint32_t id, uint8_t len, uint8_t* data);
 void setODriveState(uint32_t node_id, uint32_t state);
-void setODrivePosition(uint32_t node_id, float position);
+void setODrivePosition(uint32_t node_id, float position, float velff);
 uint32_t can_make_id(uint32_t node_id, uint32_t cmd_id);
 void setODriveInputMode(uint32_t node_id, uint32_t mode);
 void clearODriveErrors(uint32_t node_id);
@@ -54,16 +63,20 @@ void checkODriveErrors();
 void setODriveGains(uint32_t node_id, float pos_gain, float vel_gain);
 void forceODriveConfiguration(uint32_t node_id);
 void setODriveControlMode(uint32_t node_id);
-bool receiveCANMessage(CANMessage &cmsg);
+bool receiveCANMessage(CANMessage &msg);
 void Jetson_position_control(CANMessage &msg);
 float applyLowPass(float *hist, float new_sample);
 float wrapAngle(float error);
 void FeedbackIMUData();
 void setODriveVelocityMode(uint32_t node_id);
+void setODriveTrapTrajMode(uint32_t node_id);
 void sendODriveVelocity(uint32_t node_id, float velocity_turns_sec);
 void checkSerialTuning();
 void setReports(void);
 void IMU_Stabilization_Velocity();
+void sethome();
+void goHome();
+void setODrivePositionMode(uint32_t node_id);
 
 #define FILTER_TAPS 5
 
@@ -76,7 +89,6 @@ static const float kernel[FILTER_TAPS] = {0.2f, 0.2f, 0.2f, 0.2f, 0.2f};
 void setup() {
     Serial.begin(115200); 
     delay(100);
-
     twai_general_config_t g_config = TWAI_GENERAL_CONFIG_DEFAULT(CAN_TX_PIN, CAN_RX_PIN, TWAI_MODE_NORMAL);
     twai_timing_config_t t_config = TWAI_TIMING_CONFIG_1MBITS(); 
     twai_filter_config_t f_config = TWAI_FILTER_CONFIG_ACCEPT_ALL();
@@ -86,7 +98,12 @@ void setup() {
         Serial.println(">>> CAN Bus Online (1Mbps) <<<");
     }
 
+    
+
     Wire.begin(I2C_SDA, I2C_SCL);
+    Wire.setClock(60000); // force slow 100kHz
+
+
     if (!bno08x.begin_I2C(0x4A, &Wire)) {
         Serial.println("BNO08x failed to start.");
         while(1) { delay(10); } 
@@ -97,10 +114,10 @@ void setup() {
     Serial.println("Waiting 3 seconds for ODrives to fully wake up...");
     delay(3000); 
     
-    // Set to Velocity Mode
-    setODriveVelocityMode(3);
-    setODriveVelocityMode(4);
-    setODriveVelocityMode(5);
+    // Set to Position Mode
+    setODriveTrapTrajMode(3);
+    setODriveTrapTrajMode(4);
+    setODriveTrapTrajMode(5);
     delay(50);
 
     Serial.println(">>> AUTO-WAKING MOTORS <<<");
@@ -111,6 +128,8 @@ void setup() {
     setODriveState(3, 8);
     setODriveState(4, 8);
     setODriveState(5, 8);
+
+    delay(1000);
 }
 
 void loop() {
@@ -120,7 +139,19 @@ void loop() {
 
     // Check for incoming Jetson Commands
     if(receiveCANMessage(msg)){ //check for messages
+
         if (msg.node_id == 2){
+            /*
+            Serial.printf("Node ID: %d, Cmd ID: %d, Len: %d | Data: ", msg.node_id, msg.cmd_id, msg.len);
+
+            // 2. Loop through the data array and print each byte in Hex format
+            for (int i = 0; i < msg.len; i++) {
+                Serial.printf("%02X ", msg.data[i]);
+            }
+
+            Serial.println(); 
+            */
+
             if(msg.cmd_id == 1){
                 Serial.println("CAN Message Received");
                 Jetson_position_control(msg); //if jetson sends CAN command to change position, 
@@ -132,6 +163,10 @@ void loop() {
             {
                 memcpy(&Toggle_IMU_Feedback, &msg.data[0], 1);
             }
+            if(msg.cmd_id == 7){
+                home_set = true;
+                sethome();
+            }
         }
     }
 
@@ -142,6 +177,7 @@ void loop() {
     // --- IMU PROCESSING & UNWRAP ALGORITHM ---
     if (bno08x.getSensorEvent(&sensorValue)) {
         if (sensorValue.sensorId == SH2_GAME_ROTATION_VECTOR) {
+            imu_data_fresh = true; // Mark that we got fresh data
             float qw = sensorValue.un.gameRotationVector.real;
             float qx = sensorValue.un.gameRotationVector.i; 
             float qy = sensorValue.un.gameRotationVector.j; 
@@ -165,18 +201,21 @@ void loop() {
             static bool first_loop = true;
 
             if (first_loop) {
-                prev_raw_pitch = raw_pitch;
-                prev_raw_yaw = raw_yaw;
-                prev_raw_roll = raw_roll;
+                // Treat the very first IMU string reading as the structural zero
+                prev_raw_pitch = raw_pitch; 
+                prev_raw_yaw   = raw_yaw;
+                prev_raw_roll  = raw_roll;
+                
                 continuous_imu_pitch = 0.0f; 
-                continuous_imu_yaw = 0.0f;
-                continuous_imu_roll = 0.0f;
-                // Sync Jetson anchors to Tare point
+                continuous_imu_yaw   = 0.0f;
+                continuous_imu_roll  = 0.0f;
+
+                target_camera_yaw   = 0.0f;
                 target_camera_pitch = 0.0f;
-                target_camera_yaw = 0.0f;
-                target_camera_roll = 0.0f;
+                target_camera_roll  = 0.0f;
+                
                 first_loop = false;
-                Serial.println(">>> IMU ZEROED! <<<");
+                Serial.println("SENSORS ZEROED");
             }
 
             float delta_pitch = raw_pitch - prev_raw_pitch;
@@ -196,8 +235,13 @@ void loop() {
             continuous_imu_yaw += delta_yaw;
             continuous_imu_roll += delta_roll;
 
+            continuous_imu_roll  = constrain(continuous_imu_roll,  -0.5f, 0.5f);
+            continuous_imu_yaw  = constrain(continuous_imu_yaw,  -0.5f, 0.5f);
+            continuous_imu_pitch  = constrain(continuous_imu_pitch,  -0.5f, 0.5f);
+
             prev_raw_pitch = raw_pitch;
             prev_raw_yaw = raw_yaw;
+            prev_raw_roll = raw_roll;
         }
     }
 
@@ -209,15 +253,12 @@ void loop() {
             IMU_Stabilization_Velocity(); 
         } else {
             // Safety: if stabilization is toggled off, stop the motors
-            sendODriveVelocity(3, 0.0f);
-            sendODriveVelocity(4, 0.0f);
-            sendODriveVelocity(5, 0.0f);
+           //sendODriveVelocity(3, 0.0f);
+            //sendODriveVelocity(4, 0.0f);
+            //sendODriveVelocity(5, 0.0f);
         }
 
-        if (Toggle_IMU_Feedback) {
-            FeedbackIMUData();
-        }
-
+        /*
         static int print_counter = 0;
         if (++print_counter >= 10) { 
             Serial.printf("Pitch Err: %.3f | Yaw Err: %.3f\n | Roll Err: %.3f\n",  
@@ -226,6 +267,7 @@ void loop() {
                           (target_camera_roll - continuous_imu_roll));
             print_counter = 0;
         }
+        */
     }
 
     if(Toggle_IMU_Feedback){
@@ -260,15 +302,17 @@ void IMU_Stabilization_Velocity() {
     // 3. Final Velocity Command Math
     float pitch_velocity = (pitch_error * kp_pitch) + (pitch_integral * ki);
     float yaw_velocity = (yaw_error * kp_yaw) + (yaw_integral * ki);
-    float roll_velocity = (roll_error * kp_roll) + (yaw_integral * ki);
+    float roll_velocity = (roll_error * kp_roll) + (roll_integral * ki);
 
-    // --- DIRECTION FIXES ---
-    yaw_velocity = -yaw_velocity;
+    roll_velocity  = 1000 * constrain(roll_velocity,  -0.4f, 0.4f);
+    yaw_velocity  = 1000 * constrain(yaw_velocity,  -0.4f, 0.4f);
+    pitch_velocity  = 1000 * constrain(pitch_velocity,  -0.4f, 0.4f);
 
     // 4. Fire to CAN Bus
-    sendODriveVelocity(3, roll_velocity);
-    sendODriveVelocity(4, yaw_velocity);
-    sendODriveVelocity(5, pitch_velocity);
+    setODrivePosition(3, target_camera_roll, roll_velocity);
+    setODrivePosition(4, target_camera_yaw, yaw_velocity);
+    setODrivePosition(5, target_camera_pitch, pitch_velocity);
+    delay(50);
 }
 
 void FeedbackIMUData(){
@@ -279,6 +323,39 @@ void FeedbackIMUData(){
     sendCANMessage(can_make_id(1, 0x05), 8, data);
     memcpy(&data[0], &continuous_imu_pitch, 4);
     sendCANMessage(can_make_id(1, 0x06), 8, data);
+}
+
+void sethome(){
+    yaw_home = continuous_imu_yaw;
+    roll_home = continuous_imu_roll;
+    pitch_home = continuous_imu_pitch;
+
+    target_camera_yaw   = continuous_imu_yaw;
+    target_camera_pitch = continuous_imu_pitch;
+    target_camera_roll  = continuous_imu_roll;
+
+    // Save to flash
+    prefs.begin("gimbal", false); // false = read/write
+    prefs.putFloat("yaw_home",   yaw_home);
+    prefs.putFloat("pitch_home", pitch_home);
+    prefs.putFloat("roll_home",  roll_home);
+    prefs.end();
+}
+
+void goHome(){
+    setODrivePosition(3,0,0);
+    setODrivePosition(4,0,0);
+    setODrivePosition(5,0,0);
+
+    delay(500);
+
+    continuous_imu_yaw = 0.0f;
+    continuous_imu_pitch = 0.0f;
+    continuous_imu_roll = 0.0f;
+
+    target_camera_yaw = 0.0f;
+    target_camera_pitch = 0.0f;
+    target_camera_roll = 0.0f;
 }
 
 float wrapAngle(float error)
@@ -292,6 +369,24 @@ void setODriveVelocityMode(uint32_t node_id){
     uint8_t data[8] = {0};
     int32_t control_mode = 2; // VELOCITY_CONTROL
     int32_t input_mode = 1;   // PASSTHROUGH
+    memcpy(&data[0], &control_mode, 4);
+    memcpy(&data[4], &input_mode, 4);
+    sendCANMessage(can_make_id(node_id, 0x0B), 8, data);
+}
+
+void setODrivePositionMode(uint32_t node_id){
+    uint8_t data[8] = {0};
+    int32_t control_mode = 3; // VELOCITY_CONTROL
+    int32_t input_mode = 1;   // PASSTHROUGH
+    memcpy(&data[0], &control_mode, 4);
+    memcpy(&data[4], &input_mode, 4);
+    sendCANMessage(can_make_id(node_id, 0x0B), 8, data);
+}
+
+void setODriveTrapTrajMode(uint32_t node_id){
+    uint8_t data[8] = {0};
+    int32_t control_mode = 3; // VELOCITY_CONTROL
+    int32_t input_mode = 5;   // PASSTHROUGH
     memcpy(&data[0], &control_mode, 4);
     memcpy(&data[4], &input_mode, 4);
     sendCANMessage(can_make_id(node_id, 0x0B), 8, data);
@@ -320,40 +415,40 @@ float applyLowPass(float *hist, float new_sample)
         result += hist[i] * kernel[i];
         Serial.println(result);
 
-    
     return result;
-
-
 }
 
 void Jetson_position_control(CANMessage &msg) {
     // msg.data[0] = Axis ID (3, 4, or 5)
-    //msg.data[1] = direction (0 left, 1 right)
-    // msg.data[2-5] = Float Position (Little Endian)
+    // msg.data[1-4] = Float Position (Little Endian)
     
     if(msg.cmd_id == 1){
-        float received_pos;
+        float received_pos_rad;
         // Extract bytes 1 through 5 into the float variable
         //memcpy(&direction, &msg.data[1], 1);
-        memcpy(&received_pos, &msg.data[1], 4);
+        memcpy(&received_pos_rad, &msg.data[1], 4);
+        float received_pos = received_pos_rad / (2.0f * PI);
 
         if (msg.data[0] == 3) {
-            setODrivePosition(3, received_pos);
+            setODrivePosition(3, (roll_home + received_pos), 0);
+            target_camera_roll = roll_home + received_pos;
         }
         else if (msg.data[0] == 4) {
-            setODrivePosition(4, received_pos);
+            setODrivePosition(4, (yaw_home + received_pos), 0);
+            target_camera_yaw = yaw_home + received_pos;
         }
         else if (msg.data[0] == 5) {
-            setODrivePosition(5, received_pos);
+            setODrivePosition(5, (pitch_home + received_pos), 0);
+            target_camera_pitch = pitch_home + received_pos;
         }
+        else{}
     }
 }
 
-
-
-void setODrivePosition(uint32_t node_id, float position) {
+void setODrivePosition(uint32_t node_id, float position, float velff) {
     uint8_t data[8] = {0};
     memcpy(&data[0], &position, 4); // Position (Float)
+    memcpy(&data[4], &velff, 2); // VElocity FF (Float)
     // data[4-5] Vel FF, data[6-7] Torque FF (set to 0)
     uint32_t id = (node_id << 5) | 0x0c; // 0x0c = Set_Input_Pos
     sendCANMessage(id, 8, data);
@@ -381,8 +476,6 @@ void setODriveInputMode(uint32_t node_id, uint32_t mode) {
     uint32_t id = can_make_id(node_id, 0x0b);
     sendCANMessage(id, 8, data);
 }
-
-// 0x07: Set Axis State
 
 void setODriveState(uint32_t node_id, uint32_t state) {
     uint8_t data[8] = {0};
@@ -417,8 +510,6 @@ void checkODriveErrors() {
     }
 }
 
-
-
 void setODriveGains(uint32_t node_id, float pos_gain, float vel_gain) {
     uint8_t data[8];
     // Command 0x1A: Set Gains (This may vary by firmware, check 0x1A or 0x01B)
@@ -428,8 +519,6 @@ void setODriveGains(uint32_t node_id, float pos_gain, float vel_gain) {
     // If you can't set gains via CAN easily, we ensure it's in Position Control
     setODriveInputMode(node_id, 1); // 1 = Passthrough
 }
-
-
 
 void forceODriveConfiguration(uint32_t node_id) {
     uint8_t data[8] = {0};
@@ -446,8 +535,6 @@ void forceODriveConfiguration(uint32_t node_id) {
     // Some firmware versions require this explicitly via CAN
     // Note: If your ODrive is in Velocity mode, it ignores pos commands.
 }
-
-
 
 void setODriveControlMode(uint32_t node_id) {
     uint8_t data[8] = {0};
@@ -490,11 +577,56 @@ void checkSerialTuning() {
         
         if (input.equalsIgnoreCase("GO")) {
             Serial.println(">>> MANUALLY WAKING UP MOTORS <<<");
-            clearODriveErrors(0);
-            clearODriveErrors(1);
+            clearODriveErrors(3);
+            clearODriveErrors(4);
+            clearODriveErrors(5);
             delay(50);
-            setODriveState(0, 8);
-            setODriveState(1, 8);
+            setODriveState(3, 8);
+            setODriveState(4, 8);
+            setODriveState(5, 8);
+        }
+        // --- ADDED: MANUAL REBOOT SEQUENCE ---
+        else if (input.equalsIgnoreCase("R")) {
+            Serial.println("\n=============================================");
+            Serial.println(">>> TRIPPED HARD REBOOT COMMAND TO ODRIEVES <<<");
+            Serial.println("=============================================");
+            
+            uint8_t dummy_data[8] = {0};
+            // 0x16 is the standard ODrive CAN Command ID for Reboot
+            sendCANMessage(can_make_id(3, 0x16), 8, dummy_data);
+            sendCANMessage(can_make_id(4, 0x16), 8, dummy_data);
+            sendCANMessage(can_make_id(5, 0x16), 8, dummy_data);
+            
+            // Give the hardware physical time to drop power rails and cycle back up
+            Serial.println("Waiting 4 seconds for microcontrollers to reboot...");
+            delay(4000);
+            
+            // Re-run full mode initialization handshakes
+            Serial.println(">>> RE-ENGAGING CLOSED LOOP STABILIZATION <<<");
+            uint32_t nodes[] = {3, 4, 5};
+            for (int i = 0; i < 3; i++) {
+                uint32_t node = nodes[i];
+                
+                clearODriveErrors(node);
+                delay(100);
+                
+                // Force Mode registers
+                uint8_t mode_data[8] = {0};
+                int32_t control_mode = 2; // Velocity Control
+                int32_t input_mode = 1;   // Passthrough
+                memcpy(&mode_data[0], &control_mode, 4);
+                memcpy(&mode_data[4], &input_mode, 4);
+                sendCANMessage(can_make_id(node, 0x0B), 8, mode_data);
+                delay(100);
+                
+                // Engage Inverter Gates (State 8)
+                uint8_t state_data[8] = {0};
+                uint32_t requested_state = 8; 
+                memcpy(&state_data[0], &requested_state, 4);
+                sendCANMessage(can_make_id(node, 0x07), 8, state_data);
+                delay(100);
+            }
+            Serial.println(">>> REBOOT RECOVERY SEQUENCE COMPLETE <<<\n");
         }
         else if (input.startsWith("py") || input.startsWith("PY")) {
             kp_yaw = input.substring(2).toFloat();
