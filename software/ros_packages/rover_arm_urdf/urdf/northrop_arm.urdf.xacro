@@ -156,7 +156,7 @@
         <mass value="1.436142089281915"/>
         <inertia ixx="0.004268" iyy="0.006284" izz="0.003365" ixy="-0.000106" iyz="0.000102" ixz="0.00012"/>
       </inertial>
-      <visual>
+      <!-- <visual>
         <origin xyz="0.01459598 -0.05420133 -1.189494" rpy="0 0 0.097633718357"/>
         <geometry>
           <mesh filename="package://rover_arm_urdf/urdf/stl_files/mr2526-arm-Gripper-2019-URDF_Mass.stl" scale="0.001 0.001 0.001"/>
@@ -167,6 +167,18 @@
         <origin xyz="0 0 0" rpy="1.570796632679 0 3.141592653589793"/>
         <geometry>
           <mesh filename="package://rover_arm_urdf/urdf/stl_files/arm_1819_gripper.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision> -->
+      <visual>
+        <origin xyz="0 0 0.05"/>
+        <geometry>
+          <cylinder radius="0.05" length="0.1"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0.05"/>
+        <geometry>
+          <cylinder radius="0.05" length="0.1"/>
         </geometry>
       </collision>
     </link>

@@ -41,10 +41,16 @@ def generate_launch_description():
         description='Launch lidar and config mapping for lidar'
     )
 
+    attachment_arg = DeclareLaunchArgument(
+        'attachment',
+        default_value='arm',
+        description='Attachment type for the arm (arm, none)'
+    )
+
     arm = LaunchConfiguration('arm')
     auton = LaunchConfiguration('auton')
     lidar = LaunchConfiguration('lidar')
-
+    attachment = LaunchConfiguration('attachment')
     arm_enabled = PythonExpression([
         "'", arm, "'.lower() == 'true' and ",
         "'", auton, "'.lower() == 'false'"
@@ -117,9 +123,7 @@ def generate_launch_description():
         TextSubstitution(text='ros2_control_hardware_type:=main'),
         ' ',
         TextSubstitution(text='attachment:='),
-        PythonExpression([
-            "'arm' if '", arm, "'.lower() == 'true' else 'none'"
-        ]),
+        attachment,
     ])
 
     robot_state_publisher_node = Node(
@@ -262,6 +266,7 @@ def generate_launch_description():
                 arm_arg,
                 auton_arg,
                 lidar_arg,
+                attachment_arg,
 
                 ros2_control_node,
                 robot_state_publisher_node,
