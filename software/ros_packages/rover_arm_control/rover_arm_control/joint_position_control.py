@@ -3,6 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionClient
+
 from sensor_msgs.msg import JointState
 from moveit_msgs.action import MoveGroup
 from moveit_msgs.msg import Constraints, JointConstraint, RobotState
@@ -11,6 +12,13 @@ import moveit_msgs.msg
 import geometry_msgs.msg
 from builtin_interfaces.msg import Duration
 from std_msgs.msg import Float32MultiArray
+
+from std_srvs.srv import Trigger
+from controller_manager_msgs.srv import SwitchController
+from rcl_interfaces.srv import SetParameters
+
+
+
 
 class JointPositionController(Node):
     def __init__(self):
@@ -39,8 +47,81 @@ class JointPositionController(Node):
             10)
         self.latest_joint_state = None
 
+        #services
+        self.controller_client = self.make_client(SwitchController, '/controller_manager/switch_controller')
+        self.configure_servo_cli = self.make_client(SetParameters, '/servo_node/set_parameters')
+        self.start_servo_client = self.make_client(Trigger, '/servo_node/start_servo')
+
+    def make_client(self, srv_type, name):
+        """ Create a client to a service.
+
+        Parameters
+        ----------
+        srv_type : Service Type
+            The service type defined in the .srv file.
+        name : string
+            The name of the service call.
+        """
+        client = self.create_client(srv_type, name, callback_group=self.cb_group)
+        while not client.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info(f"Waiting for service '{name}', retrying...")
+        return client
+    
     def joint_states_callback(self, msg):
         self.latest_joint_state = msg
+
+    def start_servo(self):
+            """Start moveit servo.
+    
+            Returns
+            -------
+            future.result : Service Response
+                The result from the service call.
+            """
+            # Starts servo node
+            self.request = Trigger.Request()
+            self.future = self.start_servo_client.call_async(self.request)
+            rclpy.spin_until_future_complete(self, self.future) 
+            return self.future.result()
+    
+    def switch_controller(self, servo=False, sim=False):
+            """Switch the ros2 control controllers.
+    
+            Parameters
+            ----------
+                servo : Bool
+                    Indicator for servo or trajectory controller
+                sim : Bool
+                    Indicator for in sim mode (note: doesn't do anything). 
+            
+            """
+            # Switches controller from forward position controller to joint_trajectory controller
+            self.request = SwitchController.Request()
+            if servo:
+                self.start_servo()
+                if not sim:
+                    self.request.activate_controllers = ["rover_arm_controller"] 
+                    self.request.deactivate_controllers = ["rover_arm_controller_moveit"]
+                else:
+                    self.request.activate_controllers = ["rover_arm_controller"] 
+                    self.request.deactivate_controllers = ["rover_arm_controller_moveit"]
+                self.servo = True
+            else:
+                if not sim:
+                    self.request.activate_controllers = ["rover_arm_controller_moveit"]
+                    self.request.deactivate_controllers = ["rover_arm_controller"]
+                else:
+                    self.request.activate_controllers = ["rover_arm_controller_moveit"]
+                    self.request.deactivate_controllers = ["rover_arm_controller"]
+                self.servo = False
+            self.request.timeout = rclpy.duration.Duration(seconds=5.0).to_msg()
+    
+            self.request.strictness = SwitchController.Request.BEST_EFFORT  # Use STRICT or BEST_EFFORT
+    
+            self.future = self.controller_client.call_async(self.request)
+            rclpy.spin_until_future_complete(self, self.future)
+            return self.future.result()
+        
 
     def move_to_joint_positions(self, msg):
         joint_positions = []
@@ -99,7 +180,9 @@ class JointPositionController(Node):
         goal_msg = MoveGroup.Goal()
         goal_msg.request = motion_request
         goal_msg.planning_options = planning_options
-        
+
+        #switch to moveit controller
+        self.switch_controller(servo=False, sim=False)
         # Send the goal
         self.get_logger().info(f'Sending goal to move joints {self.joint_names} to positions {joint_positions}')
         send_goal_future = self.move_group_client.send_goal_async(goal_msg)
@@ -130,6 +213,8 @@ class JointPositionController(Node):
             self.get_logger().info('Motion execution succeeded!')
         else:
             self.get_logger().error(f'Motion execution failed with status: {status}')
+        self.start_servo()
+        self.switch_controller(servo=True, sim=False)
 
 
 def main(args=None):
