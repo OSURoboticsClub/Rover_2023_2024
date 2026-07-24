@@ -75,7 +75,6 @@ class SquareMakingController(Node):
         self.controller_client = self.make_client(SwitchController, '/controller_manager/switch_controller')
         self.configure_servo_cli = self.make_client(SetParameters, '/servo_node/set_parameters')
         self.start_servo_client = self.make_client(Trigger, '/servo_node/start_servo')
-        self.configure_servo_cli = self.make_client(SetParameters, '/servo_node/set_parameters')
         self.start_object_cli = self.make_client(ResetObjects, '/reset_pc_processing')
         self.set_plane_cli = self.make_client(Trigger, '/set_ground_plane')
 

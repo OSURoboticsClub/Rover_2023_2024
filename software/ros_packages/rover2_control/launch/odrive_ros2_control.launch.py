@@ -194,7 +194,7 @@ def generate_launch_description():
         angular_vel_scalar_arg,
         
         legacy_control,
-        joint_position_controler,
+        # joint_position_controler,
         robot_state_publisher_node,
         ros2_control_node,
         joint_state_broadcaster_spawner,

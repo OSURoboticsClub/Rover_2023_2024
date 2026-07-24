@@ -73,6 +73,14 @@ def generate_launch_description():
 			package = 'rover_arm_control',
 			executable = 'move_perp_to_plane',
 			name = 'move_perp_to_plane',
+            **config
+    )
+
+    joint_position_controler = Node(
+        package='rover_arm_control',
+        executable='joint_position_control',
+        name='joint_position',
+        **config
     )
 
     return LaunchDescription([
@@ -82,4 +90,5 @@ def generate_launch_description():
         pc_filter_node,
         pc_plane_node,
         move_perp,
+        joint_position_controler,
     ])
