@@ -114,6 +114,7 @@ def generate_launch_description():
         executable='camera_capture',
         name='chassis_left_cam',
         parameters=[left_calib,{
+            'namespace' : 'chassis_left',
             'device': '/dev/rover/camera_left_chassis',
             'cap_width': 640,
             'cap_height': 480,
@@ -135,6 +136,7 @@ def generate_launch_description():
         executable='camera_capture',
         name='chassis_right_cam',
         parameters=[right_calib,{
+            'namespace' : 'chassis_right',
             'device': '/dev/rover/camera_right_chassis',
             'cap_width': 640,
             'cap_height': 480,
@@ -158,6 +160,7 @@ def generate_launch_description():
         executable='camera_capture',
         name='tower_gimbal_cam',
         parameters=[{
+            'namespace' : 'tower_gimbal',
             'device': '/dev/rover/camera_tower_gimbal',
             'cap_width': 640,
             'cap_height': 480,
@@ -181,6 +184,7 @@ def generate_launch_description():
         executable='camera_capture',
         name='back_cam',
         parameters=[{
+            'namespace' : 'back',
             'device': '/dev/rover/camera_rear',
             'cap_width': 640,
             'cap_height': 480,
@@ -203,6 +207,7 @@ def generate_launch_description():
         executable='camera_capture',
         name='birds_eye_cam',
         parameters=[{
+            'namespace' : 'bev',
             'device': '/dev/rover/camera_bird_eye',
             'cap_width': 640,
             'cap_height': 480,
@@ -227,18 +232,19 @@ def generate_launch_description():
         executable='camera_capture',
         name='pan_tilt_cam',
         parameters=[{
-           'device': '/dev/rover/camera_pan_tilt',
-           'cap_width': 640,
-           'cap_height': 480,
-           'cap_framerate': 30,
-           'preset_level': 1,
-           'bitrate': 4000000,
-           'stream_width': 640,
-           'stream_height': 480,
-           'fec_percentage': 30,
-           'udp_host': DRIVE_IP,
-           'udp_port': 42073,
-           'mux_port': 20000
+            'namespace' : 'chassis_gimbal',
+            'device': '/dev/rover/camera_pan_tilt',
+            'cap_width': 640,
+            'cap_height': 480,
+            'cap_framerate': 30,
+            'preset_level': 1,
+            'bitrate': 4000000,
+            'stream_width': 640,
+            'stream_height': 480,
+            'fec_percentage': 30,
+            'udp_host': DRIVE_IP,
+            'udp_port': 42073,
+            'mux_port': 20000
         }],
         respawn=False,
         condition=IfCondition(launch_driver)
@@ -250,6 +256,7 @@ def generate_launch_description():
         executable='camera_ros2_conversion',
         name='realsense_conversion',
         parameters=[{
+            'namespace' : 'd405',
             'image_topic': '/camera/d405/color/image_raw',
             'cap_width': 640,
             'cap_height': 480,
@@ -266,6 +273,31 @@ def generate_launch_description():
         respawn=False,
         condition=IfCondition(launch_d405)
     )
+
+    chassis_view = Node(
+        package='rover2_camera',
+        namespace='rover2_camera',
+        executable='camera_ros2_conversion',
+        name='d455_conversion',
+        parameters=[{
+            'namespace' : 'd455',
+            'image_topic': '/camera/d455/color/image_raw',
+            'cap_width': 640,
+            'cap_height': 480,
+            'cap_framerate': 30,
+            'preset_level': 1,
+            'bitrate': 4000000,
+            'stream_width': 640,
+            'stream_height': 480,
+            'fec_percentage': 30,
+            'udp_host': ARM_IP,
+            'udp_port': 42075,
+            'mux_port': 20000
+        }],
+        respawn=False,
+        condition=IfCondition(launch_d455)
+    )
+
 
     muxing_node = Node(
         package='rover2_camera',
@@ -287,12 +319,13 @@ def generate_launch_description():
         realsense_launch_nav,
         chassis_right_cam_node,
         chassis_left_cam_node,
-        #birds_eye_cam_node,
-        #tower_gimbal_cam_node,
+        birds_eye_cam_node,
+        tower_gimbal_cam_node,
         back_cam_node,
-        #pan_tilt_cam_node,
+        pan_tilt_cam_node,
         muxing_node,
         d405_node,
         gripper_view,
+        chassis_view,
     ])
 
