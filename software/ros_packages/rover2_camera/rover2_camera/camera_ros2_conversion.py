@@ -6,6 +6,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import Image
 
 from rover2_camera_interface.srv import CamParams
+from std_srvs.srv import SetBool
 
 Gst = None
 GLib = None
@@ -53,6 +54,8 @@ class CameraCaptureNode(Node):
         self.declare_parameter('mux_port', 20000)
         self.declare_parameter('encoder_type', 'nvidia')
 
+        self.declare_parameter('namespace', 'd405')
+
         self.bridge    = CvBridge()
         self.pipeline  = None
         self.appsrc    = None
@@ -73,11 +76,26 @@ class CameraCaptureNode(Node):
         )
         self.get_logger().info(f'Subscribed to {image_topic}')
 
+        self.create_service(SetBool, f'/{self.get_parameter("namespace").value}/toggle_camera', self.toggle_camera_callback)
+
         # CamParams service
         image_topic_safe = image_topic.replace('/', '_')
-        service_name = f'{image_topic_safe}_cam_params'
+        service_name = f'/{self.get_parameter("namespace").value}/{image_topic_safe}_cam_params'
         self.create_service(CamParams, service_name, self.cam_params_callback)
         self.get_logger().info(f'CamParams service available at: {service_name}')
+
+    def toggle_camera_callback(self, request, response):
+        if request.data:
+            self.get_logger().info("Starting camera...")
+            self.start_pipeline()
+            response.success = True
+            response.message = "Camera started."
+        else:
+            self.get_logger().info("Stopping camera...")
+            self.stop_pipeline()
+            response.success = True
+            response.message = "Camera stopped."
+        return response
 
     def cam_params_callback(self, request, response):
         self.get_logger().info("CamParams service received, updating pipeline...")
