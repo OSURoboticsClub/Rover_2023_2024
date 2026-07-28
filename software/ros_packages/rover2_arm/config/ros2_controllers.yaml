@@ -6,7 +6,14 @@ controller_manager:
     rover_arm_controller:
       type: position_controllers/JointGroupPositionController
       #type: joint_trajectory_controller/JointTrajectoryController
-    
+
+    # Teleop-only: moveit_servo publishes raw Float64MultiArray velocities here directly (no
+    # trajectory interpolation). Streaming single-point trajectories into JointTrajectoryController
+    # at 100Hz via its topic interface causes each new trajectory to preempt the last before it's
+    # tracked, so motion stutters badly - this controller sidesteps that entirely.
+    rover_arm_velocity_controller:
+      type: velocity_controllers/JointGroupVelocityController
+
     rover_arm_controller_moveit:
       type: joint_trajectory_controller/JointTrajectoryController
 
@@ -27,6 +34,18 @@ rover_arm_controller:
       - velocity
     state_interfaces:
       - position
+      - velocity
+
+rover_arm_velocity_controller:
+  ros__parameters:
+    joints:
+      - rover_arm_base_joint
+      - rover_arm_shoulder_joint
+      - rover_arm_elbow_pitch_joint
+      - rover_arm_elbow_roll_joint
+      - rover_arm_wrist_pitch_joint
+      - rover_arm_wrist_roll_joint
+    command_interfaces:
       - velocity
 
 rover_arm_controller_moveit:

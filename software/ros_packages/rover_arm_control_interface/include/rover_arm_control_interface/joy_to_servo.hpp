@@ -50,9 +50,10 @@ with MoveIt Servo.
 
 Notes:
 ------
-- This node currently runs in unitless mode of moveit servo. This should be changed to acutal units in which 
- the node should take in the joint_limits.yaml to find velocity limits for each joint and the kinematics.yaml
- to find cartesion limits. 
+- This node runs moveit_servo in "speed_units" mode (real m/s and rad/s, not [-1:1]). Joint velocities are
+ scaled per-joint from joint_limits.yaml's max_velocity; Cartesian/IK velocities are scaled from
+ pilz_cartesian_limits.yaml's max_trans_vel/max_rot_vel. Both are passed in as node parameters from the
+ launch file so a full stick deflection commands the real hardware maximum for that axis.
 
 Licenses:
 ---------
@@ -77,6 +78,9 @@ The below code is covered under the 3-clause BSD license.
  #include <rclcpp/time.hpp>
  #include <rclcpp/utilities.hpp>
  #include <thread>
+ #include <map>
+ #include <string>
+ #include <vector>
 
 
 const std::string JOY_TOPIC = "/joy";
@@ -128,8 +132,12 @@ private:
     bool use_ik_{true}; //Whether to use inverse kinematics or joint jogging
     float slowdown_{1.0}; //Scalar to slow down velocity
 
+    double max_linear_speed_{0.0}; //Max EE linear speed [m/s], from pilz_cartesian_limits.yaml's max_trans_vel
+    double max_rotational_speed_{0.0}; //Max EE rotational speed [rad/s], from pilz_cartesian_limits.yaml's max_rot_vel
+    std::map<std::string, double> joint_max_velocities_; //Per-joint max_velocity [rad/s] read from joint_limits.yaml
 
-  void initializeControllerMappings(const std::string& controller_type);
+    void initializeControllerMappings(const std::string& controller_type);
+    void loadJointVelocityLimits();
 };
 } // namespace moveit_servo
 

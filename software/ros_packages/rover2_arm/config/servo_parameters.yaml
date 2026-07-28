@@ -13,10 +13,10 @@ robot_link_command_frame: "rover_arm_jaws_link" #robot link for command frame
 pose_command_in_topic: "~/pose_target_cmds" #Pose command topic
 cartesian_command_in_topic: "~/delta_twist_cmds" #Cartesian command topic
 joint_command_in_topic: "~/delta_joint_cmds" #Joint command topic
-command_in_type: "unitless" # "unitless"> in the range [-1:1], as if from joystick. "speed_units"> cmds are in m/s and rad/s
-scale: #Since these are applied to each joint or total motion, they either should be set to the limiting joints speed or the opposite depending on how moveit handles what limits the joints and if the commands sent to moveit servo limits these already.
-  linear:  3.14  # "Max linear velocity in m/s if using speed units or tracking a pose, else a scaling factor on the unitless commanded velocity. Used for Cartesian and pose tracking commands."
-  rotational: 3.14  # "Max angular velocity in rad/s if using speed units or tracking a pose, else a scaling factor on the unitless commanded velocity. Used for Cartesian and pose tracking commands."
+command_in_type: "speed_units" # "unitless"> in the range [-1:1], as if from joystick. "speed_units"> cmds are in m/s and rad/s
+scale: #Unused while command_in_type is "speed_units" - servo only multiplies by publish_period in that mode. joy_to_servo_pub_node does its own scaling to real units before publishing (see joy_to_servo_parameters.yaml and joint_limits.yaml).
+  linear:  1.6  # "Max linear velocity in m/s if using speed units or tracking a pose, else a scaling factor on the unitless commanded velocity. Used for Cartesian and pose tracking commands."
+  rotational: 5.0  # "Max angular velocity in rad/s if using speed units or tracking a pose, else a scaling factor on the unitless commanded velocity. Used for Cartesian and pose tracking commands."
   joint: 2.45  # "Joint angular/linear velocity scale. Only used for unitless joint commands."
 incoming_command_timeout: 0.1 #discard commands older than timeout [sec]
 
@@ -30,10 +30,17 @@ pose_tracking:
 
 #outgoing command settings
 status_topic: "~/status" #Status topic
-command_out_topic: "/rover_arm_controller/commands" #Command publish topic [joint_trajectory, commands]
+#Publishing raw velocities to rover_arm_velocity_controller (velocity_controllers/JointGroupVelocityController)
+#instead of a position-only controller or JointTrajectoryController. A position-only controller never gives
+#the ODrive a Vel_FF, so it falls back to its own onboard INPUT_MODE_POS_FILTER speed (independent of
+#anything computed here). Streaming single-point trajectories into JointTrajectoryController's topic
+#interface at 100Hz caused each new trajectory to preempt the last before it tracked, so motion stuttered
+#badly. A plain velocity forward-command controller has no interpolation to fight with and still gives the
+#ODrive a real Vel_FF -> INPUT_MODE_PASSTHROUGH.
+command_out_topic: "/rover_arm_velocity_controller/commands" #Command publish topic [joint_trajectory, commands]
 command_out_type: "std_msgs/Float64MultiArray" #[std_msgs/Float64MultiArray, trajectory_msgs/JointTrajectory] # type of command to publish
-publish_joint_positions: true #publish joint positions in output
-publish_joint_velocities: false #publish joint velicities in output
+publish_joint_positions: false #publish joint positions in output
+publish_joint_velocities: true #publish joint velicities in output
 publish_joint_accelerations: false #publish joint accelerations in output
 
 #Planning Scene Monitor
@@ -62,7 +69,7 @@ singularity_step_scale: 0.01 #scale test vecctor towards singularity
 halt_all_joints_in_joint_mode: true #halt all when one hits a limit
 halt_all_joints_in_cartesian_mode: true #halt all when one hits a limit
 joint_limit_margins: [0.05, 0.1, 0.1, 0.05, 0.1, 0.05, 0.01] #soft limit margin for each joint [rad or m]
-override_velocity_scaling_factor: 0.05 #scaling factor when servo overrides the velocity [0, 1]. Larger is less safe.
+override_velocity_scaling_factor: 0.0 #scaling factor when servo overrides the velocity [0, 1]. Larger is less safe. 0 disables the override and uses the dynamic per-joint scaling from joint_limits.yaml instead.
 
 #UR Servo Params (not sure if they exist
 collision_check_type: "threshold_distance"
