@@ -179,20 +179,36 @@ def generate_launch_description():
         condition=IfCondition(launch_ros2_control)
     )
 
+    # Used for MoveIt-planned trajectory execution (via its follow_joint_trajectory action).
+    # Kept inactive by default since it conflicts with rover_arm_velocity_controller on the
+    # velocity command interface - toggle onto it with controller_switcher's home button.
     moveit_arm_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["rover_arm_controller_moveit", 
+        arguments=["rover_arm_controller_moveit",
                    "-c", "/controller_manager",
                    "--inactive",
         ],
     )
 
+    # Active by default: moveit_servo teleop publishes raw velocities here directly (see
+    # servo_parameters.yaml command_out_topic) - no trajectory interpolation to stutter on.
+    rover_arm_velocity_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["rover_arm_velocity_controller",
+                   "-c", "/controller_manager",
+        ],
+    )
+
+    # Simple position-only controller, kept available but inactive - toggle onto it with
+    # controller_switcher's home button if you want position-only control instead.
     rover_arm_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["rover_arm_controller", 
+        arguments=["rover_arm_controller",
                    "-c", "/controller_manager",
+                   "--inactive",
         ],
     )
 
@@ -220,6 +236,9 @@ def generate_launch_description():
     servo_yaml = load_yaml("rover2_arm", "config/servo_parameters.yaml")
     # Get parameters for the Servo node
     servo_params = {"moveit_servo": servo_yaml}
+
+    # Teleop-only max Cartesian speed for joy_to_servo_pub_node (not consumed by servo_node itself)
+    joy_to_servo_yaml = load_yaml("rover2_arm", "config/joy_to_servo_parameters.yaml")
 
     # Launch as much as possible in components
     container = ComposableNodeContainer(
@@ -267,6 +286,9 @@ def generate_launch_description():
                 parameters=[
                     {"use_sim_time": use_sim_time},
                     {'controller_type': LaunchConfiguration('controller_type')},
+                    {'max_linear_speed': joy_to_servo_yaml["teleop_max_linear_speed"]},
+                    {'max_rotational_speed': joy_to_servo_yaml["teleop_max_rotational_speed"]},
+                    moveit_config.joint_limits,
                 ],
             ),
         ],
@@ -360,9 +382,10 @@ def generate_launch_description():
             container,
             joint_state_broadcaster_spawner,
             rover_arm_controller_spawner,
+            rover_arm_velocity_controller_spawner,
             moveit_arm_controller_spawner,
             controller_switcher_node,
-            # rviz_node,
+            rviz_node,
             #joy_to_servo_node,
             # d405_node,
             #d455_node,

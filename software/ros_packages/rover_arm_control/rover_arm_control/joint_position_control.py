@@ -103,19 +103,19 @@ class JointPositionController(Node):
             if servo:
                 self.start_servo()
                 if not sim:
-                    self.request.activate_controllers = ["rover_arm_controller"] 
+                    self.request.activate_controllers = ["rover_arm_velocity_controller"] 
                     self.request.deactivate_controllers = ["rover_arm_controller_moveit"]
                 else:
-                    self.request.activate_controllers = ["rover_arm_controller"] 
+                    self.request.activate_controllers = ["rover_arm_velocity_controller"] 
                     self.request.deactivate_controllers = ["rover_arm_controller_moveit"]
                 self.servo = True
             else:
                 if not sim:
                     self.request.activate_controllers = ["rover_arm_controller_moveit"]
-                    self.request.deactivate_controllers = ["rover_arm_controller"]
+                    self.request.deactivate_controllers = ["rover_arm_velocity_controller"]
                 else:
                     self.request.activate_controllers = ["rover_arm_controller_moveit"]
-                    self.request.deactivate_controllers = ["rover_arm_controller"]
+                    self.request.deactivate_controllers = ["rover_arm_velocity_controller"]
                 self.servo = False
             self.request.timeout = rclpy.duration.Duration(seconds=5.0).to_msg()
     
@@ -124,7 +124,7 @@ class JointPositionController(Node):
             self.future = self.controller_client.call_async(self.request)
             rclpy.spin_until_future_complete(self, self.future)
 
-            self.get_logger().info("Attempted to activate " + "rover_arm_controller" if servo else "rover_arm_controller_moveit")
+            self.get_logger().info("Attempted to activate " + "rover_arm_velocity_controller" if servo else "rover_arm_controller_moveit")
 
             return self.future.result()
         

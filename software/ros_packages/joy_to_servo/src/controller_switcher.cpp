@@ -17,7 +17,7 @@ public:
   {
     // Parameters
     this->declare_parameter("home_button_index", 8);
-    this->declare_parameter("controllers_to_toggle", std::vector<std::string>{"rover_arm_controller", "rover_arm_controller_moveit"});
+    this->declare_parameter("controllers_to_toggle", std::vector<std::string>{"rover_arm_velocity_controller", "rover_arm_controller_moveit"});
     
     home_button_index_ = this->get_parameter("home_button_index").as_int();
     controllers_to_toggle_ = this->get_parameter("controllers_to_toggle").as_string_array();

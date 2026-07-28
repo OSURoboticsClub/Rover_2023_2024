@@ -50,9 +50,10 @@ with MoveIt Servo.
 
 Notes
 -----
-- This node currently runs in unitless mode of moveit servo. This should be changed to acutal units in which 
- the node should take in the joint_limits.yaml to find velocity limits for each joint and the kinematics.yaml
- to find cartesion limits. 
+- This node runs moveit_servo in "speed_units" mode (real m/s and rad/s, not [-1:1]). Joint velocities are
+ scaled per-joint from joint_limits.yaml's max_velocity; Cartesian/IK velocities are scaled from
+ pilz_cartesian_limits.yaml's max_trans_vel/max_rot_vel. Both are passed in as node parameters from the
+ launch file so a full stick deflection commands the real hardware maximum for that axis.
 
 Licenses
 --------
@@ -95,7 +96,9 @@ Notes
 bool convertJoyToCmd(const std::vector<float>& axes, const std::vector<int>& buttons,
                      std::unique_ptr<geometry_msgs::msg::TwistStamped>& twist,
                      std::unique_ptr<control_msgs::msg::JointJog>& joint,
-                     bool& use_ik, const ControllerMappings& controllerMappings, float& slowdown)
+                     bool& use_ik, const ControllerMappings& controllerMappings, float& slowdown,
+                     const std::map<std::string, double>& jointMaxVelocities,
+                     double maxLinearSpeed, double maxRotationalSpeed)
 {
 
   if (buttons[controllerMappings.BUTTON_MAP.at("RIGHT_BUMPER")]){
@@ -111,41 +114,42 @@ bool convertJoyToCmd(const std::vector<float>& axes, const std::vector<int>& but
     if (axes[controllerMappings.AXIS_MAP.at("D_PAD_Y")])
     {
       joint->joint_names.push_back("shoulder_joint");
-      joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("D_PAD_Y")] * slowdown);
+      joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("D_PAD_Y")] * slowdown *
+                                   jointMaxVelocities.at("rover_arm_shoulder_joint"));
       return false;
     }
 
-    //Map joystick to twist commands
-    twist->twist.linear.y = -1.0 * axes[controllerMappings.AXIS_MAP.at("LEFT_STICK_Y")] * slowdown;
-    twist->twist.linear.x = -1.0 * axes[controllerMappings.AXIS_MAP.at("LEFT_STICK_X")] * slowdown;
+    //Map joystick to twist commands, scaled to real m/s / rad/s (command_in_type: speed_units)
+    twist->twist.linear.y = -1.0 * axes[controllerMappings.AXIS_MAP.at("LEFT_STICK_Y")] * slowdown * maxLinearSpeed;
+    twist->twist.linear.x = -1.0 * axes[controllerMappings.AXIS_MAP.at("LEFT_STICK_X")] * slowdown * maxLinearSpeed;
 
     //Triggers range from 1 to -1 and start at 1. Need to remap to 0 to 1
     double lin_z_in = -0.5 * (axes[controllerMappings.AXIS_MAP.at("RIGHT_TRIGGER")] - controllerMappings.AXIS_DEFAULTS.at("RIGHT_TRIGGER"));
     double lin_y_out = 0.5 * (axes[controllerMappings.AXIS_MAP.at("LEFT_TRIGGER")] - controllerMappings.AXIS_DEFAULTS.at("LEFT_TRIGGER"));
-    twist->twist.linear.z = (lin_y_out + lin_z_in) * slowdown;
+    twist->twist.linear.z = (lin_y_out + lin_z_in) * slowdown * maxLinearSpeed;
 
     //pitch
-    twist->twist.angular.x = axes[controllerMappings.AXIS_MAP.at("RIGHT_STICK_Y")] * slowdown;
+    twist->twist.angular.x = axes[controllerMappings.AXIS_MAP.at("RIGHT_STICK_Y")] * slowdown * maxRotationalSpeed;
     //Yaw
-    twist->twist.angular.y = -1.0 * axes[controllerMappings.AXIS_MAP.at("RIGHT_STICK_X")] * slowdown;
+    twist->twist.angular.y = -1.0 * axes[controllerMappings.AXIS_MAP.at("RIGHT_STICK_X")] * slowdown * maxRotationalSpeed;
     // Roll
-    twist->twist.angular.z = axes[controllerMappings.AXIS_MAP.at("D_PAD_X")] * slowdown;
+    twist->twist.angular.z = axes[controllerMappings.AXIS_MAP.at("D_PAD_X")] * slowdown * maxRotationalSpeed;
 
     return true;
   }
   else{ //joint by joint control
     joint->joint_names.push_back("rover_arm_base_joint");
-    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("D_PAD_X")] * 1.0);
+    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("D_PAD_X")] * jointMaxVelocities.at("rover_arm_base_joint"));
     joint->joint_names.push_back("rover_arm_shoulder_joint");
-    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("D_PAD_Y")] * 1.0);
+    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("D_PAD_Y")] * jointMaxVelocities.at("rover_arm_shoulder_joint"));
     joint->joint_names.push_back("rover_arm_elbow_pitch_joint");
-    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("LEFT_STICK_Y")] * 1.0);
+    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("LEFT_STICK_Y")] * jointMaxVelocities.at("rover_arm_elbow_pitch_joint"));
     joint->joint_names.push_back("rover_arm_elbow_roll_joint");
-    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("LEFT_STICK_X")] * -1.0);
+    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("LEFT_STICK_X")] * -jointMaxVelocities.at("rover_arm_elbow_roll_joint"));
     joint->joint_names.push_back("rover_arm_wrist_pitch_joint");
-    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("RIGHT_STICK_Y")] * 1.0);
+    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("RIGHT_STICK_Y")] * jointMaxVelocities.at("rover_arm_wrist_pitch_joint"));
     joint->joint_names.push_back("rover_arm_wrist_roll_joint");
-    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("RIGHT_STICK_X")] * 1.0);
+    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("RIGHT_STICK_X")] * jointMaxVelocities.at("rover_arm_wrist_roll_joint"));
 
     return false;
   }
@@ -194,6 +198,12 @@ JoyToServoPub::JoyToServoPub(const rclcpp::NodeOptions& options)
     this->declare_parameter<std::string>("controller_type", "xbox");
     std::string controller_type = this->get_parameter("controller_type").as_string();
 
+    this->declare_parameter<double>("max_linear_speed", 0.0);
+    max_linear_speed_ = this->get_parameter("max_linear_speed").as_double();
+    this->declare_parameter<double>("max_rotational_speed", 0.0);
+    max_rotational_speed_ = this->get_parameter("max_rotational_speed").as_double();
+    loadJointVelocityLimits();
+
     //Setup Subscribers
     joy_sub_ = this->create_subscription<sensor_msgs::msg::Joy>(
         JOY_TOPIC, rclcpp::SystemDefaultsQoS(),
@@ -232,6 +242,32 @@ Parameters
 controller_type : "ps", "xbox"
     The type of controller being used.
 */
+/*Reads per-joint max_velocity from joint_limits.yaml (loaded as robot_description_planning
+params by MoveItConfigsBuilder in the launch file). moveit_servo runs in "speed_units" mode, so
+these are used directly as the rad/s command for a full stick deflection - no further scale
+factor is applied downstream.
+*/
+void JoyToServoPub::loadJointVelocityLimits()
+  {
+    static const std::vector<std::string> JOINT_NAMES = {
+        "rover_arm_base_joint",        "rover_arm_shoulder_joint",    "rover_arm_elbow_pitch_joint",
+        "rover_arm_elbow_roll_joint",  "rover_arm_wrist_pitch_joint", "rover_arm_wrist_roll_joint"};
+
+    for (const auto& joint_name : JOINT_NAMES)
+    {
+      const std::string param_name = "robot_description_planning.joint_limits." + joint_name + ".max_velocity";
+      this->declare_parameter<double>(param_name, 0.0);
+      double max_velocity = this->get_parameter(param_name).as_double();
+      joint_max_velocities_[joint_name] = max_velocity;
+
+      if (max_velocity <= 0.0)
+      {
+        RCLCPP_WARN(this->get_logger(), "No max_velocity found for %s, it will not move in joint-by-joint mode.",
+                    joint_name.c_str());
+      }
+    }
+  }
+
 void JoyToServoPub::initializeControllerMappings(const std::string& controller_type)
   {
       if (controller_type == "xbox")
@@ -291,7 +327,8 @@ void JoyToServoPub::joyCB(const sensor_msgs::msg::Joy::ConstSharedPtr& msg)
       RCLCPP_INFO(this->get_logger(), "Control mode changed: %s", use_ik_ ? "IK Control" : "Joint by Joint Control");
     } 
     // Convert the joystick message to Twist or JointJog and publish
-    if (convertJoyToCmd(msg->axes, msg->buttons, twist_msg, joint_msg, use_ik_, controller_map_, slowdown_))
+    if (convertJoyToCmd(msg->axes, msg->buttons, twist_msg, joint_msg, use_ik_, controller_map_, slowdown_,
+                         joint_max_velocities_, max_linear_speed_, max_rotational_speed_))
     {
       // publish the TwistStamped
       twist_msg->header.frame_id = frame_to_publish_;
