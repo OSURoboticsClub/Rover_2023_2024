@@ -16,6 +16,7 @@
   <depend>sensor_msgs</depend>
   <depend>controller_manager_msgs</depend>
   <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
   <depend>moveit_ros_planning_interface</depend>
   <depend>eigen3</depend>
 
