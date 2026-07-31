@@ -1,4 +1,5 @@
 
+#include <cmath>
 #include "can_helpers.hpp"
 #include "can_simple_messages.hpp"
 #include "hardware_interface/system_interface.hpp"
@@ -220,6 +221,10 @@ return_type ODriveHardwareInterface::perform_command_mode_switch(
              {info_.joints[i].name + "/" + hardware_interface::HW_IF_EFFORT, &axis.torque_input_enabled_}}
         };
 
+        const bool was_pos_enabled = axis.pos_input_enabled_;
+        const bool was_vel_enabled = axis.vel_input_enabled_;
+        const bool was_torque_enabled = axis.torque_input_enabled_;
+
         bool mode_switch = false;
 
         for (const std::string& key : stop_interfaces) {
@@ -238,6 +243,21 @@ return_type ODriveHardwareInterface::perform_command_mode_switch(
                     mode_switch = true;
                 }
             }
+        }
+
+        // A command interface being (re)claimed after sitting inactive leaves its setpoint_
+        // wherever it was last written - stale relative to wherever the axis actually is/was
+        // commanded to by whatever else was in control since. Re-sync it now instead of
+        // relying on the newly-activated controller's first update() cycle to overwrite it
+        // before write() sends a stale command.
+        if (axis.pos_input_enabled_ && !was_pos_enabled && !std::isnan(axis.pos_estimate_)) {
+            axis.pos_setpoint_ = axis.pos_estimate_;
+        }
+        if (axis.vel_input_enabled_ && !was_vel_enabled) {
+            axis.vel_setpoint_ = 0.0;
+        }
+        if (axis.torque_input_enabled_ && !was_torque_enabled) {
+            axis.torque_setpoint_ = 0.0;
         }
 
         if (mode_switch) {
