@@ -51,7 +51,6 @@ class GripperCanControl(Node):
 
         self.gripper_action = ActionServer(self, GripperControl, 'gripper_control', self.gripper_control_callback)
 
-
         self.nu = 6 #scaling dx value Should be moved there and replaced with gear ratio
         self.publish_rate = 100 #[hz]
         #odrive params
@@ -59,6 +58,9 @@ class GripperCanControl(Node):
         self.axis = 0
         self.laser_pin = 10
         self.lights_pin = 9
+
+        self.set_gpio_id = 736
+        self.get_gpio_state_id = 734
 
         #limits
         self.vel_limit = 60.0 #[rev/s]
@@ -114,6 +116,9 @@ class GripperCanControl(Node):
         self.is_closed = False
         self.sent_command = False
         self.action_complete = False
+        self.seq_num = 0
+        self.conn_id = 7
+        self.init_connection = False
 
         #setup can
         self.bus = can.interface.Bus(channel=self.can_network, bustype='socketcan')
@@ -128,6 +133,8 @@ class GripperCanControl(Node):
         #Initialize Odrive and Gripper position 
         self.get_logger().info("Starting Setup of Odrive")
         self.setup_controller()
+        self.init_connection_id(node_id=self.node_id, conn_id=self.conn_id)
+
 
     def timer_callback_v2(self):
         """This function handles commanding the current state set by the joy callback to motor controllers.
@@ -270,10 +277,10 @@ class GripperCanControl(Node):
             self.controller_state = 0
         if buttons[self.light_button]:
             self.lights = not self.lights
-            self.send_gpio(self.lights_pin, self.lights)
+            self.set_gpio(pin=self.lights_pin, state=self.lights, node_id=self.node_id, conn_id=self.conn_id)
         if buttons[self.laser_button]:
             self.laser = not self.laser
-            self.send_gpio(self.laser_pin, self.laser)
+            self.set_gpio(pin=self.laser_pin, state=self.laser, node_id=self.node_id, conn_id=self.conn_id)
         if buttons[self.home_button]:
             self.get_logger().info("Re-Homing")
             self.found_home = False
@@ -381,30 +388,6 @@ class GripperCanControl(Node):
         except:
             self.get_logger().info("CAN Buffer full")
     
-    def send_gpio(self, pin, state):
-        """Sends a can message to change a gpio pins state
-
-        Parameters
-        ----------
-            pin : uint32
-                The gpio pin to control.
-            state : bool
-                The state to set. 
-        """
-        if True:
-            #try:
-            self.bus.send(can.Message(
-                arbitration_id = (self.node_id << 5 | 0x04),
-                data = struct.pack('<BHB', (7 << 2 | 1), 653, 1),
-                is_extended_id = False
-            ))
-            self.bus.send(can.Message(
-                arbitration_id=(self.node_id << 5 | 0x04),
-                data=struct.pack('<BBI?', (7 << 2 | 3), (1 << 4 | 1), pin, state),
-                is_extended_id=False
-            ))
-            #except:
-                #self.get_logger().info("CAN Buffer full")
     def set_mode(self, mode):
         """Sets the desired control mode. 
         
@@ -610,6 +593,10 @@ class GripperCanControl(Node):
                         self.measured_torq = torque_measured
                         self.feedback_torq_setpoint =torque_set
                         #self.get_logger().info(f"Torque: {torque_measured} | Torque Set point = {torque_set}") 
+                    case 0x05: #Tx Transmission
+                        self.get_logger().info(f"Endpoint ID: {can_msg.data[1]} | Transmission: {can_msg.data[4:]}")
+                    case 0x06: #Address reply
+                        self.get_logger().info(f"Node ID: {can_msg.data[0]} | Serial Number: {can_msg.data[1:7]} | Connection ID: {can_msg.data[7]}")
 
     #Abstraction for getting all can messages currently in the buffer:
     def get_can_buffer(self):
@@ -694,7 +681,75 @@ class GripperCanControl(Node):
         self.in_action = False
         self.controller_state = 10
         return response
-            
+
+    def _next_seq(self):
+        self.seq_num = (self.seq_num + 1) & 0xF
+        return self.seq_num
+
+    def init_connection_id(self, node_id=6, conn_id=7, serial_number=0):
+        """Registers `conn_id` with the ODrive so it accepts multi-frame SDO requests.
+
+        This is the "Address" message. It needs to be sent once (per ODrive power cycle)
+        before calling `set_gpio()`, since set_gpio's payload (5 bytes) doesn't fit in a
+        single 4-byte SDO frame and therefore requires a multi-frame call, which the
+        ODrive only accepts on a connection id that was set up this way. Requires
+        firmware 0.6.11 or newer (this project targets 0.6.12-1).
+        """
+        try: 
+            self.bus.send(can.Message(
+                arbitration_id=(node_id << 5 | 0x06),
+                data=(
+                    struct.pack('<B', node_id) +
+                    serial_number.to_bytes(6, "little") +
+                    struct.pack('<B', conn_id << 2)  # left-aligned, two LSBs zero
+                ),
+                is_extended_id=False,
+            ))
+        except:
+            self.get_logger().info("CAN Buffer full")
+            return
+        self.init_connection = True
+        
+
+    def set_gpio(self, pin, state, node_id=6, conn_id=7):
+        """Calls the set_gpio(num, status) function endpoint over CAN, and returns the
+        `ok` bool the ODrive reports back (or None if no reply was seen).
+
+        set_gpio's arguments (uint32 pin + bool state) serialize to a 5-byte payload,
+        which is one byte too many for a single SDO frame (4 payload bytes), so the
+        call is split into an initial frame carrying the first 4 payload bytes and a
+        continuation frame carrying the last one, per the multi-frame function-call
+        format used by the ODrive CAN protocol. `init_connection()` must have been
+        called first.
+        """
+        if not self.init_connection:
+            self.get_logger().info("Initializing connection id for multi-frame SDO")
+            self.init_connection_id(node_id=node_id, conn_id=conn_id)
+        payload = struct.pack('<I?', pin, state)  # num (4B) + status (1B) = 5B
+        seq = self._next_seq()
+        try: 
+            self.bus.send(can.Message(
+                arbitration_id=(node_id << 5 | 0x04),
+                data=struct.pack(
+                    '<BHB',
+                    (conn_id << 2 | 1),
+                    self.set_gpio_id,
+                    (seq << 4 | 1),  # sequence number | (total segments - 1) = 1 -> 2 segments
+                ) + payload[:4],
+                is_extended_id=False,
+            ))
+
+            self.bus.send(can.Message(
+                arbitration_id=(node_id << 5 | 0x04),
+                data=struct.pack(
+                    '<BB',
+                    (conn_id << 2 | 3),
+                    (seq << 4 | 1),  # sequence number | segment number (this is segment 1)
+                ) + payload[4:],
+                is_extended_id=False,
+            ))  
+        except:
+            self.get_logger().info("CAN Buffer full")
 
 def main(args=None):
     rclpy.init(args=args)
