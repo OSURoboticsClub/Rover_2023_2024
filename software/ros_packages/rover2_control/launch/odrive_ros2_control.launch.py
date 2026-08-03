@@ -194,7 +194,10 @@ def generate_launch_description():
             'can': 'can_cam',
             'direction': 1,
             'node_ids': [0, 1],
-            'board_id': 6
+            'board_id': 6,
+            'pitch_limits': [-3.1415, 3.1415],
+            'yaw_limits': [-3.1415, 3.1415],
+            'roll_limits': [-3.1415, 3.1415],
         }],
         **config
     )
@@ -209,6 +212,9 @@ def generate_launch_description():
             'node_ids': [3, 5, 4],
             'board_id': 2,
             'control_topic': "/tower_gimbal/control",
+            'pitch_limits': [-3.1415, 3.1415],
+            'yaw_limits': [-3.1415, 3.1415],
+            'roll_limits': [-3.1415, 3.1415],
         }],
         **config
     )
