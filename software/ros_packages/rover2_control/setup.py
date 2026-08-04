@@ -39,6 +39,7 @@ setup(
             'gripper_control = rover2_control.gripper_control:main',
             'monitor_aruco = rover2_control.monitor_aruco:main',
             'odrive_pan_tilt = rover2_control.odrive_pan_tilt:main',
+            'heist_mech_control = rover2_control.heist_mech_control:main'
         ],
     },
 )

@@ -8,6 +8,7 @@ import board
 import busio
 import adafruit_bno055
 import math
+import serial
 from sensor_msgs.msg import Imu, MagneticField
 from geometry_msgs.msg import Vector3
 from std_msgs.msg import Float32
@@ -57,6 +58,7 @@ class IMUNode(Node):
         self.mag_topic = self.declare_parameter("mag_topic", DEFAULT_MAG_TOPIC).value
         self.imu_heading_topic = self.declare_parameter("imu_heading_topic", IMU_HEADING_TOPIC).value
         self.wait_time = 1.0 / self.declare_parameter('hertz', DEFAULT_HERTZ).value
+        self.serial_path = self.declare_parameter('serial_path', '').value
 
         # Publishers
         self.imu_data_publisher = self.create_publisher(Imu, self.imu_data_topic, 10)
@@ -66,8 +68,12 @@ class IMUNode(Node):
         self.get_logger().info(f'Publishing at {1.0/self.wait_time} Hz')
         
         # Initialize I2C and BNO055
-        self.i2c = busio.I2C(board.SCL, board.SDA)
-        self.imu = adafruit_bno055.BNO055_I2C(self.i2c)
+        if self.serial_path == '':
+            self.i2c = busio.I2C(board.SCL, board.SDA)
+            self.imu = adafruit_bno055.BNO055_I2C(self.i2c)
+        else:
+            self.serial = serial.Serial(self.serial_path)
+            self.imu = adafruit_bno055.BNO055_UART(self.serial)
         
         # Magnetic declination (adjust for your location)
         self.magnetic_declination = 0

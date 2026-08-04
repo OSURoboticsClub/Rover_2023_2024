@@ -15,6 +15,9 @@ def generate_launch_description():
 #            package='rover2_odometry',
 #            executable='imu',
 #            name='imu',
+#            parameters={
+#                'serial_path':'/dev/ttyUSB1' #set this paramater to an empty string for I2C
+#            },
 #            **config
 #        ),
 #        Node(

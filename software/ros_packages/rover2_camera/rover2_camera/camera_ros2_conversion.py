@@ -53,6 +53,7 @@ class CameraCaptureNode(Node):
         self.declare_parameter('udp_port', 42073)
         self.declare_parameter('mux_port', 20000)
         self.declare_parameter('encoder_type', 'nvidia')
+        self.declare_parameter('flip_feed', False)
 
         self.declare_parameter('namespace', 'd405')
 
@@ -132,9 +133,12 @@ class CameraCaptureNode(Node):
         udp_port       = self.get_parameter('udp_port').value
         mux_port       = self.get_parameter('mux_port').value
         encoder_type   = self.get_parameter('encoder_type').value
+        flip_feed      = self.get_parameter('flip_feed').value
 
         self.frame_duration = Gst.SECOND // cap_framerate
         self.pts = 0
+
+        flip_pipeline = 'videoflip method=rotate-180 ! ' if flip_feed else ''
 
         if encoder_type == 'software':
             bitrate_kbps = max(1, int(bitrate) // 1000)
@@ -153,6 +157,7 @@ class CameraCaptureNode(Node):
             f'appsrc name=src is-live=true block=false format=time '
             f'caps=video/x-raw,format=BGR,width={cap_width},height={cap_height},framerate={cap_framerate}/1 ! '
             f'videoconvert ! '
+            f'{flip_pipeline}'
             f'tee name=t '
             f't. ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 leaky=downstream ! '
             f'rtpvrawpay ! udpsink host=127.0.0.1 port={mux_port} sync=false async=false '

@@ -61,10 +61,11 @@ def generate_launch_description():
 
             "depth_module.depth_profile": "424x240x30", # Camera depth fps caps out around 15. Setting this to 20 just makes camera info publish faster = easier sync for nodes down the line
                                                         # Note: enabling filtering ignores fps cap and defaults to 30
+            'rgb_camera.color_profile': '640x480x30',
             "pointcloud.enable": False,
 
             "enable_depth": True,
-            "enable_color": False,
+            "enable_color": True,
             "enable_infra": False,
             "enable_infra1": False,
             "enable_infra2": False,
@@ -292,7 +293,8 @@ def generate_launch_description():
             'fec_percentage': 30,
             'udp_host': ARM_IP,
             'udp_port': 42075,
-            'mux_port': 20000
+            'mux_port': 20000,
+            'flip_feed': True,
         }],
         respawn=False,
         condition=IfCondition(launch_d455)
@@ -319,7 +321,7 @@ def generate_launch_description():
         realsense_launch_nav,
         chassis_right_cam_node,
         chassis_left_cam_node,
-        birds_eye_cam_node,
+#        birds_eye_cam_node,
         tower_gimbal_cam_node,
         back_cam_node,
         pan_tilt_cam_node,
