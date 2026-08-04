@@ -42,13 +42,13 @@ class MechansimCommand(Enum):
     SERVO_POS          = 3
     TOGGLE_SOLENOID    = 6
     READ_MORSE_BUFFER  = 7
-    CLEAR_MORSE_BUFFER = 8
+    CLEAR_MORSE_BUFFER = 5
 
 
 class ServoPosition(Enum):
-    HOME  = 0
+    HOME  = 2
     MORSE = 1
-    XLR   = 2
+    XLR   = 0
 
 
 class ServiceCommand(Enum):
@@ -61,11 +61,15 @@ class ServiceCommand(Enum):
 
 def string_to_morse(string: str) -> List[str]:
 
-    result = List()
+    result = list() 
 
-    for char in string:
+    for i, char in enumerate(string):
         symbol = MORSE_MAP.get(char)
-        if symbol is not None: result.append(symbol)
+        if symbol is not None: 
+            if symbol != '/' and (i != len(string) - 1) and MORSE_MAP.get(string[i + 1]) != '/':
+                symbol += ' '
+
+        result.append(symbol)
 
     return result
 
@@ -88,8 +92,8 @@ class CanFrame():
     cmd_id: int
     data: bytearray | None
 
-    def __init__(self, node_id: int, cmd_id: int, data: bytearray | None):
-        if len(data) > 8:
+    def __init__(self, node_id: int, cmd_id: int, data: bytearray | None = None):
+        if data is not None and len(data) > 8:
             raise(ValueError("CAN Frame data longer than 8 bytes"))
 
         self.node_id = node_id
@@ -104,8 +108,8 @@ class CanFrame():
 
 class HeistMechController(Node):
 
-    def recv_can(self, node_ids: list[int] | None) -> List[CanFrame]:
-        result = List()
+    def recv_can(self, node_ids: list[int] | None = None) -> List[CanFrame]:
+        result = list()
 
         for msg in self.bus:
             node_id = msg.arbitration_id >> 5
@@ -118,15 +122,16 @@ class HeistMechController(Node):
 
     def ServiceCallback(self, req: HeistMechanismService.Request, resp: HeistMechanismService.Response) -> HeistMechanismService.Response:
 
-        def try_send_can(cmd: int, data: bytearray | None):
+        def try_send_can(cmd: int, data: bytearray | None = None):
             try:
                 self.bus.send(CanFrame(self.mech_can_id, cmd, data).get_can_message())
+                resp.result_msg = "Command successful"
             except Exception as e:
                 resp.result_msg = f"Failed to send CAN with exception: + {e}"
 
 
         def send_servo_can(pos: ServoPosition):
-            try_send_can(MechansimCommand.SERVO_POS.value, pos.value)
+            try_send_can(MechansimCommand.SERVO_POS.value, [pos.value])
 
 
         resp = HeistMechanismService.Response()
@@ -145,45 +150,42 @@ class HeistMechController(Node):
                         morse_string += s
 
                     #clear buffer
-                    self.bus.send(CanFrame(self.mech_can_id, MechansimCommand.CLEAR_MORSE_BUFFER.value))
+                    self.bus.send(CanFrame(self.mech_can_id, MechansimCommand.CLEAR_MORSE_BUFFER.value).get_can_message())
 
                     #send morse code
                     morse_substr = ""
                     for c in morse_string:
                         morse_substr += c
                         if len(morse_substr) == 8:
-                            self.bus.send(CanFrame(self.mech_can_id, MechansimCommand.MORSE_ADD.value, morse_substr))
+                            self.bus.send(CanFrame(self.mech_can_id, MechansimCommand.MORSE_ADD.value, bytearray(morse_substr, 'ASCII')).get_can_message())
                             morse_substr = ""
 
                     if len(morse_substr) != 0:
-                        self.bus.send(CanFrame(self.mech_can_id, MechansimCommand.MORSE_ADD.value, morse_substr))
+                        self.bus.send(CanFrame(self.mech_can_id, MechansimCommand.MORSE_ADD.value, bytearray(morse_substr, 'ASCII')).get_can_message())
 
                     #send command to execute buffer
-                    self.bus.send(CanFrame(self.mech_can_id), MechansimCommand.MORSE_EXEC.value)
+                    self.bus.send(CanFrame(self.mech_can_id, MechansimCommand.MORSE_EXEC.value).get_can_message())
 
                     resp.result_msg = "Operation succeeded"
                     resp.success = True
 
             except Exception as e:
-                resp.result_msg = f"Failed to send message with exception: + {e}"
+                #resp.result_msg = f"Failed to send message with exception: + {e}"
+                raise
                 return resp
 
 
         elif req.command == ServiceCommand.TOGGLE_SOLENOID.value:
             try_send_can(MechansimCommand.TOGGLE_SOLENOID.value)
-            resp.result_msg = "Command successful"
 
         elif req.command == ServiceCommand.SERVO_HOME.value:
-            send_servo_can(ServoPosition.HOME.value)
-            resp.result_msg = "Command successful"
+            send_servo_can(ServoPosition.HOME)
 
         elif req.command == ServiceCommand.SERVO_MORSE.value:
-            send_servo_can(ServoPosition.MORSE.value)
-            resp.result_msg = "Command successful"
+            send_servo_can(ServoPosition.MORSE)
 
         elif req.command == ServiceCommand.SERVO_XLR.value:
-            send_servo_can(ServoPosition.XLR.value)
-            resp.result_msg = "Command successful"
+            send_servo_can(ServoPosition.XLR)
 
         else:
             resp.result_msg = "Unknown command"
@@ -193,11 +195,13 @@ class HeistMechController(Node):
 
     def __init__(self):
 
+        super().__init__("heist_mech_control_node")
+
         self.can_net = self.declare_parameter('can', 'can_arm').value
         self.service_name = self.declare_parameter('service_name', '/heist_mech').value
         self.mech_can_id = self.declare_parameter('can_id', 0x01).value
 
-        self.bus = can.interface.Bus(channel=self.canNet, bustype='socketcan')
+        self.bus = can.interface.Bus(channel=self.can_net, bustype='socketcan')
         while not (self.bus.recv(timeout=0) is None): pass
 
         self.create_service(HeistMechanismService, self.service_name, self.ServiceCallback)

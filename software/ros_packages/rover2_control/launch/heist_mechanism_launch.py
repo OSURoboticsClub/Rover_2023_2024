@@ -11,8 +11,8 @@ def generate_launch_description():
     return LaunchDescription([
             Node(
                 package='rover2_control',
-                executable='heist_mechanism_controller',
-                name='heist_mechanism_controller',
+                executable='heist_mech_control',
+                name='heist_mech_control',
                 parameters=[{
                     'can':'can_arm',
                     'can_id':60
