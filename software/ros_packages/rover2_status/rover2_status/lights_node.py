@@ -22,10 +22,10 @@ from time import time, sleep
 
 from std_msgs.msg import String
 
-class GripperCanControl(Node):
+class LightsControl(Node):
 
     def __init__(self):
-        super().__init__('gripper_can_control')
+        super().__init__('lights_control')
 
         self.last_message_time = time()
         
@@ -88,42 +88,42 @@ class GripperCanControl(Node):
     def toggle_lights(self, state=False):
         """ Send a can command to toggle lights."""
         if state:
-            try:
+           try:
                 self.bus.send(can.Message(
                     arbitration_id=(self.node_id << 5 | 0x01), # 
                     data=struct.pack('<B', 1), # Bool for toggle
                     is_extended_id=False
                 ))
-            except:
+           except:
                 self.get_logger().info("CAN Buffer full")
         else:
-            try:
+           try:
                 self.bus.send(can.Message(
                     arbitration_id=(self.node_id << 5 | 0x01), # 
                     data=struct.pack('<B', 0), # Bool for toggle
                     is_extended_id=False
                 ))
-            except:
+           except:
                 self.get_logger().info("CAN Buffer full")
 
     def toggle_rgb_led(self, state=False):
         if state:
-            try:
+           try:
                 self.bus.send(can.Message(
                     arbitration_id=(self.node_id << 5 | 0x05), # LED White
                     data=struct.pack('<B', 1), # Bool (doesn't matter what)
                     is_extended_id=False
                 ))
-            except:
+           except:
                 self.get_logger().info("CAN Buffer full")
         else:
-            try:
+           try:
                 self.bus.send(can.Message(
-                    arbitration_id=(self.node_id << 5 | 0x05), # LED White
+                    arbitration_id=(self.node_id << 5 | 0x06), # LED White
                     data=struct.pack('<B', 0), # Bool (doesn't matter what)
                     is_extended_id=False
                 ))
-            except:
+           except:
                 self.get_logger().info("CAN Buffer full")
 
     def clear_can_buffer(self):
@@ -229,14 +229,14 @@ class GripperCanControl(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    gripper_node = GripperCanControl()
+    lights_control = LightsControl()
 
-    rclpy.spin(gripper_node)
+    rclpy.spin(lights_control)
 
     # Destroy the node explicitly
     # (optional - otherwise it will be done automatically
     # when the garbage collector destroys the node object)
-    gripper_node.destroy_node()
+    lights_control.destroy_node()
     rclpy.shutdown()
 
 
