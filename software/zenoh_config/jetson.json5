@@ -1,0 +1,34 @@
+// Zenoh config for the rover-side Jetson Orin NX.
+// Jetson runs a router in every test scenario below — it's the one
+// device guaranteed to be up whenever the rover is operating.
+//
+// HOW TO USE: uncomment the `mode` + `connect` pair for the scenario
+// you're testing, keep the other three scenario blocks commented out.
+//
+// IPs: Jetson 192.168.1.11 · Pi 192.168.1.10 · Laptop1 192.168.1.6 · Laptop2 192.168.1.8
+{
+  // ---- Scenario 1: every device runs a router (full mesh) ----
+  mode: "router",
+  connect: { endpoints: ["tcp/192.168.1.10:7447", "tcp/192.168.1.6:7447", "tcp/192.168.1.8:7447"] },
+
+  // ---- Scenario 2: Pi + Jetson run routers, laptops are clients ----
+  // mode: "router",
+  // connect: { endpoints: ["tcp/192.168.1.10:7447"] },
+
+  // ---- Scenario 3: Jetson + one laptop run routers ----
+  // mode: "router",
+  // connect: { endpoints: ["tcp/192.168.1.6:7447"] },
+
+  // ---- Scenario 4: only Jetson runs a router ----
+  // mode: "router",
+  // connect: { endpoints: [] },
+
+  listen: {
+    endpoints: ["tcp/0.0.0.0:7447"],
+  },
+
+  scouting: {
+    multicast: { enabled: true },
+    gossip: { enabled: true },
+  },
+}
