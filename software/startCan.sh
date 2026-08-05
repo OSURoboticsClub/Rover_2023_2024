@@ -2,7 +2,7 @@
 modprobe can
 modprobe can_raw
 modprobe mttcan
-
+modprobe v4l2loopback video_nr=64
 ip link set can0 down
 sleep 1
 ip link set can1 down

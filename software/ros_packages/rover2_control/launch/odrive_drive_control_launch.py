@@ -111,18 +111,18 @@ def generate_launch_description():
 #            name='monitor_aruco',
 #            **config
 #        ),
-        Node(
-            package='rover2_control',
-            executable='tower_pan_tilt_control',
-            name='tower_pan_tilt',
-            **config
-        ),
+#        Node(
+#            package='rover2_control',
+#            executable='tower_pan_tilt_control',
+#            name='tower_pan_tilt',
+#            **config
+#        ),
         Node(
             package='rover2_control',
             executable='joint_position_control',
             name='joint_position',
             **config
         ),
-        gripper_can_control_node,
+#        gripper_can_control_node,
 #        auton_controller
     ])

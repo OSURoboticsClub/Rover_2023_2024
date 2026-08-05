@@ -15,6 +15,7 @@
   <depend>nav2_bringup</depend>
   <!-- <depend>robot_localization</depend> -->
   <depend>twist_mux</depend>
+  <depend>nav_autonomy_interface</depend> 
 
   <exec_depend>ros2launch</exec_depend>
 

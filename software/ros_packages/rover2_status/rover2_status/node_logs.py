@@ -68,7 +68,7 @@ class NodeLogs(Node):
 			if(self.log_level >= 30):
 				self.pub_callback()
 				
-	#The publisher will run on a timer or when a higher level msg is recieved.
+	#The rover2_spectrometry will run on a timer or when a higher level msg is recieved.
 	def pub_callback(self):
 		#Check the timestamps to avoid repeatedly publishing:
 		if self.log_stamp != self.prev_log_stamp:
