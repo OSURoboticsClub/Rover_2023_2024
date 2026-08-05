@@ -1,0 +1,36 @@
+// Zenoh config for the groundstation Raspberry Pi.
+// Pi is unreliable, so it's a router only in scenarios where it's
+// explicitly under test (1 and 2) — otherwise it's a plain client.
+//
+// HOW TO USE: uncomment the `mode` + `connect` pair for the scenario
+// you're testing, keep the other three scenario blocks commented out.
+//
+// IPs: Jetson 192.168.1.11 · Pi 192.168.1.10 · Laptop1 192.168.1.6 · Laptop2 192.168.1.8
+{
+  // ---- Scenario 1: every device runs a router (full mesh) ----
+  mode: "router",
+  connect: { endpoints: ["tcp/192.168.1.11:7447", "tcp/192.168.1.6:7447", "tcp/192.168.1.8:7447"] },
+
+  // ---- Scenario 2: Pi + Jetson run routers, laptops are clients ----
+  // mode: "router",
+  // connect: { endpoints: ["tcp/192.168.1.11:7447"] },
+
+  // ---- Scenario 3: Jetson + one laptop run routers, Pi is a client ----
+  // (connects to the ground-side laptop router, not across the radio link,
+  //  so the wireless hop is only crossed once, by the laptop router)
+  // mode: "client",
+  // connect: { endpoints: ["tcp/192.168.1.6:7447"] },
+
+  // ---- Scenario 4: only Jetson runs a router, Pi is a client ----
+  // mode: "client",
+  // connect: { endpoints: ["tcp/192.168.1.11:7447"] },
+
+  listen: {
+    endpoints: ["tcp/0.0.0.0:7447"],
+  },
+
+  scouting: {
+    multicast: { enabled: true },
+    gossip: { enabled: true },
+  },
+}
