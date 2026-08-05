@@ -35,6 +35,7 @@ setup(
             'integrator = rover2_status.integrator:main',
 
             'moveit_logger = rover2_status.moveit_logger:main',
+            'lights_node = rover2_status.lights_node:main',
 
         ],
     },

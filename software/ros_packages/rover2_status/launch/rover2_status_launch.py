@@ -51,5 +51,13 @@ def generate_launch_description():
 			package='rover2_status',
             executable='arm_telem',
         ),
+    Node(
+            package='rover2_status',
+            executable='lights_node',
+            parameters=[{
+                'node_id': 12,
+                'can': 'can_cam',
+            }]
+    ),
 
     ])
