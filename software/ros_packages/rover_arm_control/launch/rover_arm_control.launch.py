@@ -67,13 +67,10 @@ def generate_launch_description():
 			executable = 'plane_fit',
 			name = 'plane_fit',
     )
-
-    #Launch the plane fitting node
     move_perp = Node(
-			package = 'rover_arm_control',
-			executable = 'move_perp_to_plane',
-			name = 'move_perp_to_plane',
-            **config
+                        package = 'rover_arm_control',
+                        executable = 'move_perp_to_plane',
+                        name = 'move_perp_to_plane',
     )
 
     joint_position_controler = Node(
