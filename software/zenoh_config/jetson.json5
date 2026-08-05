@@ -9,7 +9,7 @@
 {
   
   mode: "router",
-  connect: { endpoints: ["tcp/192.168.1.10:7447"] }
+  connect: { endpoints: ["tcp/192.168.1.10:7447"] },
   
   // ---- Scenario 1: every device runs a router (full mesh) ----
   //mode: "router",
