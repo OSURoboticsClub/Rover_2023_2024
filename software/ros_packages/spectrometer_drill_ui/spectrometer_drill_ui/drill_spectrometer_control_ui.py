@@ -1,14 +1,6 @@
 #!/usr/bin/env python3
-"""
-Tk-based drill/spectrometer control UI node.
+"""Tk-based spectrometer and science mechanism control UI."""
 
-This module hosts a desktop UI plus a ROS node that:
-1) sends drill/linear/cap commands,
-2) drives spectrometry requests and image display/saving,
-3) subscribes to and renders live mechanical telemetry charts.
-"""
-
-from collections import deque
 import threading
 import time
 import tkinter as tk
@@ -19,52 +11,78 @@ from tkinter import messagebox
 import cv2
 import rclpy
 from cv_bridge import CvBridge
+from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
+from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
+from rclpy.qos import HistoryPolicy, QoSProfile, ReliabilityPolicy
+from rover2_spectrometry_interface.msg import (
+    SpectrometryMechanicalControlMessage,
+)
+from rover2_spectrometry_interface.msg import (
+    SpectrometryMechanicalStatusMessage,
+)
 from rover2_spectrometry_interface.srv import SpectrometryInterface
 from sensor_msgs.msg import Image
-from std_msgs.msg import Float32
-from std_srvs.srv import SetBool
 
 SPECTROMETRY_IMAGE_WINDOW = "Spectrometry Image"
-TELEMETRY_WINDOW_S = 20.0
-TELEMETRY_Y_PADDING_RATIO = 0.10
-TELEMETRY_Y_TICKS = 5
-TELEMETRY_X_TICKS = 5
-LINEAR_ROTATIONS_PER_INCH = 600.0
+MECHANICAL_SYSTEM_NAMES = (
+    "valve_1",
+    "valve_2",
+    "pump",
+    "coil_1",
+    "coil_2",
+    "solenoid",
+)
+MECHANICAL_SYSTEM_FIELDS = {
+    "valve_1": "valve_1_on",
+    "valve_2": "valve_2_on",
+    "pump": "pump_on",
+    "coil_1": "coil_1_on",
+    "coil_2": "coil_2_on",
+    "solenoid": "solenoid_on",
+}
+MECHANICAL_STATUS_TIMEOUT_S = 1.0
+
+# Set these to the actual camera ids on the rover.
+NINHYDRIN_CAMERA_ID = 0
+BENEDICTS_CAMERA_ID = 1
 
 
 class ControlUI:
-    """Owns Tk widgets/state and delegates ROS interactions to `_ControlNode`."""
+    """Own UI widgets and delegate ROS interactions to the node."""
 
     def __init__(self, root):
         self.root = root
-        self.root.title("Drill and Spectrometer Controls")
+        self.root.title("Spectrometer and Science Controls")
 
         self.node = _ControlNode()
-        self.spin_thread = threading.Thread(target=rclpy.spin, args=(self.node,), daemon=True)
+        self.executor = MultiThreadedExecutor(num_threads=2)
+        self.executor.add_node(self.node)
+        self.spin_thread = threading.Thread(
+            target=self.executor.spin, daemon=True
+        )
         self.spin_thread.start()
 
-        self.cap_engaged = False
-        self.drill_auto_enabled = False
-        self.linear_auto_enabled = False
-        self.mechanical_systems_enabled = False
         self.spectrometry_enabled = False
         self.spectrometry_request_pending = False
         self.displayed_spectrometry_image_count = 0
+        self.science_controls_locked = True
+        self.mechanical_control_buttons = []
         self._closing = False
 
         self._build_ui()
         self._schedule_spectrometry_display()
-        self._schedule_mechanical_telemetry_display()
+        self._schedule_mechanical_status_display()
         self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
     def _build_ui(self):
-        """Construct top-level UI sections and wire control callbacks."""
+        """Construct the spectrometer controls."""
         main = tk.Frame(self.root, padx=12, pady=12)
         main.pack(fill=tk.BOTH, expand=True)
 
         spec_frame = tk.LabelFrame(main, text="Spectrometer", padx=10, pady=10)
-        spec_frame.pack(fill=tk.X, pady=(0, 8))
+        spec_frame.pack(fill=tk.X)
+
         self.spec_status_var = tk.StringVar(value="Disabled")
         tk.Label(spec_frame, text="Status:").grid(row=0, column=0, sticky="w")
         tk.Label(spec_frame, textvariable=self.spec_status_var, width=24).grid(
@@ -72,7 +90,10 @@ class ControlUI:
         )
 
         self.spec_enable_button = tk.Button(
-            spec_frame, text="Enable", width=14, command=self.toggle_spectrometry
+            spec_frame,
+            text="Enable",
+            width=14,
+            command=self.toggle_spectrometry,
         )
         self.spec_enable_button.grid(row=0, column=2, padx=(12, 0))
 
@@ -95,169 +116,320 @@ class ControlUI:
         self.ninhydrin_button.grid(row=1, column=1, pady=(8, 0), sticky="w")
 
         divider = tk.Frame(main, height=2, bg="#666666")
-        divider.pack(fill=tk.X, pady=(2, 10))
+        divider.pack(fill=tk.X, pady=(10, 10))
 
-        mech_frame = tk.LabelFrame(main, text="Mechanical Systems", padx=10, pady=10)
-        mech_frame.pack(fill=tk.X, pady=(0, 8))
-        self.mech_status_var = tk.StringVar(value="Disabled")
-        tk.Label(mech_frame, text="Status:").grid(row=0, column=0, sticky="w")
-        tk.Label(mech_frame, textvariable=self.mech_status_var, width=24).grid(
-            row=0, column=1, sticky="w"
+        mechanical_frame = tk.LabelFrame(
+            main, text="Mechanical Systems", padx=10, pady=10
         )
-        self.mech_enable_button = tk.Button(
-            mech_frame, text="Enable", width=14, command=self.toggle_mechanical_systems
-        )
-        self.mech_enable_button.grid(row=0, column=2, padx=(12, 0))
+        mechanical_frame.pack(fill=tk.BOTH, expand=True)
 
-        drill_frame = tk.LabelFrame(main, text="Drill", padx=10, pady=10)
-        drill_frame.pack(fill=tk.X, pady=(0, 8))
-        self.drill_status_var = tk.StringVar(value="Off")
-        tk.Label(drill_frame, text="Status:").grid(row=0, column=0, sticky="w")
-        tk.Label(drill_frame, textvariable=self.drill_status_var, width=12).grid(
-            row=0, column=1, sticky="w"
-        )
-        self.drill_button = tk.Button(
-            drill_frame, text="Auto Start", width=14, command=self.toggle_drill_auto
-        )
-        self.drill_button.grid(row=0, column=2, padx=(12, 0))
-        self.drill_hold_button = tk.Button(drill_frame, text="Hold to Run", width=14)
-        self.drill_hold_button.grid(row=0, column=3, padx=(8, 0))
-        self.drill_hold_button.bind("<ButtonPress-1>", self.start_drill_hold)
-        self.drill_hold_button.bind("<ButtonRelease-1>", self.stop_drill_hold)
-
-        cap_frame = tk.LabelFrame(main, text="Drill Cap", padx=10, pady=10)
-        cap_frame.pack(fill=tk.X, pady=(0, 8))
-        self.cap_status_var = tk.StringVar(value="Disengaged")
-        tk.Label(cap_frame, text="Status:").grid(row=0, column=0, sticky="w")
-        tk.Label(cap_frame, textvariable=self.cap_status_var, width=12).grid(
-            row=0, column=1, sticky="w"
-        )
-        self.cap_button = tk.Button(
-            cap_frame, text="Engage", width=14, command=self.toggle_cap
-        )
-        self.cap_button.grid(row=0, column=2, padx=(12, 0))
-
-        linear_frame = tk.LabelFrame(main, text="Linear Actuator", padx=10, pady=10)
-        linear_frame.pack(fill=tk.X, pady=(0, 8))
-
-        tk.Label(linear_frame, text="Velocity (in/s):").grid(row=0, column=0, sticky="w")
-        self.linear_speed_var = tk.StringVar(value="0.0")
-        tk.Entry(linear_frame, textvariable=self.linear_speed_var, width=10).grid(
-            row=0, column=1, sticky="w"
-        )
-
-        self.linear_direction_var = tk.StringVar(value="Extend (+)")
-        tk.OptionMenu(
-            linear_frame,
-            self.linear_direction_var,
-            "Extend (+)",
-            "Retract (-)",
-        ).grid(row=0, column=2, padx=(12, 0), sticky="w")
-
-        self.linear_status_var = tk.StringVar(value="Not Publishing")
-        tk.Label(linear_frame, text="Status:").grid(row=1, column=0, sticky="w")
-        tk.Label(linear_frame, textvariable=self.linear_status_var, width=24).grid(
-            row=1, column=1, columnspan=2, sticky="w"
-        )
-
-        self.linear_auto_button = tk.Button(
-            linear_frame, text="Auto Start", width=14, command=self.toggle_linear_auto
-        )
-        self.linear_auto_button.grid(row=0, column=3, padx=(12, 0))
-        self.linear_hold_button = tk.Button(linear_frame, text="Hold to Run", width=12)
-        self.linear_hold_button.grid(row=0, column=4, padx=(8, 0))
-        self.linear_hold_button.bind("<ButtonPress-1>", self.start_linear_hold)
-        self.linear_hold_button.bind("<ButtonRelease-1>", self.stop_linear_hold)
-        self.linear_stop_button = tk.Button(
-            linear_frame, text="Stop", width=10, command=self.stop_linear
-        )
-        self.linear_stop_button.grid(row=1, column=3, padx=(12, 0))
-
-        telemetry_frame = tk.LabelFrame(main, text="Mechanical Telemetry", padx=10, pady=10)
-        telemetry_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 8))
-
-        self.drill_speed_chart_canvas = tk.Canvas(
-            telemetry_frame,
-            width=700,
-            height=180,
-            bg="#111111",
-            highlightthickness=1,
-            highlightbackground="#444444",
-        )
-        self.drill_speed_chart_canvas.pack(fill=tk.X, pady=(0, 8))
-
-        self.drill_current_chart_canvas = tk.Canvas(
-            telemetry_frame,
-            width=700,
-            height=180,
-            bg="#111111",
-            highlightthickness=1,
-            highlightbackground="#444444",
-        )
-        self.drill_current_chart_canvas.pack(fill=tk.X, pady=(0, 8))
-
-        self.linear_position_chart_canvas = tk.Canvas(
-            telemetry_frame,
-            width=700,
-            height=180,
-            bg="#111111",
-            highlightthickness=1,
-            highlightbackground="#444444",
-        )
-        self.linear_position_chart_canvas.pack(fill=tk.X, pady=(0, 8))
-
-        self.linear_current_chart_canvas = tk.Canvas(
-            telemetry_frame,
-            width=700,
-            height=180,
-            bg="#111111",
-            highlightthickness=1,
-            highlightbackground="#444444",
-        )
-        self.linear_current_chart_canvas.pack(fill=tk.X)
-
+        self._build_master_control_section(mechanical_frame)
+        self._build_valves_section(mechanical_frame)
+        self._build_pump_section(mechanical_frame)
+        self._build_heating_coils_section(mechanical_frame)
+        self._build_dirt_agitator_section(mechanical_frame)
         self._set_mechanical_controls_state(tk.DISABLED)
 
-    def toggle_mechanical_systems(self):
-        """Globally enable/disable drill/linear/cap controls."""
-        target = not self.mechanical_systems_enabled
-        self.mechanical_systems_enabled = target
-        self.mech_status_var.set("Enabled" if target else "Disabled")
-        self.mech_enable_button.config(text="Disable" if target else "Enable")
+    def _build_master_control_section(self, parent):
+        """Build the lockout controls that gate all mechanical commands."""
+        frame = self._new_mechanical_section(parent, "Master Control")
+        self.science_lock_status_var = tk.StringVar(value="Locked")
 
-        if target:
-            self._set_mechanical_controls_state(tk.NORMAL)
+        self.lock_science_button = tk.Button(
+            frame,
+            text="Lock Science Control",
+            width=22,
+            command=self.lock_science_control,
+            state=tk.DISABLED,
+        )
+        self.lock_science_button.grid(row=0, column=0, padx=(0, 8), sticky="w")
+        self.unlock_science_button = tk.Button(
+            frame,
+            text="Unlock Science Control",
+            width=22,
+            command=self.unlock_science_control,
+            state=tk.DISABLED,
+        )
+        self.unlock_science_button.grid(
+            row=0, column=1, padx=(0, 16), sticky="w"
+        )
+        self._add_status_monitor(
+            frame,
+            row=0,
+            column=2,
+            label="Control",
+            variable=self.science_lock_status_var,
+        )
+
+    def _build_valves_section(self, parent):
+        """Build individual and grouped valve controls."""
+        frame = self._new_mechanical_section(parent, "Valves")
+        self.valve_1_status_var = tk.StringVar(value="Unknown")
+        self.valve_2_status_var = tk.StringVar(value="Unknown")
+
+        self._add_control_button(
+            frame, 0, 0, "Turn On Valve 1", "valve_1", True
+        )
+        self._add_control_button(
+            frame, 0, 1, "Turn On Valve 2", "valve_2", True
+        )
+        self._add_group_button(
+            frame, 0, 2, "Turn All Valves On", ("valve_1", "valve_2"), True
+        )
+        self._add_control_button(
+            frame, 1, 0, "Turn Off Valve 1", "valve_1", False
+        )
+        self._add_control_button(
+            frame, 1, 1, "Turn Off Valve 2", "valve_2", False
+        )
+        self._add_group_button(
+            frame, 1, 2, "Turn All Valves Off", ("valve_1", "valve_2"), False
+        )
+        self._add_status_monitor(
+            frame,
+            row=2,
+            column=0,
+            label="Valve 1",
+            variable=self.valve_1_status_var,
+        )
+        self._add_status_monitor(
+            frame,
+            row=2,
+            column=1,
+            label="Valve 2",
+            variable=self.valve_2_status_var,
+        )
+
+    def _build_pump_section(self, parent):
+        """Build pump controls and status monitor."""
+        frame = self._new_mechanical_section(parent, "Pump")
+        self.pump_status_var = tk.StringVar(value="Unknown")
+        self._add_control_button(frame, 0, 0, "Turn On Pump", "pump", True)
+        self._add_control_button(frame, 0, 1, "Turn Off Pump", "pump", False)
+        self._add_status_monitor(
+            frame, row=1, column=0, label="Pump", variable=self.pump_status_var
+        )
+
+    def _build_heating_coils_section(self, parent):
+        """Build individual and grouped heating-coil controls."""
+        frame = self._new_mechanical_section(parent, "Heating Coils")
+        self.coil_1_status_var = tk.StringVar(value="Unknown")
+        self.coil_2_status_var = tk.StringVar(value="Unknown")
+
+        self._add_control_button(frame, 0, 0, "Turn On Coil 1", "coil_1", True)
+        self._add_control_button(frame, 0, 1, "Turn On Coil 2", "coil_2", True)
+        self._add_group_button(
+            frame, 0, 2, "Turn On All Coils", ("coil_1", "coil_2"), True
+        )
+        self._add_control_button(
+            frame, 1, 0, "Turn Off Coil 1", "coil_1", False
+        )
+        self._add_control_button(
+            frame, 1, 1, "Turn Off Coil 2", "coil_2", False
+        )
+        self._add_group_button(
+            frame, 1, 2, "Turn Off All Coils", ("coil_1", "coil_2"), False
+        )
+        self._add_status_monitor(
+            frame,
+            row=2,
+            column=0,
+            label="Coil 1",
+            variable=self.coil_1_status_var,
+        )
+        self._add_status_monitor(
+            frame,
+            row=2,
+            column=1,
+            label="Coil 2",
+            variable=self.coil_2_status_var,
+        )
+
+    def _build_dirt_agitator_section(self, parent):
+        """Build dirt-agitator solenoid controls and status monitor."""
+        frame = self._new_mechanical_section(parent, "Dirt Agitator")
+        self.solenoid_status_var = tk.StringVar(value="Unknown")
+        self._add_control_button(
+            frame, 0, 0, "Turn On Solenoid", "solenoid", True
+        )
+        self._add_control_button(
+            frame, 0, 1, "Turn Off Solenoid", "solenoid", False
+        )
+        self._add_status_monitor(
+            frame,
+            row=1,
+            column=0,
+            label="Solenoid",
+            variable=self.solenoid_status_var,
+        )
+
+    @staticmethod
+    def _new_mechanical_section(parent, title):
+        frame = tk.LabelFrame(parent, text=title, padx=8, pady=8)
+        frame.pack(fill=tk.X, pady=(0, 8))
+        return frame
+
+    def _add_control_button(
+        self, parent, row, column, text, system_name, enabled
+    ):
+        button = tk.Button(
+            parent,
+            text=text,
+            width=20,
+            command=lambda: self.set_mechanical_system(system_name, enabled),
+        )
+        button.grid(
+            row=row, column=column, padx=(0, 8), pady=(0, 6), sticky="w"
+        )
+        self.mechanical_control_buttons.append(button)
+
+    def _add_group_button(
+        self, parent, row, column, text, system_names, enabled
+    ):
+        button = tk.Button(
+            parent,
+            text=text,
+            width=20,
+            command=lambda: self.set_mechanical_systems(system_names, enabled),
+        )
+        button.grid(
+            row=row, column=column, padx=(0, 8), pady=(0, 6), sticky="w"
+        )
+        self.mechanical_control_buttons.append(button)
+
+    @staticmethod
+    def _add_status_monitor(parent, row, column, label, variable):
+        monitor = tk.Frame(parent)
+        monitor.grid(
+            row=row, column=column, padx=(0, 14), pady=(2, 0), sticky="w"
+        )
+        tk.Label(monitor, text=f"{label}:").pack(side=tk.LEFT)
+        tk.Label(
+            monitor,
+            textvariable=variable,
+            font=("TkDefaultFont", 9, "underline"),
+            width=18,
+            anchor="w",
+        ).pack(side=tk.LEFT, padx=(4, 0))
+
+    def unlock_science_control(self):
+        """Allow mechanical commands until the operator locks them again."""
+        snapshot = self.node.get_mechanical_status_snapshot()
+        controls_ready = (
+            snapshot["status_available"]
+            and snapshot["can_connected"]
+            and snapshot["command_state_valid"]
+            and snapshot["command_link_active"]
+            and not snapshot["command_pending"]
+        )
+        if not controls_ready:
+            messagebox.showwarning(
+                "Science Controls Unavailable",
+                "The rover command link and science CAN interface must be "
+                "ready before controls can be unlocked.",
+            )
             return
 
-        self._disable_mechanical_outputs()
+        self.node.set_science_locked(False)
+        self.science_controls_locked = True
+        self.science_lock_status_var.set("Unlock requested")
+        self.lock_science_button.config(state=tk.NORMAL)
+        self.unlock_science_button.config(state=tk.DISABLED)
         self._set_mechanical_controls_state(tk.DISABLED)
 
-    def _set_mechanical_controls_state(self, state):
-        self.drill_button.config(state=state)
-        self.drill_hold_button.config(state=state)
-        self.cap_button.config(state=state)
-        self.linear_auto_button.config(state=state)
-        self.linear_hold_button.config(state=state)
-        self.linear_stop_button.config(state=state)
+    def lock_science_control(self):
+        """Command every mechanical output off, then lock the controls."""
+        self.node.set_science_locked(True)
+        self._apply_locked_ui("Lock requested", allow_unlock=False)
 
-    def _disable_mechanical_outputs(self):
-        """Force motion outputs idle and reset matching button/status state."""
-        self.drill_auto_enabled = False
-        self.linear_auto_enabled = False
-        self.drill_button.config(text="Auto Start")
-        self.linear_auto_button.config(text="Auto Start")
-        self.node.set_drill_active(False, 0.0)
-        self.node.set_linear_active(False, 0.0)
-        self.drill_status_var.set("Off")
-        self.linear_status_var.set("Not Publishing")
+    def _apply_locked_ui(self, status_text, allow_unlock):
+        """Apply the locally safe/locked widget state."""
+        self.science_controls_locked = True
+        self.science_lock_status_var.set(status_text)
+        self.lock_science_button.config(state=tk.DISABLED)
+        unlock_state = tk.NORMAL if allow_unlock else tk.DISABLED
+        self.unlock_science_button.config(state=unlock_state)
+        self._set_mechanical_controls_state(tk.DISABLED)
+
+    def _apply_unlocked_ui(self):
+        """Enable output buttons after the rover acknowledges unlock."""
+        self.science_controls_locked = False
+        self.science_lock_status_var.set("Unlocked (sent)")
+        self.lock_science_button.config(state=tk.NORMAL)
+        self.unlock_science_button.config(state=tk.DISABLED)
+        self._set_mechanical_controls_state(tk.NORMAL)
+
+    def _set_mechanical_controls_state(self, state):
+        for button in self.mechanical_control_buttons:
+            button.config(state=state)
+
+    def set_mechanical_system(self, system_name, enabled):
+        """Send one output request through the ROS command heartbeat."""
+        self.set_mechanical_systems((system_name,), enabled)
+
+    def set_mechanical_systems(self, system_names, enabled):
+        """Send an atomic output request if controls are unlocked."""
+        if self.science_controls_locked:
+            return
+
+        states = {system_name: bool(enabled) for system_name in system_names}
+        self.node.send_mechanical_states(states)
+
+    def _schedule_mechanical_status_display(self):
+        """Refresh monitors from the last rover-side CAN command state."""
+        status_variables = {
+            "valve_1": self.valve_1_status_var,
+            "valve_2": self.valve_2_status_var,
+            "pump": self.pump_status_var,
+            "coil_1": self.coil_1_status_var,
+            "coil_2": self.coil_2_status_var,
+            "solenoid": self.solenoid_status_var,
+        }
+        snapshot = self.node.get_mechanical_status_snapshot()
+        status_available = (
+            snapshot["status_available"]
+            and snapshot["can_connected"]
+            and snapshot["command_state_valid"]
+        )
+        for system_name, variable in status_variables.items():
+            if status_available:
+                state = snapshot["states"][system_name]
+                variable.set("On (sent)" if state else "Off (sent)")
+            else:
+                variable.set("Unknown")
+
+        if not snapshot["status_available"]:
+            self._apply_locked_ui("Status unavailable", allow_unlock=False)
+        elif not snapshot["can_connected"]:
+            self._apply_locked_ui("CAN unavailable", allow_unlock=False)
+        elif not snapshot["command_state_valid"]:
+            self._apply_locked_ui("State unknown", allow_unlock=False)
+        elif snapshot["command_pending"]:
+            if snapshot["desired_controls_unlocked"]:
+                self.science_controls_locked = True
+                self.science_lock_status_var.set("Unlock requested")
+                self.lock_science_button.config(state=tk.NORMAL)
+                self.unlock_science_button.config(state=tk.DISABLED)
+                self._set_mechanical_controls_state(tk.DISABLED)
+            else:
+                self._apply_locked_ui("Lock requested", allow_unlock=False)
+        elif snapshot["controls_unlocked"]:
+            self._apply_unlocked_ui()
+        elif not snapshot["command_link_active"]:
+            self._apply_locked_ui("Outputs off (link lost)", allow_unlock=False)
+        else:
+            self._apply_locked_ui("Locked (sent)", allow_unlock=True)
+
+        if not self._closing:
+            self.root.after(250, self._schedule_mechanical_status_display)
 
     def toggle_spectrometry(self):
-        """Enable/disable spectrometry image subscription and controls."""
+        """Enable or disable spectrometry image display and controls."""
         target = not self.spectrometry_enabled
         if not self.node.set_spectrometry_enabled(target):
             messagebox.showerror(
                 "Execution Error",
-                "Unable to enable spectrometry subscription.",
+                "Unable to enable spectrometry image display.",
             )
             return
 
@@ -270,10 +442,11 @@ class ControlUI:
             if target and not self.spectrometry_request_pending
             else tk.DISABLED
         )
-        self.benedicts_button.config(state=button_state)
-        self.ninhydrin_button.config(state=button_state)
+        self._set_spectrometry_action_state(button_state)
 
-    def _send_spectrometry_request(self, camera_id, reaction_type, reaction_name):
+    def _send_spectrometry_request(
+        self, camera_id, reaction_type, reaction_name
+    ):
         """Launch a non-blocking spectrometry request from the Tk thread."""
         if not self.spectrometry_enabled:
             messagebox.showwarning(
@@ -311,10 +484,8 @@ class ControlUI:
 
     def _handle_spectrometry_request_result(self, ok, reaction_name):
         self.spectrometry_request_pending = False
-        if self.spectrometry_enabled:
-            self._set_spectrometry_action_state(tk.NORMAL)
-        else:
-            self._set_spectrometry_action_state(tk.DISABLED)
+        state = tk.NORMAL if self.spectrometry_enabled else tk.DISABLED
+        self._set_spectrometry_action_state(state)
 
         if not ok:
             messagebox.showerror(
@@ -330,16 +501,18 @@ class ControlUI:
 
     def send_benedicts_request(self):
         self._send_spectrometry_request(
-            camera_id=1, reaction_type=1, reaction_name="Benedict's"
+            camera_id=BENEDICTS_CAMERA_ID, reaction_type=1,
+            reaction_name="Benedict's"
         )
 
     def send_ninhydrin_request(self):
         self._send_spectrometry_request(
-            camera_id=2, reaction_type=3, reaction_name="Ninhydrin"
+            camera_id=NINHYDRIN_CAMERA_ID, reaction_type=3,
+            reaction_name="Ninhydrin"
         )
 
     def _schedule_spectrometry_display(self):
-        """Pump OpenCV window updates from the latest received image snapshot."""
+        """Update the OpenCV window from the latest image snapshot."""
         try:
             if self.spectrometry_enabled:
                 snapshot = self.node.get_spectrometry_image_snapshot()
@@ -349,7 +522,9 @@ class ControlUI:
                         cv2.imshow(SPECTROMETRY_IMAGE_WINDOW, image)
                         self.displayed_spectrometry_image_count = image_count
                         if not self.spectrometry_request_pending:
-                            self.spec_status_var.set(f"Receiving image: {frame_id}")
+                            self.spec_status_var.set(
+                                f"Receiving image: {frame_id}"
+                            )
                     cv2.waitKey(1)
         except cv2.error as exc:
             self._handle_spectrometry_display_error(exc)
@@ -357,139 +532,10 @@ class ControlUI:
         if not self._closing:
             self.root.after(50, self._schedule_spectrometry_display)
 
-    def _schedule_mechanical_telemetry_display(self):
-        """Refresh rolling telemetry plots for drill/linear signals."""
-        (
-            drill_speed_samples,
-            drill_current_samples,
-            linear_position_samples,
-            linear_current_samples,
-        ) = self.node.get_mechanical_telemetry_snapshot()
-        self._draw_telemetry_chart(
-            self.drill_speed_chart_canvas,
-            drill_speed_samples,
-            title="Drill Speed Telemetry",
-            unit_label="rps",
-            line_color="#00C853",
-        )
-        self._draw_telemetry_chart(
-            self.drill_current_chart_canvas,
-            drill_current_samples,
-            title="Drill Current Telemetry",
-            unit_label="A",
-            line_color="#FF9800",
-        )
-        self._draw_telemetry_chart(
-            self.linear_position_chart_canvas,
-            linear_position_samples,
-            title="Linear Position Telemetry",
-            unit_label="in",
-            line_color="#03A9F4",
-        )
-        self._draw_telemetry_chart(
-            self.linear_current_chart_canvas,
-            linear_current_samples,
-            title="Linear Current Telemetry",
-            unit_label="A",
-            line_color="#E91E63",
-        )
-
-        if not self._closing:
-            self.root.after(100, self._schedule_mechanical_telemetry_display)
-
-    def _draw_telemetry_chart(self, canvas, samples, title, unit_label, line_color):
-        """Render one scrolling line chart with dynamic axes and grid ticks."""
-        canvas.delete("all")
-        width = max(1, int(canvas.winfo_width()))
-        height = max(1, int(canvas.winfo_height()))
-        left = 110
-        right = width - 40
-        top = 50
-        bottom = height - 45
-
-        canvas.create_text(
-            left,
-            10,
-            text=title,
-            fill="#D7D7D7",
-            anchor="w",
-            font=("TkDefaultFont", 9, "bold"),
-        )
-
-        if right <= left or bottom <= top:
-            return
-
-        if not samples:
-            canvas.create_line(left, top, left, bottom, fill="#888888", width=1)
-            canvas.create_line(left, bottom, right, bottom, fill="#888888", width=1)
-            canvas.create_text(
-                (left + right) / 2,
-                (top + bottom) / 2,
-                text="No telemetry",
-                fill="#A0A0A0",
-            )
-            return
-
-        values = [value for _, value in samples]
-        min_value = min(values)
-        max_value = max(values)
-        value_range = max_value - min_value
-        if value_range <= 1e-9:
-            pad = max(abs(max_value) * TELEMETRY_Y_PADDING_RATIO, 1e-3)
-        else:
-            pad = value_range * TELEMETRY_Y_PADDING_RATIO
-        y_min = min_value - pad
-        y_max = max_value + pad
-        y_span = max(y_max - y_min, 1e-6)
-
-        for tick in range(TELEMETRY_Y_TICKS):
-            frac = tick / (TELEMETRY_Y_TICKS - 1)
-            y = bottom - frac * (bottom - top)
-            tick_value = y_min + frac * y_span
-            canvas.create_line(left, y, right, y, fill="#2A2A2A", width=1)
-            canvas.create_text(
-                left - 8,
-                y,
-                text=f"{tick_value:.2f}",
-                fill="#BFBFBF",
-                anchor="e",
-            )
-
-        for tick in range(TELEMETRY_X_TICKS):
-            frac = tick / (TELEMETRY_X_TICKS - 1)
-            x = left + frac * (right - left)
-            seconds_ago = int(round((1.0 - frac) * TELEMETRY_WINDOW_S))
-            label = "now" if seconds_ago == 0 else f"-{seconds_ago}s"
-            canvas.create_line(x, bottom, x, top, fill="#1C1C1C", width=1)
-            canvas.create_text(x, bottom + 14, text=label, fill="#A0A0A0", anchor="n")
-
-        canvas.create_line(left, top, left, bottom, fill="#888888", width=1)
-        canvas.create_line(left, bottom, right, bottom, fill="#888888", width=1)
-
-        now = time.monotonic()
-        window_start = now - TELEMETRY_WINDOW_S
-        points = []
-        for sample_time, value in samples:
-            x_ratio = (sample_time - window_start) / TELEMETRY_WINDOW_S
-            x = left + max(0.0, min(1.0, x_ratio)) * (right - left)
-            y_ratio = (value - y_min) / y_span
-            y = bottom - max(0.0, min(1.0, y_ratio)) * (bottom - top)
-            points.extend([x, y])
-
-        if len(points) >= 4:
-            canvas.create_line(*points, fill=line_color, width=2)
-
-        canvas.create_text(
-            right,
-            10,
-            text=f"latest {values[-1]:.2f} {unit_label}",
-            fill="#D7D7D7",
-            anchor="e",
-            font=("TkDefaultFont", 9),
-        )
-
     def _handle_spectrometry_display_error(self, exc):
-        self.node.get_logger().error(f"Spectrometry image display failed: {exc}")
+        self.node.get_logger().error(
+            f"Spectrometry image display failed: {exc}"
+        )
         self.node.set_spectrometry_enabled(False)
         self.spectrometry_enabled = False
         self.spectrometry_request_pending = False
@@ -498,127 +544,25 @@ class ControlUI:
         self.spec_enable_button.config(text="Enable")
         self._set_spectrometry_action_state(tk.DISABLED)
 
-    def toggle_drill_auto(self):
-        if not self.mechanical_systems_enabled:
-            return
-        self.drill_auto_enabled = not self.drill_auto_enabled
-        self.node.set_drill_active(self.drill_auto_enabled, 1.0)
-        self.drill_status_var.set("On (Auto)" if self.drill_auto_enabled else "Off")
-        self.drill_button.config(
-            text="Auto Stop" if self.drill_auto_enabled else "Auto Start"
-        )
-
-    def start_drill_hold(self, _event):
-        if not self.mechanical_systems_enabled:
-            return
-        if self.drill_auto_enabled:
-            self.drill_auto_enabled = False
-            self.drill_button.config(text="Auto Start")
-        self.node.set_drill_active(True, 1.0)
-        self.drill_status_var.set("On (Hold)")
-
-    def stop_drill_hold(self, _event):
-        if not self.mechanical_systems_enabled:
-            return
-        self.node.set_drill_active(False, 0.0)
-        self.drill_status_var.set("Off")
-
-    def toggle_cap(self):
-        if not self.mechanical_systems_enabled:
-            return
-        target = not self.cap_engaged
-        ok = self.node.set_cap_state(target)
-        if not ok:
-            messagebox.showerror(
-                "Execution Error",
-                "Drill cap service call failed or timed out.",
-            )
-            return
-        self.cap_engaged = target
-        self.cap_status_var.set("Engaged" if target else "Disengaged")
-        self.cap_button.config(text="Disengage" if target else "Engage")
-
-    def _get_linear_command(self):
-        speed_text = self.linear_speed_var.get().strip()
-        try:
-            speed = float(speed_text)
-        except ValueError:
-            messagebox.showerror("Invalid Input", "Linear velocity must be a number.")
-            return None
-
-        direction = 1.0 if self.linear_direction_var.get() == "Extend (+)" else -1.0
-        signed_inches_per_s = speed * direction
-        return signed_inches_per_s * LINEAR_ROTATIONS_PER_INCH
-
-    def toggle_linear_auto(self):
-        if not self.mechanical_systems_enabled:
-            return
-        if self.linear_auto_enabled:
-            self.linear_auto_enabled = False
-            self.node.set_linear_active(False, 0.0)
-            self.linear_auto_button.config(text="Auto Start")
-            self.linear_status_var.set("Not Publishing")
-            return
-
-        signed_speed = self._get_linear_command()
-        if signed_speed is None:
-            return
-        self.linear_auto_enabled = True
-        self.node.set_linear_active(True, signed_speed)
-        self.linear_auto_button.config(text="Auto Stop")
-        commanded_inches_per_s = signed_speed / LINEAR_ROTATIONS_PER_INCH
-        self.linear_status_var.set(
-            f"Commanded {commanded_inches_per_s:.3f} in/s (Auto)"
-        )
-
-    def start_linear_hold(self, _event):
-        if not self.mechanical_systems_enabled:
-            return
-        signed_speed = self._get_linear_command()
-        if signed_speed is None:
-            return
-        if self.linear_auto_enabled:
-            self.linear_auto_enabled = False
-            self.linear_auto_button.config(text="Auto Start")
-        self.node.set_linear_active(True, signed_speed)
-        commanded_inches_per_s = signed_speed / LINEAR_ROTATIONS_PER_INCH
-        self.linear_status_var.set(
-            f"Commanded {commanded_inches_per_s:.3f} in/s (Hold)"
-        )
-
-    def stop_linear_hold(self, _event):
-        if not self.mechanical_systems_enabled:
-            return
-        self.node.set_linear_active(False, 0.0)
-        self.linear_status_var.set("Not Publishing")
-
-    def stop_linear(self):
-        if not self.mechanical_systems_enabled:
-            return
-        self.linear_auto_enabled = False
-        self.linear_auto_button.config(text="Auto Start")
-        self.node.set_linear_active(False, 0.0)
-        self.linear_status_var.set("Not Publishing")
-
     def on_close(self):
-        """Shutdown ROS resources and terminate the Tk application cleanly."""
+        """Shut down ROS resources and terminate the Tk application cleanly."""
         self._closing = True
+        self.node.set_science_locked(True)
         self.node.set_spectrometry_enabled(False)
+        self.executor.shutdown(timeout_sec=1.0)
         self.node.destroy_node()
-        rclpy.shutdown()
+        if rclpy.ok():
+            rclpy.shutdown()
         if self.spin_thread.is_alive():
             self.spin_thread.join(timeout=1.0)
         self.root.destroy()
 
 
 class _ControlNode(Node):
-    """ROS-side command, service, and telemetry integration for the UI."""
+    """Provide ROS spectrometry and mechanical integration for the UI."""
 
     def __init__(self):
-        super().__init__("spectrometer_drill_ui")
-        self.drill_pub = self.create_publisher(Float32, "/drill/control", 10)
-        self.linear_pub = self.create_publisher(Float32, "/linear_actuator/control", 10)
-        self.cap_client = self.create_client(SetBool, "/drill/cap/set_engaged")
+        super().__init__("spectrometer_ui")
         self.spectrometry_client = self.create_client(
             SpectrometryInterface, "spectrometry_chart"
         )
@@ -630,81 +574,164 @@ class _ControlNode(Node):
         self.spectrometry_save_dir = Path.cwd() / "spectrometry_folder"
         self.spectrometry_save_dir.mkdir(parents=True, exist_ok=True)
         self.spectrometry_enabled = False
-        # Spectrometry image stream (display + autosave in callback).
         self.spectrometry_sub = self.create_subscription(
             Image,
             "camera/image",
             self._spectrometry_image_callback,
             10,
         )
-        self.telemetry_lock = threading.Lock()
-        self.drill_speed_samples = deque()
-        self.drill_current_samples = deque()
-        self.linear_position_samples = deque()
-        self.linear_current_samples = deque()
-        # Mechanical telemetry streams used by the UI charts.
-        self.drill_speed_sub = self.create_subscription(
-            Float32,
-            "drill/speed",
-            self._drill_speed_callback,
-            10,
+        self.declare_parameter(
+            "mechanical_command_topic", "science/mechanical/control"
         )
-        self.drill_current_sub = self.create_subscription(
-            Float32,
-            "drill/current",
-            self._drill_current_callback,
-            10,
+        self.declare_parameter(
+            "mechanical_status_topic", "science/mechanical/status"
         )
-        self.linear_position_sub = self.create_subscription(
-            Float32,
-            "linear_actuator/position",
-            self._linear_position_callback,
-            10,
+        mechanical_qos = QoSProfile(
+            history=HistoryPolicy.KEEP_LAST,
+            depth=1,
+            reliability=ReliabilityPolicy.BEST_EFFORT,
         )
-        self.linear_current_sub = self.create_subscription(
-            Float32,
-            "linear_actuator/current",
-            self._linear_current_callback,
-            10,
+        self.mechanical_callback_group = MutuallyExclusiveCallbackGroup()
+        self.mechanical_command_lock = threading.Lock()
+        self.mechanical_command_sequence = 0
+        self.mechanical_command_state = {
+            "controls_unlocked": False,
+            **{system_name: False for system_name in MECHANICAL_SYSTEM_NAMES},
+        }
+        self.mechanical_status_lock = threading.Lock()
+        self.mechanical_status = None
+        self.mechanical_command_publisher = self.create_publisher(
+            SpectrometryMechanicalControlMessage,
+            self.get_parameter("mechanical_command_topic").value,
+            mechanical_qos,
         )
-        self.drill_active = False
-        self.drill_value = 0.0
-        self.linear_active = False
-        self.linear_value = 0.0
-        self.publish_timer = self.create_timer(1.0 / 30.0, self._publish_active_commands)
+        self.mechanical_status_subscription = self.create_subscription(
+            SpectrometryMechanicalStatusMessage,
+            self.get_parameter("mechanical_status_topic").value,
+            self._mechanical_status_callback,
+            mechanical_qos,
+            callback_group=self.mechanical_callback_group,
+        )
+        self.mechanical_publish_timer = self.create_timer(
+            1.0 / 30.0,
+            self._publish_mechanical_command,
+            callback_group=self.mechanical_callback_group,
+        )
+        self._publish_mechanical_command()
 
-    def publish_drill(self, value):
-        msg = Float32()
-        msg.data = float(value)
-        self.drill_pub.publish(msg)
+    def set_science_locked(self, locked):
+        """Update and immediately publish the complete master-control state."""
+        with self.mechanical_command_lock:
+            if locked:
+                self.mechanical_command_state["controls_unlocked"] = False
+                for system_name in MECHANICAL_SYSTEM_NAMES:
+                    self.mechanical_command_state[system_name] = False
+            else:
+                self.mechanical_command_state["controls_unlocked"] = True
+            self._increment_mechanical_sequence_locked()
+        self._publish_mechanical_command()
 
-    def publish_linear(self, value):
-        msg = Float32()
-        msg.data = float(value)
-        self.linear_pub.publish(msg)
+    def send_mechanical_states(self, states):
+        """Update desired outputs and immediately publish the full snapshot."""
+        unknown_systems = set(states) - set(MECHANICAL_SYSTEM_NAMES)
+        if unknown_systems:
+            self.get_logger().error(
+                "Unknown mechanical systems requested: "
+                f"{sorted(unknown_systems)}"
+            )
+            return False
 
-    def set_drill_active(self, active, value):
-        self.drill_active = bool(active)
-        self.drill_value = float(value)
-        if self.drill_active:
-            self.publish_drill(self.drill_value)
-        else:
-            self.publish_drill(0.0)
+        with self.mechanical_command_lock:
+            if (
+                any(states.values())
+                and not self.mechanical_command_state["controls_unlocked"]
+            ):
+                self.get_logger().warning(
+                    "Ignored mechanical ON command while science is locked"
+                )
+                return False
+            for system_name, state in states.items():
+                self.mechanical_command_state[system_name] = bool(state)
+            self._increment_mechanical_sequence_locked()
+        self._publish_mechanical_command()
+        return True
 
-    def set_linear_active(self, active, value):
-        self.linear_active = bool(active)
-        self.linear_value = float(value)
-        if self.linear_active:
-            self.publish_linear(self.linear_value)
-        else:
-            self.publish_linear(0.0)
+    def _increment_mechanical_sequence_locked(self):
+        self.mechanical_command_sequence = (
+            self.mechanical_command_sequence + 1
+        ) & 0xFFFFFFFF
 
-    def _publish_active_commands(self):
-        """Continuously republish active drill/linear commands while enabled."""
-        if self.drill_active:
-            self.publish_drill(self.drill_value)
-        if self.linear_active:
-            self.publish_linear(self.linear_value)
+    def _publish_mechanical_command(self):
+        """Publish the desired state heartbeat used by the rover watchdog."""
+        with self.mechanical_command_lock:
+            sequence = self.mechanical_command_sequence
+            state = dict(self.mechanical_command_state)
+
+        msg = SpectrometryMechanicalControlMessage()
+        msg.sequence = sequence
+        msg.controls_unlocked = state["controls_unlocked"]
+        for system_name, field_name in MECHANICAL_SYSTEM_FIELDS.items():
+            setattr(msg, field_name, state[system_name])
+        self.mechanical_command_publisher.publish(msg)
+
+    def _mechanical_status_callback(self, msg):
+        """Cache the latest rover mechanical status."""
+        with self.mechanical_status_lock:
+            self.mechanical_status = {
+                "received_at": time.monotonic(),
+                "command_sequence": int(msg.command_sequence),
+                "command_link_active": bool(msg.command_link_active),
+                "can_connected": bool(msg.can_connected),
+                "command_state_valid": bool(msg.command_state_valid),
+                "controls_unlocked": bool(msg.controls_unlocked),
+                "states": {
+                    system_name: bool(getattr(msg, field_name))
+                    for system_name, field_name in (
+                        MECHANICAL_SYSTEM_FIELDS.items()
+                    )
+                },
+            }
+
+    def get_mechanical_status_snapshot(self):
+        """Return a thread-safe rover status and desired-command snapshot."""
+        with self.mechanical_command_lock:
+            desired_sequence = self.mechanical_command_sequence
+            desired_controls_unlocked = self.mechanical_command_state[
+                "controls_unlocked"
+            ]
+        with self.mechanical_status_lock:
+            status = (
+                dict(self.mechanical_status)
+                if self.mechanical_status is not None
+                else None
+            )
+
+        status_available = bool(
+            status
+            and time.monotonic() - status["received_at"]
+            <= MECHANICAL_STATUS_TIMEOUT_S
+        )
+        if not status_available:
+            return {
+                "status_available": False,
+                "command_pending": False,
+                "command_link_active": False,
+                "can_connected": False,
+                "command_state_valid": False,
+                "controls_unlocked": False,
+                "desired_controls_unlocked": desired_controls_unlocked,
+                "states": {
+                    system_name: None
+                    for system_name in MECHANICAL_SYSTEM_NAMES
+                },
+            }
+
+        status["status_available"] = True
+        status["command_pending"] = (
+            status["command_sequence"] != desired_sequence
+        )
+        status["desired_controls_unlocked"] = desired_controls_unlocked
+        return status
 
     def set_spectrometry_enabled(self, enabled):
         enabled = bool(enabled)
@@ -741,11 +768,15 @@ class _ControlNode(Node):
         try:
             cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
         except Exception as exc:
-            self.get_logger().error(f"Failed to convert spectrometry image: {exc}")
+            self.get_logger().error(
+                f"Failed to convert spectrometry image: {exc}"
+            )
             return
 
         frame_id = msg.header.frame_id or "camera_image"
-        image_path = self._write_spectrometry_image(cv_image, frame_id, msg.header.stamp)
+        image_path = self._write_spectrometry_image(
+            cv_image, frame_id, msg.header.stamp
+        )
         with self.spectrometry_image_lock:
             self.spectrometry_image = cv_image
             self.spectrometry_frame_id = frame_id
@@ -753,13 +784,9 @@ class _ControlNode(Node):
 
         self.get_logger().info(f"got a new image from frame_id:={frame_id}")
         if image_path is not None:
-            self.get_logger().info(f"saved spectrometry image: {image_path.name}")
-
-    def get_latest_spectrometry_image(self):
-        with self.spectrometry_image_lock:
-            if self.spectrometry_image is None:
-                return None
-            return self.spectrometry_image.copy()
+            self.get_logger().info(
+                f"saved spectrometry image: {image_path.name}"
+            )
 
     def get_spectrometry_image_snapshot(self):
         with self.spectrometry_image_lock:
@@ -772,11 +799,13 @@ class _ControlNode(Node):
             )
 
     def _write_spectrometry_image(self, image, frame_id, stamp):
-        """Save one image to `spectrometry_folder` using frame/time naming."""
+        """Save one image using frame/time naming."""
         timestamp = datetime.fromtimestamp(stamp.sec + (stamp.nanosec * 1e-9))
         output_path = self._build_image_output_path(frame_id, timestamp)
         if not cv2.imwrite(str(output_path), image):
-            self.get_logger().error(f"Failed to save spectrometry image: {output_path}")
+            self.get_logger().error(
+                f"Failed to save spectrometry image: {output_path}"
+            )
             return None
         return output_path
 
@@ -793,55 +822,15 @@ class _ControlNode(Node):
             return "ninhydrin"
         return "unknown"
 
-    def _drill_speed_callback(self, msg):
-        self._append_telemetry_sample(self.drill_speed_samples, float(msg.data))
-
-    def _linear_position_callback(self, msg):
-        position_inches = float(msg.data) / LINEAR_ROTATIONS_PER_INCH
-        self._append_telemetry_sample(self.linear_position_samples, position_inches)
-
-    def _drill_current_callback(self, msg):
-        self._append_telemetry_sample(self.drill_current_samples, float(msg.data))
-
-    def _linear_current_callback(self, msg):
-        self._append_telemetry_sample(self.linear_current_samples, float(msg.data))
-
-    def _append_telemetry_sample(self, series, value):
-        """Append sample then trim to the configured rolling time window."""
-        now = time.monotonic()
-        with self.telemetry_lock:
-            series.append((now, value))
-            self._prune_telemetry_locked(series, now)
-
-    def _prune_telemetry_locked(self, series, now):
-        cutoff = now - TELEMETRY_WINDOW_S
-        while series and series[0][0] < cutoff:
-            series.popleft()
-
-    def get_mechanical_telemetry_snapshot(self):
-        """Return thread-safe copies of all four telemetry series."""
-        now = time.monotonic()
-        with self.telemetry_lock:
-            self._prune_telemetry_locked(self.drill_speed_samples, now)
-            self._prune_telemetry_locked(self.drill_current_samples, now)
-            self._prune_telemetry_locked(self.linear_position_samples, now)
-            self._prune_telemetry_locked(self.linear_current_samples, now)
-            return (
-                list(self.drill_speed_samples),
-                list(self.drill_current_samples),
-                list(self.linear_position_samples),
-                list(self.linear_current_samples),
-            )
-
     def send_spectrometry_request(self, camera_id, reaction_type):
-        """Issue async service request and wait with a short timeout budget."""
+        """Issue an asynchronous service request with a short timeout."""
         if not self.spectrometry_client.wait_for_service(timeout_sec=1.0):
             return False
 
-        req = SpectrometryInterface.Request()
-        req.camera_id = int(camera_id)
-        req.reaction_type = int(reaction_type)
-        future = self.spectrometry_client.call_async(req)
+        request = SpectrometryInterface.Request()
+        request.camera_id = int(camera_id)
+        request.reaction_type = int(reaction_type)
+        future = self.spectrometry_client.call_async(request)
 
         deadline = time.monotonic() + 3.0
         while rclpy.ok() and not future.done():
@@ -850,31 +839,7 @@ class _ControlNode(Node):
                 return False
             time.sleep(min(0.02, remaining))
 
-        if not future.done():
-            return False
-        if future.exception() is not None:
-            return False
-
-        response = future.result()
-        return bool(response and response.success)
-
-    def set_cap_state(self, engaged):
-        if not self.cap_client.wait_for_service(timeout_sec=1.0):
-            return False
-
-        req = SetBool.Request()
-        req.data = bool(engaged)
-        future = self.cap_client.call_async(req)
-
-        deadline = self.get_clock().now().nanoseconds + int(2.0 * 1e9)
-        while rclpy.ok() and not future.done():
-            if self.get_clock().now().nanoseconds > deadline:
-                return False
-            threading.Event().wait(0.02)
-
-        if not future.done():
-            return False
-        if future.exception() is not None:
+        if not future.done() or future.exception() is not None:
             return False
 
         response = future.result()
