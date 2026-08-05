@@ -31,12 +31,13 @@ class GripperCanControl(Node):
         
         self.declare_parameter('joy_publish_rate', 30)
         self.declare_parameter('can', "can0")
+        self.declare_parameter('node_id', 12)
         self.joy_publish_rate = self.get_parameter('joy_publish_rate').value
         self.can_network = self.get_parameter('can').value
 
         self.publish_rate = 100 #[hz]
         #odrive params
-        self.node_id = 6
+        self.node_id = self.get_parameter('node_id').value
         self.laser_pin = 10
         self.lights_pin = 9
 
