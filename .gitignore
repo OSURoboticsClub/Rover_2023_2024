@@ -2,6 +2,7 @@
 /.agents/
 /.codex/
 /.idea/
+.vscode
 
 # Generated build outputs
 build/
