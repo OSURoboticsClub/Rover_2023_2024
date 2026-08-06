@@ -106,13 +106,14 @@ class CameraCaptureNode(Node):
             f'image/jpeg,width={cap_width},height={cap_height},framerate={cap_framerate}/1 ! '
             f'nvv4l2decoder mjpeg=1 ! nvvidconv ! tee name=t '
             f't. ! queue ! rtpvrawpay ! udpsink host=127.0.0.1 port={mux_port} sync=false async=false '
-            f't. ! queue leaky=downstream ! videoscale ! '
+            f't. ! queue leaky=downstream max-size-buffers=1 max-size-bytes=0 max-size-time=0 ! videoscale ! '
             f'video/x-raw,width={stream_width},height={stream_height},format=I420 ! '
             f'nvvidconv ! video/x-raw(memory:NVMM),format=NV12 ! '
             f'nvv4l2h265enc preset-level={preset_level} bitrate={bitrate} ! '
             f'h265parse ! rtph265pay config-interval=1 ! '
             f'rtpulpfecenc percentage={fec_percentage} ! '
-            f'udpsink host={udp_host} port={udp_port} sync=false'
+            f'rtpstreampay ! '
+            f'tcpserversink host={udp_host} port={udp_port} sync=false'
         )
 
         self.get_logger().info(f'Launching pipeline:\n{pipeline_str}')

@@ -16,7 +16,8 @@
 
 sudo nvpmodel -m 0
 sudo jetson_clocks
-export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+#export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+export RMW_IMPLEMENTATION=rmw_zenoh_cpp
 sudo modprobe v4l2loopback video_nr=64,99,100 exclusive_caps=1
 source /home/makemorerobot/Rover_2023_2024/software/install/setup.bash
 sleep 15

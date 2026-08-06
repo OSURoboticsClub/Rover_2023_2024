@@ -166,7 +166,8 @@ class CameraCaptureNode(Node):
             f'{encoder_pipeline}'
             f'h265parse ! rtph265pay config-interval=1 ! '
             f'rtpulpfecenc percentage={fec_percentage} ! '
-            f'udpsink host={udp_host} port={udp_port} sync=false'
+            f'rtpstreampay ! '
+            f'tcpserversink host={udp_host} port={udp_port} sync=false'
         )
 
         self.get_logger().info(f'Launching pipeline:\n{pipeline_str}')

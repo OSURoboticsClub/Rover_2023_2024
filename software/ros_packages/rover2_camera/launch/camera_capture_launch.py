@@ -12,8 +12,8 @@ from launch.substitutions import LaunchConfiguration
 #DRIVE_IP = '192.168.1.6'
 #ARM_IP = '192.168.1.8'
 
-DRIVE_IP = '239.0.0.1'
-ARM_IP = '239.0.0.1'
+DRIVE_IP = '0.0.0.0'
+ARM_IP = '0.0.0.0'
 
 def generate_launch_description():
     # Replace these with your camera serial numbers
