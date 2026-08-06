@@ -15,24 +15,24 @@ find_package(std_srvs REQUIRED)
 # find_package(<dependency> REQUIRED)
 
 install(PROGRAMS
-  src/linear_actuator_control.py
+  rover2_drill/linear_actuator_control.py
   DESTINATION lib/${PROJECT_NAME}
   # TODO: remove rename
   RENAME linear_actuator_control
 )
 # TODO: remove following install block
 install(PROGRAMS
-  src/linear_actuator_command.py
+  rover2_drill/linear_actuator_command.py
   DESTINATION lib/${PROJECT_NAME}
   RENAME linear_actuator_command
 )
 install(PROGRAMS
-  src/drill_control.py
+  rover2_drill/drill_control.py
   DESTINATION lib/${PROJECT_NAME}
   RENAME drill_control
 )
 install(PROGRAMS
-  src/drill_cap_control.py
+  rover2_drill/drill_cap_control.py
   DESTINATION lib/${PROJECT_NAME}
   RENAME drill_cap_control
 )
@@ -48,5 +48,10 @@ if(BUILD_TESTING)
   set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
+
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}
+)
 
 ament_package()

@@ -7,6 +7,7 @@ from rcl_interfaces.msg import SetParametersResult
 from gi.repository import Gst, GLib
 
 from rover2_camera_interface.srv import CamParams
+from std_srvs.srv import SetBool
 
 gi.require_version('Gst', '1.0')
 Gst.init(sys.argv)
@@ -30,7 +31,14 @@ class CameraCaptureNode(Node):
         self.declare_parameter('udp_host', '192.168.1.1')
         self.declare_parameter('udp_port', 42067)
         self.declare_parameter('mux_port', 20000)
+        self.declare_parameter('ret', 0.0)
+        self.declare_parameter('camera_matrix', [0.0])
+        self.declare_parameter('distortion_coefficients', [0.0])
 
+        self.declare_parameter('namespace', 'pan_tilt')
+
+        self.create_service(SetBool, f'/{self.get_parameter("namespace").value}/toggle_camera', self.toggle_camera_callback)
+    
         self.pipeline = None
         self.loop = None
         self.gst_thread = None
@@ -39,10 +47,22 @@ class CameraCaptureNode(Node):
         self.start_pipeline()
 
         device_name = self.get_parameter('device').value
-        service_name = f'{device_name.replace("/", "_")}_cam_params'
+        service_name = f'/{self.get_parameter("namespace").value}/{device_name.replace("/", "_")}_cam_params'
         self.create_service(CamParams, service_name, self.cam_params_callback)
         self.get_logger().info(f'CamParams service available at: {service_name}')
 
+    def toggle_camera_callback(self, request, response):
+        if request.data:
+            self.get_logger().info("Starting camera...")
+            self.start_pipeline()
+            response.success = True
+            response.message = "Camera started."
+        else:
+            self.get_logger().info("Stopping camera...")
+            self.stop_pipeline()
+            response.success = True
+            response.message = "Camera stopped."
+        return response
 
     def cam_params_callback(self, request, response):
         self.get_logger().info("CamParams service received, updating pipeline...")
@@ -64,6 +84,9 @@ class CameraCaptureNode(Node):
         self.start_pipeline()
 
     def start_pipeline(self):
+        if self.pipeline:
+            self.get_logger().info("Pipeline is already started")
+            return
         # Read parameters
         device = self.get_parameter('device').value
         cap_width = self.get_parameter('cap_width').value
@@ -83,7 +106,7 @@ class CameraCaptureNode(Node):
             f'image/jpeg,width={cap_width},height={cap_height},framerate={cap_framerate}/1 ! '
             f'nvv4l2decoder mjpeg=1 ! nvvidconv ! tee name=t '
             f't. ! queue ! rtpvrawpay ! udpsink host=127.0.0.1 port={mux_port} sync=false async=false '
-            f't. ! queue ! videoscale ! '
+            f't. ! queue leaky=downstream ! videoscale ! '
             f'video/x-raw,width={stream_width},height={stream_height},format=I420 ! '
             f'nvvidconv ! video/x-raw(memory:NVMM),format=NV12 ! '
             f'nvv4l2h265enc preset-level={preset_level} bitrate={bitrate} ! '
@@ -114,6 +137,7 @@ class CameraCaptureNode(Node):
         if self.pipeline:
             self.get_logger().info("Stopping pipeline...")
             self.pipeline.set_state(Gst.State.NULL)
+            self.pipeline.get_state(Gst.CLOCK_TIME_NONE)
             self.pipeline = None
         if self.loop and self.loop.is_running():
             self.loop.quit()

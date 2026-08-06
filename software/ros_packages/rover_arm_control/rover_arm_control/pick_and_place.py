@@ -14,7 +14,7 @@ from rclpy.action import ActionClient
 from rclpy.callback_groups import MutuallyExclusiveCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
 
-from geometry_msgs.msg import TwistStamped, Twist, PoseStamped
+from geometry_msgs.msg import TwistStamped, Twist, PoseStamped, PointStamped
 from rcl_interfaces.msg import Parameter, ParameterValue, ParameterType
 from rcl_interfaces.srv import SetParameters
 from sensor_msgs.msg import JointState, Joy, PointCloud2
@@ -37,6 +37,8 @@ from pc_processing.srv import ResetObjects
 
 #python stuff
 import time
+from collections import deque
+import numpy as np
 
 class SquareMakingController(Node):
 
@@ -73,8 +75,8 @@ class SquareMakingController(Node):
         self.controller_client = self.make_client(SwitchController, '/controller_manager/switch_controller')
         self.configure_servo_cli = self.make_client(SetParameters, '/servo_node/set_parameters')
         self.start_servo_client = self.make_client(Trigger, '/servo_node/start_servo')
-        self.configure_servo_cli = self.make_client(SetParameters, '/servo_node/set_parameters')
         self.start_object_cli = self.make_client(ResetObjects, '/reset_pc_processing')
+        self.set_plane_cli = self.make_client(Trigger, '/set_ground_plane')
 
         #Publishers
         self.publisher_ = self.create_publisher(TwistStamped, '/servo_node/delta_twist_cmds', 1)
@@ -91,6 +93,13 @@ class SquareMakingController(Node):
             PointCloud2,
             "/obj_centroids",
             self.objects_callback,
+            10
+        )
+
+        self.pointing_sub = self.create_subscription(
+            PointStamped,
+            "/aruco/ground_intersection",
+            self.pointing_callback,
             10
         )
 
@@ -111,26 +120,34 @@ class SquareMakingController(Node):
         self.curr_dir = "down"
         self.loops = 0
         self.cycles = 0
-
         self.sq_keys = ["down", "right", "up", "left"]
         self.scan_iter = 0
+
         #Square sides [m]
         self.square_dict = {
-            "down" : self.make_posestamped([0.0, -0.15, 0.0, 0.0, 0.0, 0.0, 0.0]),
-            "up" : self.make_posestamped([0.0, 0.15, 0.0, 0.0, 0.0, 0.0, 0.0]),
-            "right" : self.make_posestamped([0.75, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
-            "left" : self.make_posestamped([-0.75 ,0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+            "down" : self.make_posestamped([-0.15, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
+            "up" : self.make_posestamped([0.15, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
+            "right" : self.make_posestamped([0.0, -0.75, 0.0, 0.0, 0.0, 0.0, 0.0]),
+            "left" : self.make_posestamped([0.0 ,0.75, 0.0, 0.0, 0.0, 0.0, 0.0])
         }
 
         #Arm params
-        self.frame_id = "arm_gripper" # usually "arm_gripper"
-        self.joint_names = ['base_joint', 'shoulder_joint', 'elbow_pitch_joint', 
-                  'elbow_roll_joint', 'wrist_pitch_joint', 'wrist_roll_joint']
+        self.frame_id = "rover_arm_gripper" # usually "arm_gripper"
+        self.joint_names = ['rover_arm_base_joint', 'rover_arm_shoulder_joint', 'rover_arm_elbow_pitch_joint', 
+                  'rover_arm_elbow_roll_joint', 'rover_arm_wrist_pitch_joint', 'rover_arm_wrist_roll_joint']
+        self.gripper_offset = 0.335
         
         #Visual segmentation params
-        self.object_pose = self.make_posestamped([0.0, 0.650, 0.304, 0.001, 1.000, 0.008, -0.005])
-        self.object_list = [self.make_posestamped([0.0, 0.650, 0.304, 0.001, 1.000, 0.008, -0.005])]
+        self.object_pose = None
+        self.object_list = []
 
+        #Ground intersection point params
+        self.deviation_threshold = 0.1  # meters
+        self.points = deque(maxlen=10)  # Store the last 10 points
+        self.points_mean = np.zeros(3)
+        self.points_std = 100 * np.ones(3)
+        self.within_radius = 0.2  # meters
+        self.pick_height = None
 
     def make_client(self, srv_type, name):
         """ Create a client to a service.
@@ -162,19 +179,19 @@ class SquareMakingController(Node):
         self.request = SwitchController.Request()
         if servo:
             if not sim:
-                self.request.activate_controllers = ["rover_arm_controller"] 
+                self.request.activate_controllers = ["rover_arm_velocity_controller"] 
                 self.request.deactivate_controllers = ["rover_arm_controller_moveit"]
             else:
-                self.request.activate_controllers = ["rover_arm_controller"] 
+                self.request.activate_controllers = ["rover_arm_velocity_controller"] 
                 self.request.deactivate_controllers = ["rover_arm_controller_moveit"]
             self.servo = True
         else:
             if not sim:
                 self.request.activate_controllers = ["rover_arm_controller_moveit"]
-                self.request.deactivate_controllers = ["rover_arm_controller"]
+                self.request.deactivate_controllers = ["rover_arm_velocity_controller"]
             else:
                 self.request.activate_controllers = ["rover_arm_controller_moveit"]
-                self.request.deactivate_controllers = ["rover_arm_controller"]
+                self.request.deactivate_controllers = ["rover_arm_velocity_controller"]
             self.servo = False
         self.request.timeout = rclpy.duration.Duration(seconds=5.0).to_msg()
 
@@ -201,9 +218,18 @@ class SquareMakingController(Node):
         self.future = self.configure_servo_cli.call_async(req)
 
     def joint_states_callback(self, msg):
+        """Callback function to stores joint states.
+        """
         self.latest_joint_state = msg
 
     def start_servo(self):
+        """Start moveit servo.
+
+        Returns
+        -------
+        future.result : Service Response
+            The result from the service call.
+        """
         # Starts servo node
         self.request = Trigger.Request()
         self.future = self.start_servo_client.call_async(self.request)
@@ -234,6 +260,14 @@ class SquareMakingController(Node):
     
     def objects_callback(self, msg):
         """Callback for object centroids.
+
+        This function receives a PointCloud2 message containing the centroids of detected objects and stores
+        them in self.object_list as PoseStamped messages.
+
+        Parameters
+        ----------
+        msg : PointCloud2
+            The point cloud message containing object centroids.
         """
         object_data = point_cloud2.read_points_list(msg, field_names=("x", "y", "z"), skip_nans=True)
         self.get_logger().info(f"Points {object_data}.")
@@ -242,8 +276,21 @@ class SquareMakingController(Node):
         self.object_list = []
         for point in object_data:
             # self.get_logger().info(f"Point {type(point.x)}.")
-            self.object_list.append(self.make_posestamped([float(point.x), float(point.y), float(point.z) + 0.335, 0.0, -1.0, 0.0, 0.0]))
-
+            self.object_list.append(self.make_posestamped([float(point.x), float(point.y), float(point.z) + self.gripper_offset, 0.7071068, 0.7071068, 0.0, 0.0]))
+        
+    def pointing_callback(self, msg):
+        """Callback for recieving the current ground intersection point from aruco detector.
+        
+        Parameters
+        ----------
+        msg : PointStamped
+            The point message containing the ground intersection point.
+        """
+        self.points.append(np.array([msg.point.x, msg.point.y, msg.point.z]))
+        if len(self.points) > 0:
+            self.points_mean = np.mean(self.points, axis=0)
+            self.points_std = np.std(self.points, axis=0)
+            # self.get_logger().info(f"Pointing mean: {self.points_mean}, std: {self.points_std}")
 
     def move_to_joint_positions(self, joint_pose):
         """"Move arm to a set of joint angles.
@@ -262,7 +309,7 @@ class SquareMakingController(Node):
         
         # Create a motion planning request
         motion_request = MotionPlanRequest()
-        motion_request.workspace_parameters.header.frame_id = "base_link"
+        motion_request.workspace_parameters.header.frame_id = "rover_arm_base_link"
         motion_request.workspace_parameters.header.stamp = self.get_clock().now().to_msg()
         
         # Set the planning group
@@ -346,7 +393,12 @@ class SquareMakingController(Node):
         self.get_logger().info(f"Latest joint states: {self.latest_joint_state.position}")
 
     def make_square(self, direction):
-        """
+        """This function sends a goal from the square_dict dictionary.
+
+        Parameters
+        ----------
+        direction : "right", "left", "up", "down"
+            The direction to move in the square.
         """
         self.move_success = False
         
@@ -358,6 +410,13 @@ class SquareMakingController(Node):
         self.sent_goal = True
 
     def gripper_control(self, close=True):
+        """ This function sends a goal to the gripper control action server.
+
+        Parameters
+        ----------
+        close : bool
+            Whether to close the gripper (True) or open it (False).
+        """
         self.move_success = False
 
         self.get_logger().info(f"sent gripper command close = {close}")
@@ -366,8 +425,28 @@ class SquareMakingController(Node):
         send_goal_future = self.gripper_control_client.send_goal_async(goal_msg)
         send_goal_future.add_done_callback(self.goal_response_callback)
         self.sent_goal = True
+    
+    def set_ground_plane(self):
+        """Service call to set the ground plane in aruco detector node.
+
+        Returns
+        -------
+        future.result : Service Response
+            The response from the service call.
+        """
+        self.get_logger().info("Setting ground plane...")
+        request = Trigger.Request()
+        future = self.set_plane_cli.call_async(request)
+        return future.result()
 
     def move_to_absolute_pose(self, pose):
+        """Sends a goal to absolute move action server.
+
+        Parameters
+        ----------
+        pose : PoseStamped
+            The pose to move the EE in the base frame.
+        """
         self.move_success = False
 
         self.get_logger().info(f"sent pose")
@@ -376,7 +455,15 @@ class SquareMakingController(Node):
         send_goal_future = self.absolute_move_client.send_goal_async(goal_msg)
         send_goal_future.add_done_callback(self.goal_response_callback)
         self.sent_goal = True
+
     def move_to_relative_pose(self, pose):
+        """Sends a goal to the relative move action server.
+
+        Parameters
+        ----------
+        pose : PoseStamped
+            The pose to move the EE relative to current pose.
+        """
         self.move_success = False
 
         self.get_logger().info(f"sent pose")
@@ -387,8 +474,24 @@ class SquareMakingController(Node):
         self.sent_goal = True
     
     def make_posestamped(self, pose_arr):
+        """Build a pose stamped message from an array.
+
+        Parameters
+        ----------
+        pose_arr : list
+            A list of pose values [x, y, z, qx, qy, qz, qw].
+
+        Returns
+        -------
+        pose : PoseStamped
+            The constructed PoseStamped message.
+        
+        Notes
+        -----
+        A header frame id should be added as a parameter.
+        """
         pose = PoseStamped()
-        pose.header.frame_id = "base_link"
+        pose.header.frame_id = "rover_arm_base_link"
         #set array to x,y,z pose positions
         pose.pose.position.x = pose_arr[0]
         pose.pose.position.y = pose_arr[1]
@@ -399,15 +502,66 @@ class SquareMakingController(Node):
         pose.pose.orientation.z = pose_arr[5]
         pose.pose.orientation.w = pose_arr[6]  # Neutral orientation
         return pose
+    
+    def get_object_from_intersection(self):
+        """Determine the object the user is pointing at. 
 
+        This function uses the intersection of an ArUco markers x-axis and the "ground" plane to find the 
+        closest object. The closes object must be within a set radius and the marker (intersection point) 
+        must not be moving too much (ie small standard deviation over the last 10 points). The function 
+        stores the pick height of the object for later use.
+
+        Returns
+        -------
+        best_point : PoseStamped
+            The pose of the selected object.
+        """
+        #return if not enough points or point has moved too much
+        if len(self.points) < 10 or np.any(self.points_std[0:2] > self.deviation_threshold) or self.object_list == []:
+            return None
+        best_dist = self.within_radius
+        best_point = None
+        for point in self.object_list:
+            dist = np.linalg.norm(
+                np.array([point.pose.position.x, point.pose.position.y])
+                - np.array([self.points_mean[0], self.points_mean[1]])
+            )
+            if dist <= best_dist:
+                best_point = point
+                # best_point.pose.position.z += self.gripper_offset
+        if best_point != None:
+            self.pick_height = best_point.pose.position.z
+        return best_point
+    
+    def get_location_from_intersection(self):
+        """Find the place location from ground intersection point.
+
+        This function returns the mean of the last 10 intersection points if they are stable enough (ie small 
+        standard deviation). Unlike the get_object_from_intersection function, this function is only finding 
+        a location not an object. 
+
+        Returns
+        -------
+        best_point : PoseStamped
+            The pose of the selected place location.
+        """
+        if len(self.points) < 10 or np.any(self.points_std[0:2] > self.deviation_threshold):
+            return None
+        return self.make_posestamped([self.points_mean[0], self.points_mean[1], self.pick_height, 0.7071068, 0.7071068, 0.0, 0.0])
     
     def get_EE_pose(self):
-        # Get the current pose of the gripper
+        """Get the current EE pose.
+
+        Returns
+        -------
+        current_pose : PoseStamped
+            The current EE pose.
+        """
         current_pose = PoseStamped()
         try:
             trans = self.tf_buffer.lookup_transform(
-                "base_link",  # target frame
-                "arm_gripper",  # source frame
+                "rover_arm_base_link",  # target frame
+                "rover_arm_gripper",  # source frame
                 rclpy.time.Time())  # latest available
 
             current_pose.header = trans.header
@@ -423,6 +577,15 @@ class SquareMakingController(Node):
         return current_pose
 
     def timer_callback(self): 
+        """The main control loop for the pick and place routine.
+
+        Notes
+        -----
+        The current routine uses moveit trajectory planner for all movements do to servo drift (12/16/2025).
+
+        Object detection finds the centroid of the top of the object. Does not fit a shape or determine grasp
+        orientation. This cannot be used for collision detection when moving around the objects or placing. 
+        """
         #step 1 move to scan position
         if self.state == "start":
             #self.get_logger().info(f"{self.state}")
@@ -444,7 +607,8 @@ class SquareMakingController(Node):
             elif self.move_success:
                 self.get_logger().info("goto scan")
                 self.reset_count_object(enable=True, reset=True)
-                self.state = "scan"
+                self.set_ground_plane()
+                self.state = "home"
                 # pose = self.get_EE_pose()
                 # self.get_logger().info(f"EE Pose: position=({pose.pose.position.x:.3f}, {pose.pose.position.y:.3f}, {pose.pose.position.z:.3f}), "
                 #                     f"orientation=({pose.pose.orientation.x:.3f}, {pose.pose.orientation.y:.3f}, "
@@ -498,14 +662,24 @@ class SquareMakingController(Node):
                 self.move_to_joint_positions(input_pos)
             if self.move_success:
                 self.get_logger().info("goto get pick input")
-                self.state = "get_pick_input"
+                self.state = "home"
+                self.points.clear()
+                self.points_mean = np.zeros(3)
+                self.points_std = 100 * np.ones(3)
                 self.sent_goal = False
 
         #step 4 get pick input
         if self.state == "get_pick_input":
-            self.get_logger().info("goto object")
-            self.object_pose = self.object_list[0]
-            self.state = "move_to_object"
+            # self.get_logger().info("goto object")
+
+            if self.object_list == []:
+                self.state = "home"
+            else:
+                self.object_pose = self.get_object_from_intersection()
+                if self.object_pose != None:
+                    self.get_logger().info("Goto Move to object")
+                    self.state = "move_to_object"
+                    self.get_logger().info(f"object pose {self.object_pose}")
 
         #step 4.5 move to movement position
         if self.state == "move_to_pick_mobility":
@@ -523,6 +697,7 @@ class SquareMakingController(Node):
         if self.state == "move_to_object":
             if not self.sent_goal:
                 time.sleep(1.00)
+                self.get_logger().info(f"Sent this object pose: {self.object_pose}")
                 # self.object_pose = self.make_posestamped([0.0, 0.650, 0.304, 0.001, 1.000, 0.008, -0.005])
                 self.move_to_absolute_pose(self.object_pose)
             elif self.move_success:
@@ -537,7 +712,7 @@ class SquareMakingController(Node):
         if self.state == "approach":
             if not self.sent_goal:
                 time.sleep(0.500)
-                approach_pose = self.make_posestamped([0.0, 0.0, -0.09, 0.0, 0.0, 0.0, 0.0, 0.0])
+                approach_pose = self.make_posestamped([0.0, 0.0, -0.15, 0.0, 0.0, 0.0, 0.0, 0.0])
                 self.move_to_relative_pose(approach_pose)
             elif self.move_success:
                 self.get_logger().info("Goto pick")
@@ -563,14 +738,19 @@ class SquareMakingController(Node):
                 self.switch_controller(servo=False)
                 self.move_to_joint_positions(input_pos)
             if self.move_success:
-                self.get_logger().info("goto get pick input")
-                self.state = "get_placd_input"
+                self.get_logger().info("goto get place input")
+                self.state = "get_place_input"
+                self.points.clear()
+                self.points_mean = np.zeros(3)
+                self.points_std = 100 * np.ones(3)
                 self.sent_goal = False
 
         #step 8 get place input
-        if self.state == "get_placd_input":
-            self.get_logger().info("goto place location")
-            self.state = "move_above_place_location"
+        if self.state == "get_place_input":
+            self.object_pose = self.get_location_from_intersection()
+            if self.object_pose != None:
+                self.get_logger().info("goto place location")
+                self.state = "move_above_place_location"
         
         #step 8.5 move to place mobility
         if self.state == "move_to_place_mobility":
@@ -588,7 +768,8 @@ class SquareMakingController(Node):
         if self.state == "move_above_place_location":
             if not self.sent_goal:
                 time.sleep(0.500)
-                self.object_pose = self.make_posestamped([0.0, 0.650, 0.304, 0.001, 1.000, 0.008, -0.005])
+                self.get_logger().info(f"Above place location {self.object_pose.pose.position}")
+                #   self.object_pose = self.make_posestamped([0.0, 0.650, 0.304, 0.001, 1.000, 0.008, -0.005])
                 self.move_to_absolute_pose(self.object_pose)
             elif self.move_success:
                 current_pose = self.get_EE_pose()
@@ -602,7 +783,7 @@ class SquareMakingController(Node):
         if self.state == "place_approach":
             if not self.sent_goal:
                 time.sleep(0.500)
-                approach_pose = self.make_posestamped([0.0, 0.0, -0.09, 0.0, 0.0, 0.0, 0.0, 0.0])
+                approach_pose = self.make_posestamped([0.0, 0.0, -0.15, 0.0, 0.0, 0.0, 0.0, 0.0])
                 self.move_to_relative_pose(approach_pose)
             elif self.move_success:
                 self.get_logger().info("Goto place")
@@ -630,7 +811,7 @@ class SquareMakingController(Node):
                 self.move_to_joint_positions(input_pos)
             if self.move_success:
                 self.get_logger().info("Done")
-                self.state = "home"
+                self.state = "start"
                 self.sent_goal = False
 
         #step 12 Return to Home sometimes

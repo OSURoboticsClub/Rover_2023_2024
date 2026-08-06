@@ -1,0 +1,110 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 100
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    drive_controller:
+      type: diff_drive_controller/DiffDriveController
+    rover_arm_controller:
+      type: position_controllers/JointGroupPositionController
+      #type: joint_trajectory_controller/JointTrajectoryController
+    rover_arm_controller_moveit:
+      type: joint_trajectory_controller/JointTrajectoryController
+    rover_arm_velocity_controller:
+      type: velocity_controllers/JointGroupVelocityController
+
+rover_arm_controller:
+  ros__parameters:
+    joints:
+      - rover_arm_base_joint
+      - rover_arm_shoulder_joint
+      - rover_arm_elbow_pitch_joint
+      - rover_arm_elbow_roll_joint
+      - rover_arm_wrist_pitch_joint
+      - rover_arm_wrist_roll_joint
+    command_interfaces:
+      - position
+      - velocity
+    state_interfaces:
+      - position
+      
+rover_arm_velocity_controller:
+  ros__parameters:
+    joints:
+      - rover_arm_base_joint
+      - rover_arm_shoulder_joint
+      - rover_arm_elbow_pitch_joint
+      - rover_arm_elbow_roll_joint
+      - rover_arm_wrist_pitch_joint
+      - rover_arm_wrist_roll_joint
+    command_interfaces:
+      - velocity
+      - velocity
+
+rover_arm_velocity_controller:
+  ros__parameters:
+    joints:
+      - rover_arm_base_joint
+      - rover_arm_shoulder_joint
+      - rover_arm_elbow_pitch_joint
+      - rover_arm_elbow_roll_joint
+      - rover_arm_wrist_pitch_joint
+      - rover_arm_wrist_roll_joint
+    command_interfaces:
+      - velocity
+
+rover_arm_controller_moveit:
+  ros__parameters:
+    joints:
+      - rover_arm_base_joint
+      - rover_arm_shoulder_joint
+      - rover_arm_elbow_pitch_joint
+      - rover_arm_elbow_roll_joint
+      - rover_arm_wrist_pitch_joint
+      - rover_arm_wrist_roll_joint
+    state_interfaces:
+      - position
+      - velocity
+    command_interfaces:
+      - position
+      - velocity
+
+drive_controller:
+  ros__parameters:
+    publish_rate: 30.0
+
+    enable_odom_tf: false   # Let ekf do odom. This still published the odom topic we could take as wheel odom tho
+
+    left_wheel_names:
+      - rover_front_left_wheel_joint
+      - rover_middle_left_wheel_joint
+      - rover_back_left_wheel_joint
+    right_wheel_names:
+      - rover_front_right_wheel_joint
+      - rover_middle_right_wheel_joint
+      - rover_back_right_wheel_joint
+    wheel_radius: 0.146
+    wheel_separation: 1.15    # This value gives decent odom yaw
+    
+    # odometry covariance values, Untuned 2/8/2025
+    pose_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]
+    twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.03]
+    # topmost frame of the robot  
+    odom_frame_id: odom
+    base_frame_id: rover_base_origin
+    use_stamped_velocities: false
+    linear:
+      x:
+        has_velocity_limits: true
+        max_velocity: 4.0
+        min_velocity: -4.0
+        has_acceleration_limits: true
+        max_acceleration: 2.0
+    angular:
+      z:
+        has_velocity_limits: true
+        max_velocity: 4.0
+        min_velocity: -4.0
+        has_acceleration_limits: true
+        max_acceleration: 2.0
+        min_acceleration: -2.0

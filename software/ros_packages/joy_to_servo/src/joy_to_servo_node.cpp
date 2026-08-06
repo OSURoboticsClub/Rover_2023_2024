@@ -50,8 +50,8 @@
 const std::string JOY_TOPIC = "/joy";
 const std::string TWIST_TOPIC = "/servo_node/delta_twist_cmds";
 const std::string JOINT_TOPIC = "/servo_node/delta_joint_cmds";
-const std::string EEF_FRAME_ID = "arm_gripper";
-const std::string BASE_FRAME_ID = "base_link";
+const std::string EEF_FRAME_ID = "rover_arm_gripper";
+const std::string BASE_FRAME_ID = "rover_arm_base_link";
 
 struct ControllerMappings {
 
@@ -124,17 +124,17 @@ bool convertJoyToCmd(const std::vector<float>& axes, const std::vector<int>& but
     return true;
   }
   else{ //joint by joint control
-    joint->joint_names.push_back("base_joint");
-    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("D_PAD_X")] * -0.30);
-    joint->joint_names.push_back("shoulder_joint");
-    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("D_PAD_Y")] * -0.25);
-    joint->joint_names.push_back("elbow_pitch_joint");
-    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("LEFT_STICK_Y")] * -0.30); //THIS JOINT IS BACKWARDS
-    joint->joint_names.push_back("elbow_roll_joint");
-    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("LEFT_STICK_X")] * -0.25);
-    joint->joint_names.push_back("wrist_pitch_joint");
-    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("RIGHT_STICK_Y")] * -0.30);
-    joint->joint_names.push_back("wrist_roll_joint");
+    joint->joint_names.push_back("rover_arm_base_joint");
+    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("D_PAD_X")] * -1.0);
+    joint->joint_names.push_back("rover_arm_shoulder_joint");
+    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("D_PAD_Y")] * -1.0);
+    joint->joint_names.push_back("rover_arm_elbow_pitch_joint");
+    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("LEFT_STICK_Y")] * -1.0); //THIS JOINT IS BACKWARDS
+    joint->joint_names.push_back("rover_arm_elbow_roll_joint");
+    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("LEFT_STICK_X")] * -1.0);
+    joint->joint_names.push_back("rover_arm_wrist_pitch_joint");
+    joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("RIGHT_STICK_Y")] * -1.0);
+    joint->joint_names.push_back("rover_arm_wrist_roll_joint");
     joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("RIGHT_STICK_X")]);
 
     return false;
@@ -185,46 +185,6 @@ public:
     servo_start_client_->wait_for_service(std::chrono::seconds(1));
     servo_start_client_->async_send_request(std::make_shared<std_srvs::srv::Trigger::Request>());
 
-    // Load the collision scene asynchronously
-    // collision_pub_thread_ = std::thread([this]() {
-    //   rclcpp::sleep_for(std::chrono::seconds(3));
-      // Create collision object, in the way of servoing
-      // moveit_msgs::msg::CollisionObject collision_object;
-      // collision_object.header.frame_id = "base_link";
-      // collision_object.id = "box";
-
-      // shape_msgs::msg::SolidPrimitive table_1;
-      // table_1.type = table_1.BOX;
-      // table_1.dimensions = { 0.04, 0.04, 2.0 };
-
-      // geometry_msgs::msg::Pose table_1_pose;
-      // table_1_pose.position.x = 0.0;
-      // table_1_pose.position.y = -0.5;
-      // table_1_pose.position.z = 1.0;
-
-      // shape_msgs::msg::SolidPrimitive table_2;
-      // table_2.type = table_2.BOX;
-      // table_2.dimensions = { 0.6, 0.4, 0.03 };
-
-      // geometry_msgs::msg::Pose table_2_pose;
-      // table_2_pose.position.x = 0.0;
-      // table_2_pose.position.y = -0.5;
-      // table_2_pose.position.z = 0.25;
-
-      // collision_object.primitives.push_back(table_1);
-      // collision_object.primitive_poses.push_back(table_1_pose);
-      // collision_object.primitives.push_back(table_2);
-      // collision_object.primitive_poses.push_back(table_2_pose);
-      // collision_object.operation = collision_object.ADD;
-
-      // moveit_msgs::msg::PlanningSceneWorld psw;
-      // // psw.collision_objects.push_back(collision_object);
-
-      // auto ps = std::make_unique<moveit_msgs::msg::PlanningScene>();
-      // ps->world = psw;
-      // ps->is_diff = true;
-      // collision_pub_->publish(std::move(ps));
-    // });
   }
 
   ~JoyToServoNode() override
@@ -254,7 +214,7 @@ public:
     {
       // publish the JointJog
       joint_msg->header.stamp = this->now();
-      joint_msg->header.frame_id = "rover_link_3";
+      joint_msg->header.frame_id = "rover_arm_base_link";
       joint_pub_->publish(std::move(joint_msg));
     }
   }

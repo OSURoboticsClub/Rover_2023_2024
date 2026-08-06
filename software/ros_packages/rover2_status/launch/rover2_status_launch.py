@@ -9,12 +9,12 @@ def generate_launch_description():
     }
 
     return LaunchDescription([
-        Node(
-            package='rover2_status',
-            executable='led_node',
-            name='led_node',
-            **config
-        ),
+       # Node(
+       #     package='rover2_status',
+       #     executable='led_node_serial',
+       #     name='led_node',
+       #     **config
+       # ),
 	Node(
 			package='rover2_status',
             executable='node_info',
@@ -51,5 +51,13 @@ def generate_launch_description():
 			package='rover2_status',
             executable='arm_telem',
         ),
+    Node(
+            package='rover2_status',
+            executable='lights_node',
+            parameters=[{
+                'node_id': 12,
+                'can': 'can_cam',
+            }]
+    ),
 
     ])

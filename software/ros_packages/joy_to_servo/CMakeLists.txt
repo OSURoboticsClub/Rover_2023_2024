@@ -14,6 +14,7 @@ find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(controller_manager_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
 find_package(moveit_ros_planning_interface REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(moveit_core REQUIRED)
@@ -41,6 +42,7 @@ ament_target_dependencies(
   "rclcpp"
   "sensor_msgs"
   "controller_manager_msgs"
+  "std_srvs"
 )
 ament_target_dependencies(
   manipulability

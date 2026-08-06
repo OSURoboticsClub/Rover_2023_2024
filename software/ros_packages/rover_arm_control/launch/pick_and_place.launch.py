@@ -1,3 +1,11 @@
+"""
+Pick and Place Launch
+DAM Robotics
+Authors: Jared Northrop, Osian Leahy, 
+Year: 2526
+
+This launch file launches the necessary nodes for ROB514 pick and place project. 
+"""
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.actions import IncludeLaunchDescription, RegisterEventHandler
@@ -31,7 +39,7 @@ def generate_launch_description():
     }
     arm = IncludeLaunchDescription(
       PythonLaunchDescriptionSource([os.path.join(
-         get_package_share_directory('rover_arm'),
+         get_package_share_directory('rover2_arm'),
          'launch'), '/rover_arm.launch.py']),
         launch_arguments={
             'hardware_type': LaunchConfiguration(
@@ -123,8 +131,8 @@ def generate_launch_description():
         absolute_move_node,
         #pick_and_place_node,
         aruco_detector_node,
-        # pc_filter_node,
-        # pc_plane_node,
-        # pc_count_object_node,
+        pc_filter_node,
+        pc_plane_node,
+        pc_count_object_node,
 
     ])

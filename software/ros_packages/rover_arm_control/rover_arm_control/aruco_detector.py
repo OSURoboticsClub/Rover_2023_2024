@@ -11,6 +11,7 @@ from geometry_msgs.msg import PoseStamped, PointStamped
 from visualization_msgs.msg import Marker
 from shape_msgs.msg import Plane
 from cv_bridge import CvBridge
+from std_srvs.srv import Trigger
 
 from tf2_ros import Buffer, TransformListener
 from rclpy.time import Time
@@ -87,6 +88,11 @@ class ArucoDetector(Node):
             Plane, self.plane_topic, self.plane_callback, 10
         )
 
+        self.plane_srv = self.create_service(
+            Trigger, "set_ground_plane", self.set_plane_callback
+        )
+
+        self.plane_coeffs_current = None  # np.array([a, b, c, d])
         self.plane_coeffs = None  # np.array([a, b, c, d])
         self.has_plane = False
 
@@ -106,8 +112,8 @@ class ArucoDetector(Node):
                 "Plane.msg must contain 4 coefficients [a, b, c, d]"
             )
             return
-        self.plane_coeffs = np.array(msg.coef, dtype=np.float32)
-        self.has_plane = True
+        self.plane_coeffs_current = np.array(msg.coef, dtype=np.float32)
+        # self.has_plane = False
 
     def image_callback(self, msg: Image) -> None:
         if not self.has_plane:
@@ -175,6 +181,26 @@ class ArucoDetector(Node):
         P = self._intersect_ray_with_plane(origin_base, dir_base)
         if P is not None:
             self._publish_intersection(P, msg)
+
+    def set_plane_callback(self, request, response):
+        """Service to set the ground plane
+        
+        """
+        if self.plane_coeffs_current is None:
+            response.success = False
+            response.message = "No plane received yet."
+            return response
+
+        self.plane_coeffs = self.plane_coeffs_current.copy()
+        self.has_plane = True
+
+        response.success = True
+        response.message = (
+            f"Ground plane set to coefficients: {self.plane_coeffs.tolist()}"
+        )
+        self.get_logger().info(response.message)
+        return response
+
 
     def _to_ground_frame(self, origin_cam: np.ndarray, dir_cam: np.ndarray):
         """Transform point and direction from camera_frame to ground_frame."""

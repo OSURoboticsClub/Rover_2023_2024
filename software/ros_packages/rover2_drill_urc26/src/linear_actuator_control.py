@@ -34,7 +34,7 @@ class LinearActuatorControl(Node):
     def __init__(self):
         super().__init__("linear_actuator_control")
         # Both of these need to be replaced, they do not need to be parameters
-        self.declare_parameter("can", "can0")
+        self.declare_parameter("can", "can_arm")
         # check the node id
         self.declare_parameter("node_id", 1)
         self.declare_parameter("command_topic", "linear_actuator/control")
@@ -509,9 +509,9 @@ class LinearActuatorControl(Node):
         dist_to_max = self.max_position_rotations - rel_pos
 
         if dist_to_min <= 0.0:
-            return max(0.0, limited_velocity)
+            return max(-100, limited_velocity)
         if dist_to_max <= 0.0:
-            return min(0.0, limited_velocity)
+            return min(5, limited_velocity)
 
         max_negative_speed = math.sqrt(2.0 * accel_limit * dist_to_min)
         max_positive_speed = math.sqrt(2.0 * accel_limit * dist_to_max)

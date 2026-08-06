@@ -11,6 +11,8 @@ Notes
 Currently (11/17/25) relative orientation is not implemented and orientation is held fixed during movements.
 In the current implementation this means that the end-effector will maintain its start or current 
 orientation throughout the move. 
+
+This should be combined with absolute move with changes to the srv call definition to allow for both relative and absolute moves.
 """
 import rclpy
 from rclpy.node import Node
@@ -35,6 +37,7 @@ from rover_arm_control_interface.action import RelativeMove
 from controller_manager_msgs.srv import SwitchController
 from rclpy.executors import MultiThreadedExecutor
 from std_srvs.srv import Trigger, Empty
+from tf_transformations import quaternion_matrix, quaternion_from_matrix, translation_matrix, translation_from_matrix
 
 
 from scipy.spatial.transform import Rotation as R
@@ -79,8 +82,8 @@ class GripperMoveNode(Node):
         
         self.move_action = ActionServer(self, RelativeMove, 'relative_move', self.set_callback_flag)
         #set robot frames
-        self.target_frame = "arm_gripper"
-        self.reference_frame = "base_link"
+        self.target_frame = "rover_arm_tool0"
+        self.reference_frame = "rover_arm_base_link"
 
         self.latest_joint_state = None
 
@@ -157,19 +160,19 @@ class GripperMoveNode(Node):
         self.get_logger().info("in switching controllers")
         if servo:
             if not sim:
-                self.request.activate_controllers = ["rover_arm_controller"] 
+                self.request.activate_controllers = ["rover_arm_velocity_controller"] 
                 self.request.deactivate_controllers = ["rover_arm_controller_moveit"]
             else:
-                self.request.activate_controllers = ["rover_arm_controller"] 
+                self.request.activate_controllers = ["rover_arm_velocity_controller"] 
                 self.request.deactivate_controllers = ["rover_arm_controller_moveit"]
             self.servo = True
         else:
             if not sim:
                 self.request.activate_controllers = ["rover_arm_controller_moveit"]
-                self.request.deactivate_controllers = ["rover_arm_controller"]
+                self.request.deactivate_controllers = ["rover_arm_velocity_controller"]
             else:
                 self.request.activate_controllers = ["rover_arm_controller_moveit"]
-                self.request.deactivate_controllers = ["rover_arm_controller"]
+                self.request.deactivate_controllers = ["rover_arm_velocity_controller"]
             self.servo = False
         self.request.timeout = rclpy.duration.Duration(seconds=5.0).to_msg()
 
@@ -250,7 +253,7 @@ class GripperMoveNode(Node):
         # Get the current pose of the gripper
         try:
             trans = self.tf_buffer.lookup_transform(
-                "base_link",  # target frame
+                self.reference_frame,  # target frame
                 self.target_frame,  # source frame
                 rclpy.time.Time())  # latest available
 
@@ -289,26 +292,29 @@ class GripperMoveNode(Node):
         # --- orientation (quaternion composition) ---
         q_current = [current.orientation.x, current.orientation.y,
                     current.orientation.z, current.orientation.w]
+        p_current = [current.position.x, current.position.y, current.position.z]
+
         q_rel = [relative.orientation.x, relative.orientation.y,
                 relative.orientation.z, relative.orientation.w]
+        p_rel = [relative.position.x, relative.position.y, relative.position.z]
 
-        r1 = R.from_quat(q_current)
-        r2 = R.from_quat(q_rel)
+        #transformation matrix of current position
+        T_current = translation_matrix(p_current) @ quaternion_matrix(q_current)
+        T_rel = translation_matrix(p_rel) @ quaternion_matrix(q_rel)
 
-        # q_final = quaternion_multiply(q_current, q_rel)
-        r3 = r1 * r2
-        q_final = r3.as_quat()  # [x, y, z, w]
-        result.orientation.x, result.orientation.y, result.orientation.z, result.orientation.w = q_final
+        #compute transform
+        T_move = T_current @ T_rel
+        p_T = translation_from_matrix(T_move)
+        q_T = quaternion_from_matrix(T_move)
 
-        # --- position ---
-        # Rotate the relative position by the current orientation
-        Rot = R.from_quat(q_current)[0:3, 0:3]  # 3x3 rotation matrix
-        p_rel_rot = Rot.dot([relative.position.x, relative.position.y, relative.position.z])
-
-        result.position.x = current.position.x + p_rel_rot[0]
-        result.position.y = current.position.y + p_rel_rot[1]
-        result.position.z = current.position.z + p_rel_rot[2]
-
+        result = Pose()
+        result.orientation.x = q_T[0]
+        result.orientation.y = q_T[1]
+        result.orientation.z = q_T[2]
+        result.orientation.w = q_T[3]
+        result.position.x = p_T[0]
+        result.position.y = p_T[1]
+        result.position.z = p_T[2]
         return result
     
     def get_current_robot_state(self) -> RobotState:
@@ -378,8 +384,15 @@ class GripperMoveNode(Node):
         #self.get_logger().info(f"Target Pose: {target_pose}")
         pose = PoseStamped()
         pose.header.frame_id = self.reference_frame
-        pose.pose = self.add_pose_position(target_pose, self.current_pose.pose)
+        # pose.pose = self.add_pose_position(target_pose, self.current_pose.pose)
+        pose.pose = self.compose_poses_ee(self.current_pose.pose, target_pose)
+        # pose.pose = target_pose
         pose.pose.orientation = self.current_pose.pose.orientation
+
+        # pose.pose.orientation.z = 0.0
+        # pose.pose.orientation.x = 0.0
+        # pose.pose.orientation.y = 0.0
+        # pose.pose.orientation.w = 0.0
         #self.get_logger().info(f"Current: {self.current_pose.pose.position}")
         #self.get_logger().info(f"Goal: {pose.pose.position}")
 
@@ -409,7 +422,7 @@ class GripperMoveNode(Node):
         
         # Create goal orientation constraint
         orientation_constraint = OrientationConstraint()
-        orientation_constraint.header.frame_id = self.reference_frame
+        orientation_constraint.header.frame_id = pose.header.frame_id
         orientation_constraint.link_name = self.target_frame
         orientation_constraint.orientation = self.current_pose.pose.orientation
         orientation_constraint.absolute_x_axis_tolerance = 0.0001
@@ -423,7 +436,7 @@ class GripperMoveNode(Node):
 
         #Create Path constraint
         path_constraint = PositionConstraint()
-        path_constraint.header.frame_id = "base_link"  # or your world frame
+        path_constraint.header.frame_id = pose.header.frame_id # or your world frame
         path_constraint.link_name = self.target_frame
         path_constraint.target_point_offset.x = 0.0
         path_constraint.target_point_offset.y = 0.0
@@ -449,7 +462,7 @@ class GripperMoveNode(Node):
 
         # Create goal orientation constraint
         path_orientation_constraint = OrientationConstraint()
-        path_orientation_constraint.header.frame_id = self.reference_frame
+        path_orientation_constraint.header.frame_id = pose.header.frame_id
         path_orientation_constraint.link_name = self.target_frame
         path_orientation_constraint.orientation = self.current_pose.pose.orientation
         path_orientation_constraint.absolute_x_axis_tolerance = 0.01

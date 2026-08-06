@@ -14,6 +14,7 @@ setup(
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name, glob('launch/*launch.[pxy][yma]*')),
         (os.path.join('share', package_name, 'rover2_control'), glob('rover2_control/*.py')),
+        (os.path.join('share', package_name, 'config'), glob('config/*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -33,12 +34,12 @@ setup(
             'joint_position_control = rover2_control.joint_position_control:main',
             'auton_controller = rover2_control.auton_controller:main',
             'joy_to_drive = rover2_control.joy_to_drive:main',
-            'auton_typing = rover2_control.auton_typing:main',
-            'odrive_drive_control = rover2_control.odrive_drive_control:main',
             'drive_can_control = rover2_control.drive_can_control:main',
             'drill_control = rover2_control.drill_control:main',
             'gripper_control = rover2_control.gripper_control:main',
-            'monitor_aruco = rover2_control.monitor_aruco:main'
+            'monitor_aruco = rover2_control.monitor_aruco:main',
+            'odrive_pan_tilt = rover2_control.odrive_pan_tilt:main',
+            'heist_mech_control = rover2_control.heist_mech_control:main'
         ],
     },
 )

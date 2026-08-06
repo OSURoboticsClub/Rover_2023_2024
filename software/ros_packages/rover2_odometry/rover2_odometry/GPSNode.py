@@ -11,7 +11,7 @@ class GPSNode(Node):
     def __init__(self):
         super().__init__('gps_node')
 
-        self.ser = serial.Serial('/dev/ttyACM0', baudrate=38400, timeout=1)
+        self.ser = serial.Serial('/dev/rover/gps', baudrate=38400, timeout=1)
         self.get_logger().info(f"Serial port {self.ser.port} opened at {self.ser.baudrate} baud")
 
         self.fix_pub = self.create_publisher(NavSatFix, 'gps/fix', 10)

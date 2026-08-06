@@ -23,8 +23,8 @@ class JointPositionController(Node):
         self.get_logger().info('Waiting for MoveGroup action server...')
         self.move_group_client.wait_for_server()
         self.get_logger().info('MoveGroup action server connected!')
-        self.joint_names = ['base_joint', 'shoulder_joint', 'elbow_pitch_joint', 
-                  'elbow_roll_joint', 'wrist_pitch_joint', 'wrist_roll_joint']
+        self.joint_names = ['rover_arm_base_joint', 'rover_arm_shoulder_joint', 'rover_arm_elbow_pitch_joint', 
+                  'rover_arm_elbow_roll_joint', 'rover_arm_wrist_pitch_joint', 'rover_arm_wrist_roll_joint']
         # Subscribe to current joint states for getting the current robot state
         self.joint_states_sub = self.create_subscription(
             JointState,
@@ -53,7 +53,7 @@ class JointPositionController(Node):
         
         # Create a motion planning request
         motion_request = MotionPlanRequest()
-        motion_request.workspace_parameters.header.frame_id = "base_link"
+        motion_request.workspace_parameters.header.frame_id = "rover_arm_base_link"
         motion_request.workspace_parameters.header.stamp = self.get_clock().now().to_msg()
         
         # Set the planning group
@@ -82,8 +82,8 @@ class JointPositionController(Node):
             motion_request.goal_constraints[0].joint_constraints.append(joint_constraint)
         
         # Set planning parameters
-        motion_request.max_velocity_scaling_factor = 0.5
-        motion_request.max_acceleration_scaling_factor = 0.5
+        motion_request.max_velocity_scaling_factor = 1.0
+        motion_request.max_acceleration_scaling_factor = 1.0
         motion_request.allowed_planning_time = 5.0
         motion_request.num_planning_attempts = 10
         

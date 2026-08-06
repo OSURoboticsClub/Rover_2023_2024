@@ -7,8 +7,13 @@ rosbags
 *.db3
 __pycache__
 ./react_groundstation
+./lib
+**/rosbag2*
 .vscode
 .atsuo
 origin/SAM4S_firmware
 
 react_groundstation/node_modules
+
+ros_packages/rover_gazebo/worlds/materials/*
+ros_packages/rover_gazebo/worlds/meshes/*

@@ -100,26 +100,26 @@ class OdriveTelemetry(Node):
 		self.pub.publish(msg)
 
 	def clear_can_callback(self, request, response):
-            nodes = [1,2,3,4,5]
-            #If wanting to clear arm bus
-            if(self.bus_name == "can1"):
-                nodes = [1,2,3,4,5,6]
-            for node_id in nodes:
-                self.bus.send(can.Message(
-                arbitration_id=(node_id << 5 | 0x18), # 0x0d: Clear_errors
-                data=struct.pack('<I', 1), 
-                is_extended_id=False
-                ))
+		nodes = [1,2,3,4,5]
+		#If wanting to clear arm bus
+		if(self.bus_name == "can_arm"):
+			nodes = [1,2,3,4,5,6]
+		for node_id in nodes:
+			self.bus.send(can.Message(
+			arbitration_id=(node_id << 5 | 0x18), # 0x0d: Clear_errors
+			data=struct.pack('<I', 1), 
+			is_extended_id=False
+			))
 
-                self.bus.send(can.Message(
-                arbitration_id=(node_id << 5 | 0x07), # Set axis state
-                data=struct.pack('<I', 8), # 8: closed loop control
-                is_extended_id=False
-                ))
-            response.success = True;
-            response.message = self.bus_name + " cleared"
-            
-            return response
+		self.bus.send(can.Message(
+		arbitration_id=(node_id << 5 | 0x07), # Set axis state
+		data=struct.pack('<I', 8), # 8: closed loop control
+		is_extended_id=False
+		))
+		response.success = True
+		response.message = self.bus_name + " cleared"
+		
+		return response
             
 	#Define a callback for watching can messages:
 	def read_can(self):
@@ -250,7 +250,7 @@ def drivetrain_telem(args = None):
 #Used for ODrives on the Arm (can1) network:
 def arm_telem(args = None):
 	rclpy.init()
-	odrive_telem = OdriveTelemetry("can1")
+	odrive_telem = OdriveTelemetry("can_arm")
 	rclpy.spin(odrive_telem)
 	rclpy.shutdown
 

@@ -13,6 +13,11 @@ uint16 NO_PATTERN=0
 uint16 SPIRAL=1
 uint16 LAWNMOWER=2
 
+# Lane Spacing
+float32 search_param_1  
+# Radius for Spiral / Step Size for Lawnmower
+float32 search_param_2 
+
 GPSWaypoint[] nav_waypoints 
 
 ---
@@ -22,6 +27,7 @@ std_msgs/Header header
 uint16 ack
 uint16 CANCELED=0
 uint16 SUCCESS=1
+uint16 FAILED=2
 
 ---
 # Feedback
@@ -31,9 +37,17 @@ uint16 current_action
 uint16 NO_ACTION=0
 uint16 NAVIGATING=1
 uint16 SEARCHING=2
+uint16 INVESTIGATING=3
+uint16 ALIGNING=4
 
 uint16 completion_status 
 uint16 NOT_STARTED=0
 uint16 IN_PROGRESS=1
 uint16 COMPLETED=2
 uint16 FAILED=3
+
+# Telemetry for Unity
+float32 current_x
+float32 current_y
+# Degrees (East = 0, +CCW)
+float32 current_heading  

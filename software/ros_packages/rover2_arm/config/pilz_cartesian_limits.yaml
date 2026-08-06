@@ -1,0 +1,10 @@
+# Limits for the Pilz planner. Unlike moveit_servo, Pilz-planned trajectories have no runtime
+# per-joint velocity clamp, so these must be values the arm can achieve in EVERY configuration,
+# not just a favorable one. Derived from the arm's real joint_limits.yaml max_velocity values
+# via the geometric Jacobian, sampled across the full joint range (worst-case observed: ~0.49 m/s,
+# ~3.66 rad/s), with a small margin subtracted.
+cartesian_limits:
+  max_trans_vel: 0.45
+  max_trans_acc: 3.5
+  max_trans_dec: -7.0
+  max_rot_vel: 3.5

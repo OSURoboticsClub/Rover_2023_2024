@@ -1,0 +1,8 @@
+#Teleop-only max Cartesian speed for joy_to_servo_pub_node's IK/EE mode. Not read by moveit_servo
+#itself - servo clamps every command to each joint's real max_velocity downstream regardless of
+#the incoming twist (enforce_limits.cpp), so unlike the Pilz planner (pilz_cartesian_limits.yaml)
+#this doesn't need to be achievable in every pose, it just needs to not itself be the bottleneck.
+#Set at/above the arm's best-case achievable speed (computed via the Jacobian across the full
+#joint range, using joint_limits.yaml's max_velocity values: ~1.56 m/s / ~4.97 rad/s at best).
+teleop_max_linear_speed: 1.6 #m/s
+teleop_max_rotational_speed: 5.0 #rad/s

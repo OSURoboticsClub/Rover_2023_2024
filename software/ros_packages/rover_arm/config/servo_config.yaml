@@ -9,7 +9,7 @@ scale:
   linear:  3.14  # Max linear velocity. Unit is [m/s]. Only used for Cartesian commands.
   rotational: 3.14  # Max angular velocity. Unit is [rad/s]. Only used for Cartesian commands.
   # Max joint angular/linear velocity. Only used for joint commands on joint_command_in_topic.
-  joint: 6.0
+  joint: 2.45044
 
 # Optionally override Servo's internal velocity scaling when near singularity or collision (0.0 = use internal velocity scaling)
 # override_velocity_scaling_factor = 0.0 # valid range [0.0:1.0]
@@ -51,10 +51,10 @@ check_octomap_collisions: true  # Check collision against the octomap (if a 3D s
 
 ## MoveIt properties
 move_group_name:  rover_arm  # Often 'manipulator' or 'arm'
-planning_frame: base_link
+planning_frame: rover_arm_base_link
 
-ee_frame_name: arm_gripper
-robot_link_command_frame: arm_gripper
+ee_frame_name: rover_arm_gripper
+robot_link_command_frame: rover_arm_gripper
 
 apply_twist_commands_about_ee_frame: true
 

@@ -29,6 +29,7 @@ import struct
 from time import time, sleep
 
 from std_msgs.msg import String
+from typing import Callable
 
 
 class GripperCanControl(Node):
@@ -104,8 +105,10 @@ class GripperCanControl(Node):
 
         #joy states
         self.controller_state = 0 #controller state. See timer_callback_v2/joy_callback_v2 for Details
-        self.lights = False 
+        self.lights = False
+        self.lightsChanged = False 
         self.laser = False
+        self.laserChanged = False
 
         #setup can
         self.bus = can.interface.Bus(channel=self.can_network, bustype='socketcan')
@@ -357,11 +360,19 @@ class GripperCanControl(Node):
         else:
             self.controller_state = 0
         if buttons[self.light_button]:
-            self.lights = not self.lights
-            self.send_gpio(self.lights_pin, self.lights)
+            if not self.lightsChanged:
+                self.lights = not self.lights
+                self.lightsChanged = True
+                self.send_gpio(self.lights_pin, self.lights)
+        else:
+            self.lightsChanged = False
         if buttons[self.laser_button]:
-            self.laser = not self.laser
-            self.send_gpio(self.laser_pin, self.laser)
+            if not self.laserChanged:
+                self.laser = not self.laser
+                self.laserChanged = True
+                self.send_gpio(self.laser_pin, self.laser)
+        else:
+            self.laserChanged = False
         if buttons[self.home_button]:
             self.get_logger().info("Re-Homing")
             self.found_home = False

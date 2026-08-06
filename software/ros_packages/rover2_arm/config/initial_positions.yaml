@@ -1,0 +1,9 @@
+# Default initial positions for rover's ros2_control fake system
+
+initial_positions:
+  rover_arm_base_joint: 0
+  rover_arm_elbow_pitch_joint: 0
+  rover_arm_elbow_roll_joint: 0
+  rover_arm_shoulder_joint: 0
+  rover_arm_wrist_pitch_joint: 0
+  rover_arm_wrist_roll_joint: 0

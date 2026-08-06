@@ -73,7 +73,7 @@ private:
 	//Where the magic is supposed to happen...
 	void sub_callback(const PointCloud2::SharedPtr msg) {
 		//Log that we've recieved a msg
-		RCLCPP_INFO(this->get_logger(),"Point Cloud Recieved");
+		// RCLCPP_INFO(this->get_logger(),"Point Cloud Recieved");
 
 		//First, pull in the point cloud, translate from ROS PC2 to PCL:
 		//We get RGB data with this camera, as specified in the PC2 message fields
@@ -81,12 +81,12 @@ private:
 		pcl::fromROSMsg(*msg, *pcl_cloud); //pass it and the msg by reference for conversion
 		
 		if (pcl_cloud->size() < 100) {
-			RCLCPP_WARN(
-				this->get_logger(),
-				"Point cloud has fewer than 100 points, skipping processing."
-			);
+			//RCLCPP_WARN(
+			//	this->get_logger(),
+			//	"Point cloud has fewer than 100 points, skipping processing."
+			//);
 		return;
-}
+		}
 
 		//Create output object:
 		pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_cloud_table_removed(new pcl::PointCloud<pcl::PointXYZRGB>);
@@ -125,7 +125,7 @@ private:
 
 		//Publish and log the resulting point cloud:
 		this->publisher_->publish(msg_out);
-		RCLCPP_INFO(this->get_logger(), "point cloud truncated.");
+		// RCLCPP_INFO(this->get_logger(), "point cloud truncated.");
 
 		//Also Publish the ground plane:
 		Plane plane_params;
@@ -171,7 +171,7 @@ private:
 			Marker plane_marker;
 
 			//plane_marker.header.frame_id = "/quori/head_camera_optical"; //Old HW Rosbag Frame
-			plane_marker.header.frame_id = "/base_link"; //Rover D405 Frame
+			plane_marker.header.frame_id = "/rover_arm_base_link"; //Rover D405 Frame
 			plane_marker.header.stamp = rclcpp::Clock().now();
 
 			plane_marker.pose.position.x = 0;

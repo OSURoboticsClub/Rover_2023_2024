@@ -5,7 +5,7 @@ Authors: Jared Northrop
 Year: 2526
 
 This node implement the full moveit trajectory pipeline for end-effector movements relative to the 
-base/world frame. 
+base frame. 
 
 Notes
 -----
@@ -13,6 +13,9 @@ There are no constraints on the movement and this may cause seemingly random arm
 goal. 
 
 Current arm implementation aligns the base frame with the world. 
+
+This should be combined with absolute move with changes to the srv call definition to allow for both relative and absolute moves.
+
 """
 import rclpy
 from rclpy.node import Node
@@ -79,8 +82,8 @@ class GripperMoveNode(Node):
         
         self.move_action = ActionServer(self, RelativeMove, 'absolute_move', self.set_callback_flag)
         #set robot frames
-        self.target_frame = "arm_gripper"
-        self.reference_frame = "base_link"
+        self.target_frame = "rover_arm_gripper"
+        self.reference_frame = "rover_arm_base_link"
 
         self.latest_joint_state = None
 
@@ -157,19 +160,19 @@ class GripperMoveNode(Node):
         self.get_logger().info("in switching controllers")
         if servo:
             if not sim:
-                self.request.activate_controllers = ["rover_arm_controller"] 
+                self.request.activate_controllers = ["rover_arm_velocity_controller"] 
                 self.request.deactivate_controllers = ["rover_arm_controller_moveit"]
             else:
-                self.request.activate_controllers = ["rover_arm_controller"] 
+                self.request.activate_controllers = ["rover_arm_velocity_controller"] 
                 self.request.deactivate_controllers = ["rover_arm_controller_moveit"]
             self.servo = True
         else:
             if not sim:
                 self.request.activate_controllers = ["rover_arm_controller_moveit"]
-                self.request.deactivate_controllers = ["rover_arm_controller"]
+                self.request.deactivate_controllers = ["rover_arm_velocity_controller"]
             else:
                 self.request.activate_controllers = ["rover_arm_controller_moveit"]
-                self.request.deactivate_controllers = ["rover_arm_controller"]
+                self.request.deactivate_controllers = ["rover_arm_velocity_controller"]
             self.servo = False
         self.request.timeout = rclpy.duration.Duration(seconds=5.0).to_msg()
 
@@ -242,13 +245,14 @@ class GripperMoveNode(Node):
         #switch ros2 control controller to servo
         self.start_servo()
         self.switch_controller(servo=True)
+        self.get_logger().info("Switched back to servo controller")
         return response
 
     def get_EE_pose(self):
         # Get the current pose of the gripper
         try:
             trans = self.tf_buffer.lookup_transform(
-                "base_link",  # target frame
+                self.reference_frame,  # target frame
                 self.target_frame,  # source frame
                 rclpy.time.Time())  # latest available
 
@@ -427,7 +431,7 @@ class GripperMoveNode(Node):
 
         #Create Path constraint
         path_constraint = PositionConstraint()
-        path_constraint.header.frame_id = "base_link"  # or your world frame
+        path_constraint.header.frame_id = "rover_arm_base_link"  # or your world frame
         path_constraint.link_name = self.target_frame
         path_constraint.target_point_offset.x = 0.0
         path_constraint.target_point_offset.y = 0.0

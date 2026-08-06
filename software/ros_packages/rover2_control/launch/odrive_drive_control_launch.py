@@ -70,7 +70,7 @@ def generate_launch_description():
         parameters=[{
             'is_position_control': False,
             'joy_publish_rate': 50,
-            'can': 'can1'
+            'can': 'can_arm'
         }],
         **config
     )
@@ -92,19 +92,19 @@ def generate_launch_description():
             executable='iris_controller',
             name='iris_controller',
             parameters=[{
-                '~port': '/dev/rover/ttyIRIS',
-                '~hertz': 20
+                '~port': '/dev/ttyUSB0',
+                '~hertz': 30
             }],
             **config
         ),
         # Load joint_state_broadcaster after ros2_control_node is up
   
-        Node(
-            package='rover2_control',
-            executable='chassis_pan_tilt_control',
-            name='chassis_pan_tilt',
-            **config
-        ),
+        #Node(
+        #    package='rover2_control',
+        #    executable='chassis_pan_tilt_control',
+        #    name='chassis_pan_tilt',
+        #    **config
+        #),
 #        Node(
 #            package='rover2_control',
 #            executable='monitor_aruco',
@@ -123,6 +123,6 @@ def generate_launch_description():
             name='joint_position',
             **config
         ),
-#        gripper_can_control_node,
+        gripper_can_control_node,
 #        auton_controller
     ])
