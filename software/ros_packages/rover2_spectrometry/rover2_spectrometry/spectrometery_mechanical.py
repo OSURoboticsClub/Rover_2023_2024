@@ -29,7 +29,7 @@ class SpectrometryMechanical(Node):
 
         # This process protects against a lost groundstation heartbeat.
 
-        self.declare_parameter("can", "can0")
+        self.declare_parameter("can_bus", "can0")
         self.declare_parameter("node_id", 60)
         self.declare_parameter("command_topic", "science/mechanical/control")
         self.declare_parameter("status_topic", "science/mechanical/status")
@@ -38,7 +38,7 @@ class SpectrometryMechanical(Node):
         self.declare_parameter("command_qos_depth", 1)
         self.declare_parameter("can_send_timeout_s", 0.005)
 
-        self.can_interface = str(self.get_parameter("can").value)
+        self.can_interface = str(self.get_parameter("can_bus").value)
         self.node_id = int(self.get_parameter("node_id").value)
         self.command_timeout_s = max(
             0.05, float(self.get_parameter("command_timeout_s").value)

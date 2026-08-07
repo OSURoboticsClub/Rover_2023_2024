@@ -29,8 +29,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'spectrometry_publisher = rover2_spectrometry.spectrometry_publisher:main'
-
+            'spectrometry_publisher = rover2_spectrometry.spectrometry_publisher:main',
+            'spectrometry_mechanical = rover2_spectrometry.spectrometry_mechanical:main',
         ],
     },
 )

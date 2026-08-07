@@ -12,6 +12,8 @@
   <exec_depend>cv_bridge</exec_depend>
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>matplotlib</exec_depend>
+  <exec_depend>rover2_spectrometry_interface</exec_depend>
+  <exec_depend>python3-can</exec_depend>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
