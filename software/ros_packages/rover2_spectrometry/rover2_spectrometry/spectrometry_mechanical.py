@@ -17,7 +17,7 @@ from rover2_spectrometry_interface.msg import (
 from .protocol import (
     MechanicalState,
     WATCHDOG_TIMEOUT_STATE,
-    command_codes_for_state,
+    command_codes_for_transition,
 )
 
 
@@ -27,9 +27,7 @@ class SpectrometryMechanical(Node):
     def __init__(self):
         super().__init__("spectrometry_mechanical")
 
-        # This process protects against a lost groundstation heartbeat.
-
-        self.declare_parameter("can", "can0")
+        self.declare_parameter("can_bus", "can0")
         self.declare_parameter("node_id", 60)
         self.declare_parameter("command_topic", "science/mechanical/control")
         self.declare_parameter("status_topic", "science/mechanical/status")
@@ -38,7 +36,7 @@ class SpectrometryMechanical(Node):
         self.declare_parameter("command_qos_depth", 1)
         self.declare_parameter("can_send_timeout_s", 0.005)
 
-        self.can_interface = str(self.get_parameter("can").value)
+        self.can_interface = str(self.get_parameter("can_bus").value)
         self.node_id = int(self.get_parameter("node_id").value)
         self.command_timeout_s = max(
             0.05, float(self.get_parameter("command_timeout_s").value)
@@ -131,23 +129,37 @@ class SpectrometryMechanical(Node):
             else WATCHDOG_TIMEOUT_STATE
         )
 
-        new_command_sequence = (
-            command_link_active
-            and self.requested_sequence != self.applied_sequence
-        )
-        if target_state != self.applied_state or new_command_sequence:
-            self._transmit_state(target_state)
+        if target_state != self.applied_state:
+            self._transmit_transition(self.applied_state, target_state)
             self.applied_state = target_state
-            if command_link_active:
-                self.applied_sequence = self.requested_sequence
-        elif command_link_active:
+        if command_link_active:
             self.applied_sequence = self.requested_sequence
 
         self._publish_status(command_link_active)
 
-    def _transmit_state(self, state):
-        """Send one complete, idempotent state to CAN."""
-        for command_code in command_codes_for_state(state):
+    def _transmit_transition(self, previous_state, target_state):
+        """Send only the CAN commands needed for a state transition."""
+        command_codes = command_codes_for_transition(
+            previous_state, target_state
+        )
+        if not command_codes:
+            return
+
+        print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+        for command_code in command_codes:
+            # Commented out code below tests the functionality of the CAN messages.
+            # message = can.Message(
+            #     arbitration_id=self.arbitration_id(command_code),
+            #     data=[],
+            #     is_extended_id=False,
+            #     is_rx=False,
+            # )
+            # print(
+            #     f"\n{command_code.name} "
+            #     f"(command={int(command_code)}, "
+            #     f"arbitration_id=0x{message.arbitration_id:03X}): "
+            #     f"{message}"
+            # )
             self.bus.send(
                 can.Message(
                     arbitration_id=self.arbitration_id(command_code),
@@ -179,7 +191,9 @@ class SpectrometryMechanical(Node):
 
     def destroy_node(self):
         """Best-effort safe shutdown before releasing the CAN interface."""
-        self._transmit_state(WATCHDOG_TIMEOUT_STATE)
+        self._transmit_transition(
+            self.applied_state, WATCHDOG_TIMEOUT_STATE
+        )
         self.bus.shutdown()
         return super().destroy_node()
 

@@ -24,7 +24,7 @@ class Spectrometry_Publisher(Node):
     def __init__(self):
         super().__init__('Spectrometry_Publisher')
 
-        self.img_pub = self.create_publisher(Image, 'camera/image', 10)
+        self.img_pub = self.create_publisher(Image, 'science/image', 10)
 
         self.bridge = CvBridge()
         # [Top_Left_X, Top_Left_Y, Width, Height]
@@ -39,6 +39,8 @@ class Spectrometry_Publisher(Node):
         self.start_time = 0
         self.camera_ids = []
 
+        self.declare_parameter("camera_location", "/dev/video")
+
         self.timer_period = .1
         self.timer = self.create_timer(self.timer_period, self.timer_callback)
 
@@ -47,6 +49,7 @@ class Spectrometry_Publisher(Node):
         self.reaction_type = {}
         self.start_times = {}
         self.iterations = {}
+        self._camera_location = self.get_parameter("camera_location").value
 
     def start_graph_feed(self, request, response):
         if not self.camera_ids:
@@ -104,10 +107,7 @@ class Spectrometry_Publisher(Node):
             plt.clf()
 
     def get_graph(self, feedNumber, reaction_type):
-        if IMPLEMENTATION_VERSION:
-            cap = cv2.VideoCapture(f"dev/rover/spectrometer_camera_{feedNumber}")
-        else:
-            cap = cv2.VideoCapture(feedNumber)
+        cap = cv2.VideoCapture(self._camera_location + str(feedNumber))
         
         ret, frame = cap.read()
         cropped = frame[int(self.r[1]):int(self.r[1] + self.r[3]), int(self.r[0]):int(self.r[0] + self.r[2])]
