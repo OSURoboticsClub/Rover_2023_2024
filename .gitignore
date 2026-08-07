@@ -1,1 +1,9 @@
+# Local agent and IDE metadata
+/.agents/
+/.codex/
+/.idea/
 .vscode/
+
+# Generated build outputs
+build/
+install/

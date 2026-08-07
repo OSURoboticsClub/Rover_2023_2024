@@ -12,6 +12,8 @@ from rover2_spectrometry_interface.srv import SpectrometryInterface
 
 
 # IMPORTANT NOTE: THIS CODE MUST BE UPDATED TO ACCOMODATE THE ACTUAL DESIGN
+# If this is deployed onto the rover, change this value to True
+IMPLEMENTATION_VERSION = False
 
 class Spectrometry_Publisher(Node):
     """
@@ -102,10 +104,10 @@ class Spectrometry_Publisher(Node):
             plt.clf()
 
     def get_graph(self, feedNumber, reaction_type):
-        # Actual implementation
-        cap = cv2.VideoCapture(f"dev/rover/spectrometer_camera_{feedNumber}")
-        # Local test
-        # cap = cv2.VideoCapture(feedNumber)
+        if IMPLEMENTATION_VERSION:
+            cap = cv2.VideoCapture(f"dev/rover/spectrometer_camera_{feedNumber}")
+        else:
+            cap = cv2.VideoCapture(feedNumber)
         
         ret, frame = cap.read()
         cropped = frame[int(self.r[1]):int(self.r[1] + self.r[3]), int(self.r[0]):int(self.r[0] + self.r[2])]

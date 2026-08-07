@@ -26,6 +26,8 @@ if(BUILD_TESTING)
 endif()
 
 rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/SpectrometryMechanicalControlMessage.msg"
+  "msg/SpectrometryMechanicalStatusMessage.msg"
   "srv/SpectrometryInterface.srv"
 )
 
