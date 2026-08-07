@@ -111,7 +111,11 @@ class Spectrometry_Publisher(Node):
             plt.clf()
 
     def get_graph(self, feedNumber, reaction_type):
+
         cap = cv2.VideoCapture(self._camera_location + str(feedNumber))
+        cap.set(cv2.CAP_PROP_BRIGHTNESS, 60)
+        cap.set(cv2.CAP_PROP_CONTRAST, 110)
+        cap.set(cv2.CAP_PROP_SATURATION, 200)
         
         ret, frame = cap.read()
         cropped = frame[int(self.r[1]):int(self.r[1] + self.r[3]), int(self.r[0]):int(self.r[0] + self.r[2])]
