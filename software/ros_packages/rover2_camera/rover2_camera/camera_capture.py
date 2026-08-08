@@ -37,7 +37,7 @@ class CameraCaptureNode(Node):
 
         self.declare_parameter('namespace', 'pan_tilt')
 
-        self.declare_parameter('use_tcp', False)
+        self.declare_parameter('use_tcp', True)
 
         self.create_service(SetBool, f'/{self.get_parameter("namespace").value}/toggle_camera', self.toggle_camera_callback)
     
@@ -46,7 +46,7 @@ class CameraCaptureNode(Node):
         self.gst_thread = None
 
 
-        self.start_pipeline()
+        #self.start_pipeline()
 
         device_name = self.get_parameter('device').value
         service_name = f'/{self.get_parameter("namespace").value}/{device_name.replace("/", "_")}_cam_params'
@@ -129,16 +129,16 @@ class CameraCaptureNode(Node):
             f'image/jpeg,width={cap_width},height={cap_height},framerate={cap_framerate}/1 ! '
             f'nvv4l2decoder mjpeg=1 ! nvvidconv ! tee name=t '
             f't. ! queue ! rtpvrawpay ! udpsink host=127.0.0.1 port={mux_port} sync=false async=false '
-            f't. ! queue ! videoscale ! '
+            f't. ! queue leaky=downstream ! videoscale ! '
             f'video/x-raw,width={stream_width},height={stream_height},format=I420 ! '
             f'nvvidconv ! video/x-raw(memory:NVMM),format=NV12 ! '
-            f'nvv4l2h265enc preset-level={preset_level} bitrate={bitrate} ! insert-sps-pps=1'
+            f'nvv4l2h265enc preset-level={preset_level} bitrate={bitrate} insert-sps-pps=1 !'
             f'h265parse ! rtph265pay config-interval=1 ! '
             f'rtpulpfecenc percentage={fec_percentage} ! '
             f'udpsink host={udp_host} port={udp_port} sync=false'
         )
 
-        self.get_logger().info(f'Launching pipeline:\n{pipeline_str}')
+        self.get_logger().info(f'Launching pipeline:\n{pipeline_str if use_tcp else udp_pipeline_str}')
         self.pipeline = Gst.parse_launch(pipeline_str if use_tcp else udp_pipeline_str)
 
         bus = self.pipeline.get_bus()

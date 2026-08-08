@@ -57,7 +57,7 @@ class CameraCaptureNode(Node):
 
         self.declare_parameter('namespace', 'd405')
 
-        self.declare_parameter('use_tcp', False)
+        self.declare_parameter('use_tcp', True)
 
         self.bridge    = CvBridge()
         self.pipeline  = None
@@ -67,7 +67,7 @@ class CameraCaptureNode(Node):
         self.pts       = 0
         self.frame_duration = 0
 
-        self.start_pipeline()
+        #self.start_pipeline()
 
         # Subscribe to image topic
         image_topic = self.get_parameter('image_topic').value
@@ -189,7 +189,7 @@ class CameraCaptureNode(Node):
             f'udpsink host={udp_host} port={udp_port} sync=false'
         )
 
-        self.get_logger().info(f'Launching pipeline:\n{pipeline_str}')
+        self.get_logger().info(f'Launching pipeline:\n{pipeline_str if use_tcp else udp_pipeline_str}')
         try:
             self.pipeline = Gst.parse_launch(pipeline_str if use_tcp else udp_pipeline_str)
         except GLib.Error as e:
