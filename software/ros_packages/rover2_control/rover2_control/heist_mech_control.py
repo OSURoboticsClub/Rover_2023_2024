@@ -64,7 +64,7 @@ def string_to_morse(string: str) -> List[str]:
     result = list() 
 
     for i, char in enumerate(string):
-        symbol = MORSE_MAP.get(char)
+        symbol = MORSE_MAP.get(char.upper())
         if symbol is not None: 
             if symbol != '/' and (i != len(string) - 1) and MORSE_MAP.get(string[i + 1]) != '/':
                 symbol += ' '

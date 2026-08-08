@@ -37,6 +37,8 @@ class CameraCaptureNode(Node):
 
         self.declare_parameter('namespace', 'pan_tilt')
 
+        self.declare_parameter('use_tcp', False)
+
         self.create_service(SetBool, f'/{self.get_parameter("namespace").value}/toggle_camera', self.toggle_camera_callback)
     
         self.pipeline = None
@@ -100,6 +102,9 @@ class CameraCaptureNode(Node):
         udp_host = self.get_parameter('udp_host').value
         udp_port = self.get_parameter('udp_port').value
         mux_port = self.get_parameter('mux_port').value
+        use_tcp = self.get_parameter('use_tcp').value
+
+        #Docs for jetppack 7 gstreamer options https://docs.nvidia.com/jetson/archives/r39.2/DeveloperGuide/SD/Multimedia/AcceleratedGstreamer.html 
 
         pipeline_str = (
             f'v4l2src do-timestamp=true device={device} ! '
@@ -116,8 +121,25 @@ class CameraCaptureNode(Node):
             f'tcpserversink host={udp_host} port={udp_port} sync=false'
         )
 
+        # Changes: Insert SPS / PPS with all iframes
+        # Icrease number of i-frames - not yet
+
+        udp_pipeline_str = (
+            f'v4l2src do-timestamp=true device={device} ! '
+            f'image/jpeg,width={cap_width},height={cap_height},framerate={cap_framerate}/1 ! '
+            f'nvv4l2decoder mjpeg=1 ! nvvidconv ! tee name=t '
+            f't. ! queue ! rtpvrawpay ! udpsink host=127.0.0.1 port={mux_port} sync=false async=false '
+            f't. ! queue ! videoscale ! '
+            f'video/x-raw,width={stream_width},height={stream_height},format=I420 ! '
+            f'nvvidconv ! video/x-raw(memory:NVMM),format=NV12 ! '
+            f'nvv4l2h265enc preset-level={preset_level} bitrate={bitrate} ! insert-sps-pps=1'
+            f'h265parse ! rtph265pay config-interval=1 ! '
+            f'rtpulpfecenc percentage={fec_percentage} ! '
+            f'udpsink host={udp_host} port={udp_port} sync=false'
+        )
+
         self.get_logger().info(f'Launching pipeline:\n{pipeline_str}')
-        self.pipeline = Gst.parse_launch(pipeline_str)
+        self.pipeline = Gst.parse_launch(pipeline_str if use_tcp else udp_pipeline_str)
 
         bus = self.pipeline.get_bus()
         bus.add_signal_watch()

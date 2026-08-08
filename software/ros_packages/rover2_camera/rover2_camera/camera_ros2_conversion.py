@@ -57,6 +57,8 @@ class CameraCaptureNode(Node):
 
         self.declare_parameter('namespace', 'd405')
 
+        self.declare_parameter('use_tcp', False)
+
         self.bridge    = CvBridge()
         self.pipeline  = None
         self.appsrc    = None
@@ -134,6 +136,7 @@ class CameraCaptureNode(Node):
         mux_port       = self.get_parameter('mux_port').value
         encoder_type   = self.get_parameter('encoder_type').value
         flip_feed      = self.get_parameter('flip_feed').value
+        use_tcp        = self.get_parameter('use_tcp').value
 
         self.frame_duration = Gst.SECOND // cap_framerate
         self.pts = 0
@@ -170,9 +173,25 @@ class CameraCaptureNode(Node):
             f'tcpserversink host={udp_host} port={udp_port} sync=false'
         )
 
+        udp_pipeline_str = (
+            f'appsrc name=src is-live=true block=false format=time '
+            f'caps=video/x-raw,format=BGR,width={cap_width},height={cap_height},framerate={cap_framerate}/1 ! '
+            f'videoconvert ! '
+            f'{flip_pipeline}'
+            f'tee name=t '
+            f't. ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 leaky=downstream ! '
+            f'rtpvrawpay ! udpsink host=127.0.0.1 port={mux_port} sync=false async=false '
+            f't. ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 leaky=downstream ! '
+            f'videoscale ! video/x-raw,width={stream_width},height={stream_height} ! '
+            f'{encoder_pipeline} insert-sps-pps=1 ! '
+            f'h265parse ! rtph265pay config-interval=1 ! '
+            f'rtpulpfecenc percentage={fec_percentage} ! '
+            f'udpsink host={udp_host} port={udp_port} sync=false'
+        )
+
         self.get_logger().info(f'Launching pipeline:\n{pipeline_str}')
         try:
-            self.pipeline = Gst.parse_launch(pipeline_str)
+            self.pipeline = Gst.parse_launch(pipeline_str if use_tcp else udp_pipeline_str)
         except GLib.Error as e:
             raise RuntimeError(f"Failed to create GStreamer pipeline: {e}") from e
 

@@ -1,0 +1,153 @@
+running egg_info
+creating ../../../build/rover2_control/rover2_control.egg-info
+writing ../../../build/rover2_control/rover2_control.egg-info/PKG-INFO
+writing dependency_links to ../../../build/rover2_control/rover2_control.egg-info/dependency_links.txt
+writing entry points to ../../../build/rover2_control/rover2_control.egg-info/entry_points.txt
+writing requirements to ../../../build/rover2_control/rover2_control.egg-info/requires.txt
+writing top-level names to ../../../build/rover2_control/rover2_control.egg-info/top_level.txt
+writing manifest file '../../../build/rover2_control/rover2_control.egg-info/SOURCES.txt'
+reading manifest file '../../../build/rover2_control/rover2_control.egg-info/SOURCES.txt'
+writing manifest file '../../../build/rover2_control/rover2_control.egg-info/SOURCES.txt'
+running build
+running build_py
+creating /home/nolan/source/Rover_2023_2024/build/rover2_control/build
+creating /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib
+creating /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control
+copying rover2_control/auton_control_node.py -> /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control
+copying rover2_control/drive_control.py -> /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control
+copying rover2_control/drive_coordinator.py -> /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control
+copying rover2_control/can_calibrate.py -> /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control
+copying rover2_control/aruco_scan.py -> /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control
+copying rover2_control/tower_pan_tilt_control.py -> /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control
+copying rover2_control/heist_mech_control.py -> /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control
+copying rover2_control/auton_controller.py -> /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control
+copying rover2_control/geographic_functions.py -> /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control
+copying rover2_control/hammer_detector.py -> /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control
+copying rover2_control/can_restore_config.py -> /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control
+copying rover2_control/monitor_aruco.py -> /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control
+copying rover2_control/drive_can_control.py -> /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control
+copying rover2_control/__init__.py -> /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control
+copying rover2_control/drill_control.py -> /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control
+copying rover2_control/gripper_control.py -> /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control
+copying rover2_control/test_drive_accuracy.py -> /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control
+copying rover2_control/iris_controller.py -> /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control
+copying rover2_control/bottle_detect.py -> /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control
+copying rover2_control/chassis_pan_tilt_control.py -> /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control
+copying rover2_control/odrive_pan_tilt.py -> /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control
+copying rover2_control/joy_to_drive.py -> /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control
+copying rover2_control/joint_position_control.py -> /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control
+copying rover2_control/effectors_control.py -> /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control
+running install
+running install_lib
+creating /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control
+copying /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control/auton_control_node.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control
+copying /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control/drive_control.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control
+copying /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control/drive_coordinator.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control
+copying /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control/can_calibrate.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control
+copying /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control/aruco_scan.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control
+copying /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control/tower_pan_tilt_control.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control
+copying /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control/heist_mech_control.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control
+copying /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control/auton_controller.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control
+copying /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control/geographic_functions.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control
+copying /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control/hammer_detector.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control
+copying /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control/can_restore_config.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control
+copying /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control/monitor_aruco.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control
+copying /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control/drive_can_control.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control
+copying /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control/__init__.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control
+copying /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control/drill_control.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control
+copying /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control/gripper_control.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control
+copying /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control/test_drive_accuracy.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control
+copying /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control/iris_controller.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control
+copying /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control/bottle_detect.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control
+copying /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control/chassis_pan_tilt_control.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control
+copying /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control/odrive_pan_tilt.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control
+copying /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control/joy_to_drive.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control
+copying /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control/joint_position_control.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control
+copying /home/nolan/source/Rover_2023_2024/build/rover2_control/build/lib/rover2_control/effectors_control.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control
+byte-compiling /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control/auton_control_node.py to auton_control_node.cpython-310.pyc
+byte-compiling /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control/drive_control.py to drive_control.cpython-310.pyc
+byte-compiling /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control/drive_coordinator.py to drive_coordinator.cpython-310.pyc
+byte-compiling /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control/can_calibrate.py to can_calibrate.cpython-310.pyc
+byte-compiling /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control/aruco_scan.py to aruco_scan.cpython-310.pyc
+byte-compiling /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control/tower_pan_tilt_control.py to tower_pan_tilt_control.cpython-310.pyc
+byte-compiling /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control/heist_mech_control.py to heist_mech_control.cpython-310.pyc
+byte-compiling /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control/auton_controller.py to auton_controller.cpython-310.pyc
+byte-compiling /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control/geographic_functions.py to geographic_functions.cpython-310.pyc
+byte-compiling /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control/hammer_detector.py to hammer_detector.cpython-310.pyc
+byte-compiling /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control/can_restore_config.py to can_restore_config.cpython-310.pyc
+byte-compiling /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control/monitor_aruco.py to monitor_aruco.cpython-310.pyc
+byte-compiling /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control/drive_can_control.py to drive_can_control.cpython-310.pyc
+byte-compiling /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control/__init__.py to __init__.cpython-310.pyc
+byte-compiling /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control/drill_control.py to drill_control.cpython-310.pyc
+byte-compiling /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control/gripper_control.py to gripper_control.cpython-310.pyc
+byte-compiling /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control/test_drive_accuracy.py to test_drive_accuracy.cpython-310.pyc
+byte-compiling /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control/iris_controller.py to iris_controller.cpython-310.pyc
+byte-compiling /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control/bottle_detect.py to bottle_detect.cpython-310.pyc
+byte-compiling /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control/chassis_pan_tilt_control.py to chassis_pan_tilt_control.cpython-310.pyc
+byte-compiling /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control/odrive_pan_tilt.py to odrive_pan_tilt.cpython-310.pyc
+byte-compiling /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control/joy_to_drive.py to joy_to_drive.cpython-310.pyc
+byte-compiling /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control/joint_position_control.py to joint_position_control.cpython-310.pyc
+byte-compiling /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control/effectors_control.py to effectors_control.cpython-310.pyc
+running install_data
+creating /home/nolan/source/Rover_2023_2024/install/rover2_control/share/ament_index
+creating /home/nolan/source/Rover_2023_2024/install/rover2_control/share/ament_index/resource_index
+creating /home/nolan/source/Rover_2023_2024/install/rover2_control/share/ament_index/resource_index/packages
+copying resource/rover2_control -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/ament_index/resource_index/packages
+copying package.xml -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control
+copying launch/rover2_control_launch.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control
+copying launch/odrive_ros2_control.launch.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control
+copying launch/drive_control_launch.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control
+copying launch/gripper_control_launch.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control
+copying launch/gimbal_launch.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control
+copying launch/heist_mechanism_launch.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control
+copying launch/pan_tilt_launch.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control
+copying launch/camera_control_launch.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control
+copying launch/odrive_drive_control_launch.py.bak -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control
+copying launch/odrive_drive_control_launch.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control
+creating /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control/rover2_control
+copying rover2_control/auton_control_node.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control/rover2_control
+copying rover2_control/drive_control.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control/rover2_control
+copying rover2_control/drive_coordinator.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control/rover2_control
+copying rover2_control/can_calibrate.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control/rover2_control
+copying rover2_control/aruco_scan.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control/rover2_control
+copying rover2_control/tower_pan_tilt_control.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control/rover2_control
+copying rover2_control/heist_mech_control.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control/rover2_control
+copying rover2_control/auton_controller.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control/rover2_control
+copying rover2_control/geographic_functions.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control/rover2_control
+copying rover2_control/hammer_detector.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control/rover2_control
+copying rover2_control/can_restore_config.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control/rover2_control
+copying rover2_control/monitor_aruco.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control/rover2_control
+copying rover2_control/drive_can_control.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control/rover2_control
+copying rover2_control/__init__.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control/rover2_control
+copying rover2_control/drill_control.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control/rover2_control
+copying rover2_control/gripper_control.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control/rover2_control
+copying rover2_control/test_drive_accuracy.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control/rover2_control
+copying rover2_control/iris_controller.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control/rover2_control
+copying rover2_control/bottle_detect.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control/rover2_control
+copying rover2_control/chassis_pan_tilt_control.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control/rover2_control
+copying rover2_control/odrive_pan_tilt.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control/rover2_control
+copying rover2_control/joy_to_drive.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control/rover2_control
+copying rover2_control/joint_position_control.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control/rover2_control
+copying rover2_control/effectors_control.py -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control/rover2_control
+creating /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control/config
+copying config/flat_endpoints.json -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control/config
+copying config/rover_drive.yaml -> /home/nolan/source/Rover_2023_2024/install/rover2_control/share/rover2_control/config
+running install_egg_info
+Copying ../../../build/rover2_control/rover2_control.egg-info to /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/python3.10/site-packages/rover2_control-0.0.0-py3.10.egg-info
+running install_scripts
+Installing auton_controller script to /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/rover2_control
+Installing chassis_pan_tilt_control script to /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/rover2_control
+Installing drill_control script to /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/rover2_control
+Installing drive_can_control script to /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/rover2_control
+Installing drive_control script to /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/rover2_control
+Installing drive_coordinator script to /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/rover2_control
+Installing effectors_control script to /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/rover2_control
+Installing gripper_control script to /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/rover2_control
+Installing heist_mech_control script to /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/rover2_control
+Installing iris_controller script to /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/rover2_control
+Installing joint_position_control script to /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/rover2_control
+Installing joy_to_drive script to /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/rover2_control
+Installing monitor_aruco script to /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/rover2_control
+Installing odrive_pan_tilt script to /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/rover2_control
+Installing tower_pan_tilt_control script to /home/nolan/source/Rover_2023_2024/install/rover2_control/lib/rover2_control
+writing list of installed files to '/home/nolan/source/Rover_2023_2024/build/rover2_control/install.log'
