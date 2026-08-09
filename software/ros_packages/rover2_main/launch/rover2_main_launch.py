@@ -276,7 +276,7 @@ def generate_launch_description():
                 control_launch,
                 odom,
                 status,
-               # cameras,
+                cameras,
                 lidar,
 
                 arm_launch,

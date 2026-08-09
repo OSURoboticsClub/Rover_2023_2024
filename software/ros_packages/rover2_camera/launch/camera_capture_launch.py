@@ -90,7 +90,7 @@ def generate_launch_description():
             # "depth_height": 720,
             # "color_width": 1280,
             # "color_height": 720,
-            "depth_module.depth_profile": "1280x720x15",
+            "depth_module.depth_profile": "640x480x15",
             'depth_module.color_profile': '640x480x30',
 
             "pointcloud.enable": True,
@@ -110,9 +110,11 @@ def generate_launch_description():
             "enable_sync": True,
             "pointcloud.stream_filter": 2,
             # "enable_depth": True,
-            "serial_no":"218622273613",
+            "serial_no":"238722072340", # Northrop-238722072340, D405: 218622273613
             # "depth_fps": 5,
             # "rgb_fps": 5,
+
+            "depth_module.emitter_enabled": 0,
         }],
         output='screen',
         condition=IfCondition(launch_d405)
@@ -327,7 +329,7 @@ def generate_launch_description():
         launch_muxing_arg,
         launch_driver_arg,
 
-        realsense_launch_nav,
+        #realsense_launch_nav,
         chassis_right_cam_node,
         chassis_left_cam_node,
 #        birds_eye_cam_node,
@@ -337,6 +339,6 @@ def generate_launch_description():
         muxing_node,
         d405_node,
         gripper_view,
-        chassis_view,
+        #chassis_view,
     ])
 

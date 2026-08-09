@@ -193,7 +193,7 @@
       <parent link="${name}_base_link"/>
       <child link="${name}_shoulder"/>
       <axis xyz="0.0 0.0 -1.0"/>
-      <limit upper="1.570796" lower="-1.570796" effort="100" velocity="0.565478"/>
+      <limit upper="3.1416" lower="-3.1416" effort="100" velocity="0.565478"/>
     </joint>
 
     <joint name="${name}_shoulder_joint" type="revolute">

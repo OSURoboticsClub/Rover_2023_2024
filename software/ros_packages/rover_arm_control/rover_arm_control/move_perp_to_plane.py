@@ -124,7 +124,7 @@ class PerpToPlane(Node):
         """
         # z direction is the tool orientation
         #get the unit vector in the z direction
-        z = z / np.linalg.norm(z)
+        z = -z / np.linalg.norm(z)
         #Choose an arbitrary x reference
         x_ref = np.array([0.0, 0.0, 1.0])
         #Check if x reference is parallel to z
