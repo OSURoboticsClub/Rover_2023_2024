@@ -46,9 +46,9 @@ class MechansimCommand(Enum):
 
 
 class ServoPosition(Enum):
-    HOME  = 2
+    HOME  = 0
     MORSE = 1
-    XLR   = 0
+    XLR   = 2
 
 
 class ServiceCommand(Enum):
@@ -101,7 +101,7 @@ class CanFrame():
         self.data = data
 
     def get_can_message(self):
-        return can.Message(arbitration_id = (self.node_id << 5 | self.cmd_id), data = self.data)
+        return can.Message(arbitration_id = (self.node_id << 5 | self.cmd_id), data = self.data, is_extended_id=False)
 
     
         
@@ -126,6 +126,7 @@ class HeistMechController(Node):
             try:
                 self.bus.send(CanFrame(self.mech_can_id, cmd, data).get_can_message())
                 resp.result_msg = "Command successful"
+                resp.success = True
             except Exception as e:
                 resp.result_msg = f"Failed to send CAN with exception: + {e}"
 
@@ -167,7 +168,6 @@ class HeistMechController(Node):
                     self.bus.send(CanFrame(self.mech_can_id, MechansimCommand.MORSE_EXEC.value).get_can_message())
 
                     resp.result_msg = "Operation succeeded"
-                    resp.success = True
 
             except Exception as e:
                 #resp.result_msg = f"Failed to send message with exception: + {e}"
@@ -177,6 +177,7 @@ class HeistMechController(Node):
 
         elif req.command == ServiceCommand.TOGGLE_SOLENOID.value:
             try_send_can(MechansimCommand.TOGGLE_SOLENOID.value)
+            resp.success = True
 
         elif req.command == ServiceCommand.SERVO_HOME.value:
             send_servo_can(ServoPosition.HOME)
