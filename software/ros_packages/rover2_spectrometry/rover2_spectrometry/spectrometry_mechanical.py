@@ -102,7 +102,6 @@ class SpectrometryMechanical(Node):
             pump_on=bool(msg.pump_on),
             coil_1_on=bool(msg.coil_1_on),
             coil_2_on=bool(msg.coil_2_on),
-            solenoid_on=bool(msg.solenoid_on),
         ).normalized()
         self.last_command_time = now
 
@@ -182,7 +181,6 @@ class SpectrometryMechanical(Node):
         msg.pump_on = state.pump_on
         msg.coil_1_on = state.coil_1_on
         msg.coil_2_on = state.coil_2_on
-        msg.solenoid_on = state.solenoid_on
         self.status_publisher.publish(msg)
 
     def arbitration_id(self, command_code):
