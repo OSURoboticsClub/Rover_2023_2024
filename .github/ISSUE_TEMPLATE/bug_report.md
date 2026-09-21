@@ -1,9 +1,10 @@
 ---
 name: Bug report
 about: Report a problem which needs resolved
-title: ''
+title: "[BUG REPORT]"
 labels: ''
 assignees: ''
+type: Bug
 
 ---
 
