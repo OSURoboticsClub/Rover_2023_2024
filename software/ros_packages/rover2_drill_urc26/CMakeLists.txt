@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(rover2_drill)
+project(rover2_drill_urc26)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -15,24 +15,24 @@ find_package(std_srvs REQUIRED)
 # find_package(<dependency> REQUIRED)
 
 install(PROGRAMS
-  rover2_drill/linear_actuator_control.py
+  rover2_drill_urc26/linear_actuator_control.py
   DESTINATION lib/${PROJECT_NAME}
   # TODO: remove rename
   RENAME linear_actuator_control
 )
 # TODO: remove following install block
 install(PROGRAMS
-  rover2_drill/linear_actuator_command.py
+  rover2_drill_urc26/linear_actuator_command.py
   DESTINATION lib/${PROJECT_NAME}
   RENAME linear_actuator_command
 )
 install(PROGRAMS
-  rover2_drill/drill_control.py
+  rover2_drill_urc26/drill_control.py
   DESTINATION lib/${PROJECT_NAME}
   RENAME drill_control
 )
 install(PROGRAMS
-  rover2_drill/drill_cap_control.py
+  rover2_drill_urc26/drill_cap_control.py
   DESTINATION lib/${PROJECT_NAME}
   RENAME drill_cap_control
 )

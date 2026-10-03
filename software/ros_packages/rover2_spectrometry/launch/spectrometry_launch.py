@@ -15,6 +15,9 @@ def generate_launch_description():
             name='spectrometry_publisher',
             parameters=[{
                 'camera_locations': '/dev/rover/spectrometer_cam_',
+                'timer_period_s': .1,
+                # Wait time between image sends in seconds
+                'image_wait_time': 30,
             }],
             **config
         ), # Local System - /dev/video

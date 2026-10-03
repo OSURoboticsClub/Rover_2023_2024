@@ -40,8 +40,13 @@ class Spectrometry_Publisher(Node):
         self.camera_ids = []
 
         self.declare_parameter("camera_location", "/dev/video")
+        self.declare_parameter("timer_period", .1)
+        self.declare_parameter("image_wait_time", 30)
 
-        self.timer_period = .1
+
+        self._image_wait_time = self.get_parameter("image_wait_time").value
+        self.timer_period = self.get_parameter("timer_period").value
+        self._camera_location = self.get_parameter("camera_location").value
         self.timer = self.create_timer(self.timer_period, self.timer_callback)
 
         self.srv = self.create_service(SpectrometryInterface, 'spectrometry_chart', self.start_graph_feed)
@@ -49,7 +54,6 @@ class Spectrometry_Publisher(Node):
         self.reaction_type = {}
         self.start_times = {}
         self.iterations = {}
-        self._camera_location = self.get_parameter("camera_location").value
 
     def start_graph_feed(self, request, response):
         if not self.camera_ids:
@@ -75,7 +79,7 @@ class Spectrometry_Publisher(Node):
         if not self.camera_ids:
             return
         for camera_id in self.camera_ids:
-            if ((int(self.start_times.get(camera_id).nanoseconds / 1e9) + (10.0 * self.iterations.get(camera_id)))
+            if ((int(self.start_times.get(camera_id).nanoseconds / 1e9) + (self._image_wait_time * self.iterations.get(camera_id)))
                     > float(self.get_clock().now().nanoseconds)/1e9):
                 continue
             self.iterations[camera_id] = self.iterations[camera_id] + 1
@@ -107,7 +111,11 @@ class Spectrometry_Publisher(Node):
             plt.clf()
 
     def get_graph(self, feedNumber, reaction_type):
+
         cap = cv2.VideoCapture(self._camera_location + str(feedNumber))
+        cap.set(cv2.CAP_PROP_BRIGHTNESS, 60)
+        cap.set(cv2.CAP_PROP_CONTRAST, 110)
+        cap.set(cv2.CAP_PROP_SATURATION, 200)
         
         ret, frame = cap.read()
         cropped = frame[int(self.r[1]):int(self.r[1] + self.r[3]), int(self.r[0]):int(self.r[0] + self.r[2])]
