@@ -39,6 +39,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/GPSStatusMessage.msg"
   "msg/OdrivePanTiltControlMessage.msg"
   "srv/HeistMechanismService.srv"
+  "msg/CommsStatusMessage.msg"
   DEPENDENCIES geometry_msgs
 )
 
