@@ -1,7 +1,0 @@
-{
-	"name": "modbus_slave",
-	"author": "OSURC",
-	"description": "Custom modbus slave library.",
-	"keywords": "modbus_slave",
-	"version": "1.0"
-}
