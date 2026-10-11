@@ -1,7 +1,7 @@
 #include <rclcpp/rclcpp.hpp>
-#include <moveit/planning_scene_monitor/planning_scene_monitor.h>
-#include <moveit/robot_state/robot_state.h>
-#include <moveit/robot_model_loader/robot_model_loader.h>
+#include <moveit/planning_scene_monitor/planning_scene_monitor.hpp>
+#include <moveit/robot_state/robot_state.hpp>
+#include <moveit/robot_model_loader/robot_model_loader.hpp>
 #include <Eigen/Dense>
 
 class ManipulabilityNode : public rclcpp::Node

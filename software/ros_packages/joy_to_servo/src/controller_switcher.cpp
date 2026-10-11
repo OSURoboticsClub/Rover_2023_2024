@@ -120,10 +120,10 @@ private:
 
     // Create request
     auto request = std::make_shared<controller_manager_msgs::srv::SwitchController::Request>();
-    request->start_controllers = {next_controller};
-    request->stop_controllers = {current_controller};
+    request->activate_controllers = {next_controller};
+    request->deactivate_controllers = {current_controller};
     request->strictness = controller_manager_msgs::srv::SwitchController::Request::BEST_EFFORT;
-    request->start_asap = false;
+    request->activate_asap = false;
 
     // Send request
     controller_switch_client_->async_send_request(

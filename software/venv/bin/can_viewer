@@ -1,0 +1,6 @@
+#!/home/makemorerobot/Rover_2023_2024/software/venv/bin/python3
+import sys
+from can.viewer import main
+if __name__ == '__main__':
+    sys.argv[0] = sys.argv[0].removesuffix('.exe')
+    sys.exit(main())

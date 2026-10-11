@@ -228,15 +228,15 @@ def generate_launch_description():
     # -------------------------
     # Other stuff I don't need rn
     # -------------------------
-    driller = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory('rover2_drill'),
-                'launch',
-                'drill_launch.py'
-            )
-        )
-    )
+    #driller = IncludeLaunchDescription(
+    #    PythonLaunchDescriptionSource(
+    #        os.path.join(
+    #            get_package_share_directory('rover2_drill'),
+    #            'launch',
+    #            'drill_launch.py'
+    #        )
+    #    )
+    #)
 
     camera_gimbals = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(

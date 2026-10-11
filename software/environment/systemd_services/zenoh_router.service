@@ -1,0 +1,10 @@
+[Unit]
+After=network-online.target
+
+[Service]
+Type=simple
+Restart=no
+ExecStart=/home/makemorerobot/Rover_2023_2024/software/zenoh_config/start_zenoh_router.bash
+
+[Install]
+WantedBy=multi-user.target

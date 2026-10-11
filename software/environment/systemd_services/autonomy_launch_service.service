@@ -1,0 +1,17 @@
+[Unit]
+After=can_launch_service.service
+Requires=can_launch_service.service
+Description=ROS2 rover launch
+
+[Service]
+User=makemorerobot
+Group=makemorerobot
+WorkingDirectory=/home/makemorerobot/Rover_Autonomy_Capstone/software
+ExecStart= /home/makemorerobot/Rover_Autonomy_Capstone/software/startRover.sh
+RemainAfterExit=no
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
+
