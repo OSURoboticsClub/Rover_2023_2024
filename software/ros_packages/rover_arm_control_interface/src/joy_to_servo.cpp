@@ -46,7 +46,16 @@ Year: 2526
 
 The follow is based off the above work by Adam Pettinger at PickNik Robotics for MoveIt Servo. It is modified
 to fit the needs of rover tele-op control. This node takes a joy message and converts it to a form capatable 
-with MoveIt Servo. 
+with MoveIt Servo.
+------------------
+
+DAM Robtics
+Nolan Kessler
+2627
+
+Updated for ROS2 Jazzy, with fixes for updated MoveitServo. Swapped removed start_servo interface for new pause_servo
+interface. Added use of required switch_command_type service.
+-------------------------------------------------------------
 
 Notes
 -----
@@ -180,7 +189,7 @@ void updateCmdFrame(std::string& frame_name, const std::vector<int>& buttons, co
 {
   if (buttons[controllerMappings.BUTTON_MAP.at("CHANGE_VIEW")] && frame_name == EEF_FRAME_ID){
     frame_name = BASE_FRAME_ID;
-    use_ik = false; 
+    use_ik = false;
   }
   else if (buttons[controllerMappings.BUTTON_MAP.at("MENU")] && frame_name == BASE_FRAME_ID){
     frame_name = EEF_FRAME_ID;
@@ -217,15 +226,21 @@ JoyToServoPub::JoyToServoPub(const rclcpp::NodeOptions& options)
   
 
     //Setup Services
-    servo_start_client_ = this->create_client<std_srvs::srv::Trigger>("/servo_node/start_servo");
-    servo_start_client_->wait_for_service(std::chrono::seconds(1));
+    pause_servo_client_ = this->create_client<std_srvs::srv::SetBool>("/servo_node/pause_servo");
+    pause_servo_client_->wait_for_service(std::chrono::seconds(1));
 
     // Start the servo node
-    servo_start_client_->async_send_request(std::make_shared<std_srvs::srv::Trigger::Request>());
+    auto request = std::make_shared<std_srvs::srv::SetBool::Request>();
+    request->data = false;
+    pause_servo_client_->async_send_request(request);
 
     //Initialize mappings
     RCLCPP_INFO(this->get_logger(), "Using controller type: %s", controller_type.c_str());
     this->initializeControllerMappings(controller_type);
+
+    //create command type switcher client
+    servo_command_type_client_ = this->create_client<moveit_msgs::srv::ServoCommandType>("/servo_node/switch_command_type");
+    servo_command_type_client_->wait_for_service(std::chrono::seconds(1));
 
 }
 
@@ -325,6 +340,20 @@ void JoyToServoPub::joyCB(const sensor_msgs::msg::Joy::ConstSharedPtr& msg)
     updateCmdFrame(frame_to_publish_, msg->buttons, controller_map_, use_ik_);
     if (prev_use != use_ik_){
       RCLCPP_INFO(this->get_logger(), "Control mode changed: %s", use_ik_ ? "IK Control" : "Joint by Joint Control");
+      if (use_ik_) {
+        // switch moveit servo to twist command mode
+        auto request = std::make_shared<moveit_msgs::srv::ServoCommandType::Request>();
+        request->command_type = request->TWIST;
+        auto result = this->servo_command_type_client_->async_send_request(request);
+        result.future.wait();
+      }
+      else {
+        // switch moveit servo to joint jogging mode
+        auto request = std::make_shared<moveit_msgs::srv::ServoCommandType::Request>();
+        request->command_type = request->JOINT_JOG;
+        auto result = this->servo_command_type_client_->async_send_request(request);
+        result.future.wait();
+      }
     } 
     // Convert the joystick message to Twist or JointJog and publish
     if (convertJoyToCmd(msg->axes, msg->buttons, twist_msg, joint_msg, use_ik_, controller_map_, slowdown_,

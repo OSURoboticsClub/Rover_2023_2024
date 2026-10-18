@@ -1,3 +1,12 @@
+/*
+ Updated to Jazzy 10/2026
+
+ Updated to new pause_servo service.
+
+ -NK
+
+*/
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -6,7 +15,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/joy.hpp"
 #include "controller_manager_msgs/srv/switch_controller.hpp"
-#include "std_srvs/srv/trigger.hpp"
+#include "std_srvs/srv/set_bool.hpp"
 
 using namespace std::chrono_literals;
 
@@ -22,6 +31,8 @@ public:
     // Switching to this controller must call /servo_node/start_servo first, or moveit_servo's
     // low-pass filters/internal state can be stale relative to wherever the arm actually ended
     // up while this controller was inactive, causing a snap back toward the old position.
+    //
+    // Updated to use pause_servo -NK
     this->declare_parameter("servo_controller_name", std::string{"rover_arm_velocity_controller"});
 
     home_button_index_ = this->get_parameter("home_button_index").as_int();
@@ -54,15 +65,15 @@ public:
       RCLCPP_INFO(this->get_logger(), "Waiting for controller_manager service...");
     }
 
-    // Create client for moveit_servo's start_servo trigger
-    start_servo_client_ = this->create_client<std_srvs::srv::Trigger>("/servo_node/start_servo");
+    // Create client for moveit_servo's pause_servo service
+    pause_servo_client_ = this->create_client<std_srvs::srv::SetBool>("/servo_node/pause_servo");
 
-    while (!start_servo_client_->wait_for_service(1s)) {
+    while (!pause_servo_client_->wait_for_service(1s)) {
       if (!rclcpp::ok()) {
         RCLCPP_ERROR(this->get_logger(), "Interrupted while waiting for service.");
         return;
       }
-      RCLCPP_INFO(this->get_logger(), "Waiting for /servo_node/start_servo service...");
+      RCLCPP_INFO(this->get_logger(), "Waiting for /servo_node/pause_servo service...");
     }
 
     RCLCPP_INFO(this->get_logger(), "Controller switcher initialized.");
@@ -96,19 +107,36 @@ private:
       // ros2_control controller is active. start_servo re-syncs its internal state/filters
       // from the robot's actual current position before we hand it control again, so it
       // doesn't resume from wherever it last thought the arm was.
-      RCLCPP_INFO(this->get_logger(), "Calling start_servo before switching to %s", next_controller.c_str());
-      auto trigger_request = std::make_shared<std_srvs::srv::Trigger::Request>();
-      start_servo_client_->async_send_request(
+      //
+      // Updated to use new pause_servo service. NK - 10/17/2026
+      RCLCPP_INFO(this->get_logger(), "Calling pause_servo (false) before switching to %s", next_controller.c_str());
+      auto trigger_request = std::make_shared<std_srvs::srv::SetBool::Request>();
+      trigger_request->data = false;
+      pause_servo_client_->async_send_request(
         trigger_request,
-        [this, current_controller, next_controller](rclcpp::Client<std_srvs::srv::Trigger>::SharedFuture future)
+        [this, current_controller, next_controller](rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture future)
         {
           if (!future.get()->success) {
-            RCLCPP_WARN(this->get_logger(), "start_servo call did not report success, switching controllers anyway");
+            RCLCPP_WARN(this->get_logger(), "pause_servo call did not report success, switching controllers anyway");
           }
           send_switch_controller_request(current_controller, next_controller);
         }
       );
-    } else {
+    } 
+    else {
+      RCLCPP_INFO(this->get_logger(), "Calling pause_servo (true) before switching to %s", next_controller.c_str());
+      auto trigger_request = std::make_shared<std_srvs::srv::SetBool::Request>();
+      trigger_request->data = true;
+      pause_servo_client_->async_send_request(
+        trigger_request,
+        [this, current_controller, next_controller](rclcpp::Client<std_srvs::srv::SetBool>::SharedFuture future)
+        {
+          if (!future.get()->success) {
+            RCLCPP_WARN(this->get_logger(), "pause_servo call did not report success, switching controllers anyway");
+          }
+          send_switch_controller_request(current_controller, next_controller);
+        }
+      );
       send_switch_controller_request(current_controller, next_controller);
     }
   }
@@ -145,7 +173,7 @@ private:
 
   rclcpp::Subscription<sensor_msgs::msg::Joy>::SharedPtr joy_subscription_;
   rclcpp::Client<controller_manager_msgs::srv::SwitchController>::SharedPtr controller_switch_client_;
-  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr start_servo_client_;
+  rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr pause_servo_client_;
 
   std::vector<std::string> controllers_to_toggle_;
   std::string servo_controller_name_;

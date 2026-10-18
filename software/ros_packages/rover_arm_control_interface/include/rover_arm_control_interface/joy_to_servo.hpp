@@ -47,6 +47,15 @@ Year: 2526
 The follow is based off the above work by Adam Pettinger at PickNik Robotics for MoveIt Servo. It is modified
 to fit the needs of rover tele-op control. This node takes a joy message and converts it to a form capatable 
 with MoveIt Servo. 
+------------------
+
+DAM Robtics
+Nolan Kessler
+2627
+
+Updated for ROS2 Jazzy, with fixes for updated MoveitServo. Swapped removed start_servo interface for new pause_servo
+interface. Added use of required switch_command_type service.
+-------------------------------------------------------------
 
 Notes:
 ------
@@ -66,8 +75,9 @@ The below code is covered under the 3-clause BSD license.
  #include <sensor_msgs/msg/joy.hpp>
  #include <geometry_msgs/msg/twist_stamped.hpp>
  #include <control_msgs/msg/joint_jog.hpp>
- #include <std_srvs/srv/trigger.hpp>
+ #include <std_srvs/srv/set_bool.hpp>
  #include <moveit_msgs/msg/planning_scene.hpp>
+ #include <moveit_msgs/srv/servo_command_type.hpp>
  #include <rclcpp/client.hpp>
  #include <rclcpp/experimental/buffers/intra_process_buffer.hpp>
  #include <rclcpp/node.hpp>
@@ -123,7 +133,8 @@ private:
     rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr twist_pub_;
     rclcpp::Publisher<control_msgs::msg::JointJog>::SharedPtr joint_pub_;
     rclcpp::Publisher<moveit_msgs::msg::PlanningScene>::SharedPtr collision_pub_;
-    rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr servo_start_client_;
+    rclcpp::Client<std_srvs::srv::SetBool>::SharedPtr pause_servo_client_;
+    rclcpp::Client<moveit_msgs::srv::ServoCommandType>::SharedPtr servo_command_type_client_;
 
     std::string frame_to_publish_{EEF_FRAME_ID};
     std::thread collision_pub_thread_;

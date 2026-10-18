@@ -425,7 +425,7 @@ Urdf of the rovers chassis and bogies
         </joint>
 
 
-        <joint name="${name}_front_left_link_joint" type="fixed">
+        <joint name="${name}_front_left_link_joint" type="revolute">
             <origin xyz="0.244132 0.178623 0.051277" rpy="0 0 1.5708"/>
             <parent link="${name}_base_origin"/>
             <child link="${name}_front_left_link"/>
@@ -433,14 +433,14 @@ Urdf of the rovers chassis and bogies
             <limit upper="0.2617994" lower="-0.2617994" effort="100" velocity="100"/>
             <dynamics damping="2.0" friction="0.2"/>
         </joint>
-        <joint name="${name}_back_left_link_joint" type="fixed">
+        <joint name="${name}_back_left_link_joint" type="continuous">
             <origin xyz="0.170002 0.178623 0.051277" rpy="0 0 1.5708"/>
             <parent link="${name}_base_origin"/>
             <child link="${name}_back_left_link"/>
             <!-- <axis xyz="1.0 0.0 0.0"/>
             <limit upper="0.2617994" lower="-0.2617994" effort="100" velocity="100"/> -->
         </joint>
-        <joint name="${name}_front_left_bogie_joint" type="fixed">
+        <joint name="${name}_front_left_bogie_joint" type="revolute">
             <origin xyz="0.036626 0.062229 -0.077732" rpy="0 0 0"/>
             <parent link="${name}_front_left_link"/>
             <child link="${name}_left_bogie"/>
@@ -459,7 +459,7 @@ Urdf of the rovers chassis and bogies
 
 
 
-        <joint name="${name}_front_right_link_joint" type="fixed">
+        <joint name="${name}_front_right_link_joint" type="revolute">
             <origin xyz="0.244132 -0.220157 0.051277" rpy="0 0 1.5708"/>
             <parent link="${name}_base_origin"/>
             <child link="${name}_front_right_link"/>
@@ -468,13 +468,13 @@ Urdf of the rovers chassis and bogies
             <dynamics damping="2.0" friction="0.2"/>
 
         </joint>
-        <joint name="${name}_back_right_link_joint" type="fixed">
+        <joint name="${name}_back_right_link_joint" type="continuous">
             <origin xyz="0.170002 -0.220157 0.051277" rpy="0 0 1.5708"/>
             <parent link="${name}_base_origin"/>
             <child link="${name}_back_right_link"/>
             <!-- <axis xyz="1.0 0.0 0.0"/> -->
         </joint>
-        <joint name="${name}_front_right_bogie_joint" type="fixed">
+        <joint name="${name}_front_right_bogie_joint" type="revolute">
             <origin xyz="-0.036626 0.054471 -0.076141" rpy="0 0 0"/>
             <parent link="${name}_front_right_link"/>
             <child link="${name}_right_bogie"/>
