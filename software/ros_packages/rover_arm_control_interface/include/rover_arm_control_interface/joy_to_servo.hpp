@@ -145,9 +145,12 @@ private:
     double max_linear_speed_{0.0}; //Max EE linear speed [m/s], from pilz_cartesian_limits.yaml's max_trans_vel
     double max_rotational_speed_{0.0}; //Max EE rotational speed [rad/s], from pilz_cartesian_limits.yaml's max_rot_vel
     std::map<std::string, double> joint_max_velocities_; //Per-joint max_velocity [rad/s] read from joint_limits.yaml
+    int8_t servo_command_type_{-1}; //Command type servo last confirmed (-1 = never set, servo rejects all input)
+    bool command_type_request_pending_{false}; //Avoids re-sending switch_command_type while a request is in flight
 
     void initializeControllerMappings(const std::string& controller_type);
     void loadJointVelocityLimits();
+    void setServoCommandType(int8_t command_type);
 };
 } // namespace moveit_servo
 

@@ -122,7 +122,7 @@ bool convertJoyToCmd(const std::vector<float>& axes, const std::vector<int>& but
     //Maintain joint by joint shoulder control if D_PAD is used
     if (axes[controllerMappings.AXIS_MAP.at("D_PAD_Y")])
     {
-      joint->joint_names.push_back("shoulder_joint");
+      joint->joint_names.push_back("rover_arm_shoulder_joint");
       joint->velocities.push_back(axes[controllerMappings.AXIS_MAP.at("D_PAD_Y")] * slowdown *
                                    jointMaxVelocities.at("rover_arm_shoulder_joint"));
       return false;
@@ -340,25 +340,13 @@ void JoyToServoPub::joyCB(const sensor_msgs::msg::Joy::ConstSharedPtr& msg)
     updateCmdFrame(frame_to_publish_, msg->buttons, controller_map_, use_ik_);
     if (prev_use != use_ik_){
       RCLCPP_INFO(this->get_logger(), "Control mode changed: %s", use_ik_ ? "IK Control" : "Joint by Joint Control");
-      if (use_ik_) {
-        // switch moveit servo to twist command mode
-        auto request = std::make_shared<moveit_msgs::srv::ServoCommandType::Request>();
-        request->command_type = request->TWIST;
-        auto result = this->servo_command_type_client_->async_send_request(request);
-        result.future.wait();
-      }
-      else {
-        // switch moveit servo to joint jogging mode
-        auto request = std::make_shared<moveit_msgs::srv::ServoCommandType::Request>();
-        request->command_type = request->JOINT_JOG;
-        auto result = this->servo_command_type_client_->async_send_request(request);
-        result.future.wait();
-      }
     } 
     // Convert the joystick message to Twist or JointJog and publish
     if (convertJoyToCmd(msg->axes, msg->buttons, twist_msg, joint_msg, use_ik_, controller_map_, slowdown_,
                          joint_max_velocities_, max_linear_speed_, max_rotational_speed_))
     {
+      // servo drops messages that don't match its command type, so keep it in sync with what we publish
+      setServoCommandType(moveit_msgs::srv::ServoCommandType::Request::TWIST);
       // publish the TwistStamped
       twist_msg->header.frame_id = frame_to_publish_;
       twist_msg->header.stamp = this->now();  
@@ -367,11 +355,54 @@ void JoyToServoPub::joyCB(const sensor_msgs::msg::Joy::ConstSharedPtr& msg)
     else
     {
       // publish the JointJog
+      setServoCommandType(moveit_msgs::srv::ServoCommandType::Request::JOINT_JOG);
       joint_msg->header.stamp = this->now();
       //Likely doesn't matter what frame
       joint_msg->header.frame_id = BASE_FRAME_ID;
       joint_pub_->publish(std::move(joint_msg));
     }
+  }
+
+/*Switch moveit servo's command type if it doesn't already match.
+
+Sent asynchronously: waiting on the future inside joyCB would deadlock, since the response is handled by the
+same callback group. servo_command_type_ is only updated once servo confirms, so a failed or dropped request
+is retried on the next joy message.
+
+Parameters
+----------
+command_type : int8_t
+    ServoCommandType::Request::JOINT_JOG, TWIST, or POSE
+*/
+void JoyToServoPub::setServoCommandType(int8_t command_type)
+  {
+    if (command_type == servo_command_type_ || command_type_request_pending_)
+      return;
+
+    if (!servo_command_type_client_->service_is_ready())
+    {
+      RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 2000,
+                           "/servo_node/switch_command_type not available, servo will reject commands");
+      return;
+    }
+
+    auto request = std::make_shared<moveit_msgs::srv::ServoCommandType::Request>();
+    request->command_type = command_type;
+    command_type_request_pending_ = true;
+    servo_command_type_client_->async_send_request(
+        request, [this, command_type](rclcpp::Client<moveit_msgs::srv::ServoCommandType>::SharedFuture future) {
+          command_type_request_pending_ = false;
+          if (future.get()->success)
+          {
+            servo_command_type_ = command_type;
+            RCLCPP_INFO(this->get_logger(), "Servo command type set to %s",
+                        command_type == moveit_msgs::srv::ServoCommandType::Request::TWIST ? "TWIST" : "JOINT_JOG");
+          }
+          else
+          {
+            RCLCPP_WARN(this->get_logger(), "Servo rejected command type %d", command_type);
+          }
+        });
   }
 } // namespace moveit_servo
 
