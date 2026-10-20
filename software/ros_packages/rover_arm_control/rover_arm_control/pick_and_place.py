@@ -19,7 +19,7 @@ from rcl_interfaces.msg import Parameter, ParameterValue, ParameterType
 from rcl_interfaces.srv import SetParameters
 from sensor_msgs.msg import JointState, Joy, PointCloud2
 from sensor_msgs_py import point_cloud2
-from std_srvs.srv import Trigger, Empty
+from std_srvs.srv import Trigger, Empty, SetBool
 from controller_manager_msgs.srv import SwitchController
 
 from tf2_ros import Buffer, TransformListener
@@ -74,7 +74,7 @@ class SquareMakingController(Node):
 
         self.controller_client = self.make_client(SwitchController, '/controller_manager/switch_controller')
         self.configure_servo_cli = self.make_client(SetParameters, '/servo_node/set_parameters')
-        self.start_servo_client = self.make_client(Trigger, '/servo_node/start_servo')
+        self.start_servo_client = self.make_client(SetBool, '/servo_node/pause_servo')
         self.start_object_cli = self.make_client(ResetObjects, '/reset_pc_processing')
         self.set_plane_cli = self.make_client(Trigger, '/set_ground_plane')
 
@@ -164,7 +164,7 @@ class SquareMakingController(Node):
             self.get_logger().info(f"Waiting for service '{name}', retrying...")
         return client
     
-    def switch_controller(self, servo=False, sim=False):
+    async def switch_controller(self, servo=False, sim=False):
         """Switch the ros2 control controllers.
 
         Parameters
@@ -197,9 +197,7 @@ class SquareMakingController(Node):
 
         self.request.strictness = SwitchController.Request.BEST_EFFORT  # Use STRICT or BEST_EFFORT
 
-        self.future = self.controller_client.call_async(self.request)
-        rclpy.spin_until_future_complete(self, self.future)
-        return self.future.result()
+        return await self.controller_client.call_async(self.request)
     
     def configure_servo(self, frame):
         """Change the moveit servo planning frame.
@@ -222,7 +220,7 @@ class SquareMakingController(Node):
         """
         self.latest_joint_state = msg
 
-    def start_servo(self):
+    async def start_servo(self):
         """Start moveit servo.
 
         Returns
@@ -230,11 +228,10 @@ class SquareMakingController(Node):
         future.result : Service Response
             The result from the service call.
         """
-        # Starts servo node
-        self.request = Trigger.Request()
-        self.future = self.start_servo_client.call_async(self.request)
-        rclpy.spin_until_future_complete(self, self.future) 
-        return self.future.result()
+        # Starts servo node (pause_servo with False unpauses)
+        self.request = SetBool.Request()
+        self.request.data = False
+        return await self.start_servo_client.call_async(self.request)
     
     def reset_count_object(self, enable=True, reset=True):
         """Service call to reset the object detection node.
@@ -576,7 +573,7 @@ class SquareMakingController(Node):
             self.get_logger().error(f"Failed to lookup gripper pose: {str(e)}")
         return current_pose
 
-    def timer_callback(self): 
+    async def timer_callback(self): 
         """The main control loop for the pick and place routine.
 
         Notes
@@ -602,7 +599,7 @@ class SquareMakingController(Node):
             if not self.sent_goal:
                 #self.get_logger().info("goal")
                 time.sleep(0.5)
-                self.switch_controller(servo=False)
+                await self.switch_controller(servo=False)
                 self.move_to_joint_positions(start_scan_pose)
             elif self.move_success:
                 self.get_logger().info("goto scan")
@@ -618,8 +615,8 @@ class SquareMakingController(Node):
 
         #step 2 scan workspace
         if self.state == "scan":
-            # self.start_servo()
-            # self.switch_controller(servo=True)
+            # await self.start_servo()
+            # await self.switch_controller(servo=True)
 
             # #Draw a square
             # self.set_direction()
@@ -636,8 +633,8 @@ class SquareMakingController(Node):
             #     self.state = "move_to_input"
             #     self.cycles = 0
 
-            # self.start_servo()
-            # self.switch_controller(servo=True)
+            # await self.start_servo()
+            # await self.switch_controller(servo=True)
 
             #make square
             if not self.sent_goal:
@@ -658,7 +655,7 @@ class SquareMakingController(Node):
             input_pos =  [0.17453, 1.22173, -2.61799, 0.0, -0.17453, 0.0] #front facing [0.0, -0.34, -1.98968, 0.0, 0.785398, 0.0]# stow [0.17453, 1.22173, -2.61799, 0.0, -0.17453, 0.0]# Ground pick up: [0.0, -0.698132, -1.65806, 0.0, -0.785698, 0.0]
             if not self.sent_goal:
                 time.sleep(0.5)
-                self.switch_controller(servo=False)
+                await self.switch_controller(servo=False)
                 self.move_to_joint_positions(input_pos)
             if self.move_success:
                 self.get_logger().info("goto get pick input")
@@ -686,7 +683,7 @@ class SquareMakingController(Node):
             input_pos =  [0.0, -0.34, -1.98968, 0.0, 0.785398, 0.0]# stow [0.17453, 1.22173, -2.61799, 0.0, -0.17453, 0.0]# Ground pick up: [0.0, -0.698132, -1.65806, 0.0, -0.785698, 0.0]
             if not self.sent_goal:
                 time.sleep(1.0)
-                self.switch_controller(servo=False)
+                await self.switch_controller(servo=False)
                 self.move_to_joint_positions(input_pos)
             if self.move_success:
                 self.get_logger().info("goto move to object")
@@ -735,7 +732,7 @@ class SquareMakingController(Node):
             input_pos =  [0.17453, 1.22173, -2.61799, 0.0, -0.17453, 0.0] #front facing [0.0, -0.34, -1.98968, 0.0, 0.785398, 0.0]# stow [0.17453, 1.22173, -2.61799, 0.0, -0.17453, 0.0]# Ground pick up: [0.0, -0.698132, -1.65806, 0.0, -0.785698, 0.0]
             if not self.sent_goal:
                 time.sleep(0.5)
-                self.switch_controller(servo=False)
+                await self.switch_controller(servo=False)
                 self.move_to_joint_positions(input_pos)
             if self.move_success:
                 self.get_logger().info("goto get place input")
@@ -757,7 +754,7 @@ class SquareMakingController(Node):
             input_pos =  [0.0, -0.34, -1.98968, 0.0, 0.785398, 0.0]# stow [0.17453, 1.22173, -2.61799, 0.0, -0.17453, 0.0]# Ground pick up: [0.0, -0.698132, -1.65806, 0.0, -0.785698, 0.0]
             if not self.sent_goal:
                 time.sleep(0.5)
-                self.switch_controller(servo=False)
+                await self.switch_controller(servo=False)
                 self.move_to_joint_positions(input_pos)
             if self.move_success:
                 self.get_logger().info("goto move above place location")
@@ -807,7 +804,7 @@ class SquareMakingController(Node):
             input_pos =  [0.17453, 1.22173, -2.61799, 0.0, -0.17453, 0.0]# stow [0.17453, 1.22173, -2.61799, 0.0, -0.17453, 0.0]# Ground pick up: [0.0, -0.698132, -1.65806, 0.0, -0.785698, 0.0]
             if not self.sent_goal:
                 time.sleep(0.5)
-                self.switch_controller(servo=False)
+                await self.switch_controller(servo=False)
                 self.move_to_joint_positions(input_pos)
             if self.move_success:
                 self.get_logger().info("Done")
@@ -819,7 +816,7 @@ class SquareMakingController(Node):
             input_pos =  [0.0, 0.0, -0.0, 0.0, 0.0, 0.0]# stow [0.17453, 1.22173, -2.61799, 0.0, -0.17453, 0.0]# Ground pick up: [0.0, -0.698132, -1.65806, 0.0, -0.785698, 0.0]
             if not self.sent_goal:
                 time.sleep(0.5)
-                self.switch_controller(servo=False)
+                await self.switch_controller(servo=False)
                 self.move_to_joint_positions(input_pos)
             if self.move_success:
                 self.get_logger().info("Done")
