@@ -538,7 +538,7 @@ Urdf of the rovers chassis and bogies
                 <update_rate>100</update_rate>
                 <visualize>true</visualize>
                 <topic>imu/data/raw</topic>
-                <ignition_frame_id>${name}_base_origin</ignition_frame_id>
+                <gz_frame_id>${name}_base_origin</gz_frame_id>
                 <plugin filename="gz-sim-imu-system"
                     name="gz::sim::systems::Imu">
                 </plugin>
@@ -550,7 +550,7 @@ Urdf of the rovers chassis and bogies
                 <update_rate>100</update_rate>
                 <visualize>true</visualize>
                 <topic>imu/mag/raw</topic>
-                <ignition_frame_id>${name}_base_origin</ignition_frame_id>
+                <gz_frame_id>${name}_base_origin</gz_frame_id>
                 <plugin filename="ignition-gazebo-magnetometer-system"
                     name="ignition::gazebo::systems::Magnetometer">
                 </plugin>
@@ -563,7 +563,7 @@ Urdf of the rovers chassis and bogies
                 <update_rate>5</update_rate>
                 <visualize>true</visualize>
                 <topic>gps/raw</topic>
-                <ignition_frame_id>${name}_base_origin</ignition_frame_id>
+                <gz_frame_id>${name}_base_origin</gz_frame_id>
                 <plugin
                     filename="ignition-gazebo-navsat-system"
                     name="ignition::gazebo::systems::NavSat">
