@@ -88,7 +88,9 @@ source /opt/ros/humble/setup.bash
 MoveIt2 can be installed via apt after ROS2 Humble is set up:
 
 ```bash
-sudo apt install ros-humble-moveit
+sudo apt install ros-jazzy-moveit
+sudo apt install ros-jazzy-moveit-servo
+
 ```
 
 For a full setup guide including tutorials, see the [MoveIt2 Getting Started docs](https://moveit.picknik.ai/main/doc/tutorials/getting_started/getting_started.html).
@@ -119,7 +121,7 @@ sudo apt update && sudo apt install librealsense2-dkms librealsense2-utils libre
 For the ROS2 RealSense wrapper, also install:
 
 ```bash
-sudo apt install ros-humble-realsense2-camera ros-humble-realsense2-description
+sudo apt install ros-jazzy-realsense2-camera ros-jazzy-realsense2-description
 ```
 
 ---
@@ -162,12 +164,12 @@ Make sure all dependencies above are installed and your ROS2 environment is sour
 
 ```bash
 # Source ROS2 Humble
-source /opt/ros/humble/setup.bash
+source /opt/ros/jazzy/setup.bash
 
 # Navigate to your workspace
-cd ~/ros2_ws
+cd ~/Rover_2023_2024
 
-# Install any missing ROS dependencies
+# Install any missing ROS dependencies. Rover doesn't have rosdep setup.
 rosdep update
 rosdep install --from-paths src --ignore-src -r -y
 

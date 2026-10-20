@@ -15,24 +15,24 @@ find_package(std_srvs REQUIRED)
 # find_package(<dependency> REQUIRED)
 
 install(PROGRAMS
-  rover2_drill/linear_actuator_control.py
+  src/linear_actuator_control.py
   DESTINATION lib/${PROJECT_NAME}
   # TODO: remove rename
   RENAME linear_actuator_control
 )
 # TODO: remove following install block
 install(PROGRAMS
-  rover2_drill/linear_actuator_command.py
+  src/linear_actuator_command.py
   DESTINATION lib/${PROJECT_NAME}
   RENAME linear_actuator_command
 )
 install(PROGRAMS
-  rover2_drill/drill_control.py
+  src/drill_control.py
   DESTINATION lib/${PROJECT_NAME}
   RENAME drill_control
 )
 install(PROGRAMS
-  rover2_drill/drill_cap_control.py
+  src/drill_cap_control.py
   DESTINATION lib/${PROJECT_NAME}
   RENAME drill_cap_control
 )
