@@ -4,12 +4,12 @@
 - [Groundstation Setup](#groundstation-setup)
 - [Rover Setup](#rover-setup)
   - [Software Dependencies](#software-dependencies)
-  - [ROS2 Humble](#ros2-humble)
+  - [ROS2 Jazzy](#ros2-jazzy)
   - [MoveIt2](#moveit2)
   - [Intel RealSense](#intel-realsense)
   - [GStreamer](#gstreamer)
 - [Building the Project](#building-the-project)
-- [Miscellaneous Notes](#miscellaneous-notes)
+- [Miscellaneous Notes](#miscellaneous-notes-and-stuff)
 
 ---
 
@@ -43,7 +43,7 @@ We integrate several software environments to help manage our rover. These inclu
 
 #### ROS2 Jazzy
 
-[ROS2 Jazzy](https://docs.ros.org/en/jazzy/index.html) is our middleware communications manager between subsystems on the rover and between the rover and groundstation. ROS2 Humble is the current LTS release and targets **Ubuntu 24.04 (Noble)**.
+[ROS2 Jazzy](https://docs.ros.org/en/jazzy/index.html) is our middleware communications manager between subsystems on the rover and between the rover and groundstation. ROS2 Jazzy is the current LTS release and targets **Ubuntu 24.04 (Noble)**.
 
 **Installation:**
 
@@ -66,12 +66,17 @@ sudo apt update && sudo apt install curl -y
 export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F'"' '{print $4}')
 curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo ${UBUNTU_CODENAME:-${VERSION_CODENAME}})_all.deb"
 sudo dpkg -i /tmp/ros2-apt-source.deb
-# Install ROS2 Humble (desktop-full recommended)
+# Install ROS2 Jazzy (desktop-full recommended)
 sudo apt update && sudo apt upgrade
 sudo apt install ros-jazzy-desktop
 
 # Source the environment (add to ~/.bashrc for persistence)
 source /opt/ros/jazzy/setup.bash
+```
+##### Ros2 package installs
+```bash
+sudo apt install ros-jazzy-ros2-control ros-jazzy-ros2-controllers \
+  ros-jazzy-rmw-zenoh-cpp ros-jazzy-tf-transformations
 ```
 
 ---
@@ -82,12 +87,11 @@ source /opt/ros/jazzy/setup.bash
 
 **Installation:**
 
-MoveIt2 can be installed via apt after ROS2 Humble is set up:
+MoveIt2 can be installed via apt after ROS2 Jazzy is set up:
 
 ```bash
 sudo apt install ros-jazzy-moveit
 sudo apt install ros-jazzy-moveit-servo
-
 ```
 
 For a full setup guide including tutorials, see the [MoveIt2 Getting Started docs](https://moveit.picknik.ai/main/doc/tutorials/getting_started/getting_started.html).
@@ -146,7 +150,7 @@ sudo apt install \
 sudo apt install gstreamer1.0-plugins-bad gstreamer1.0-gl
 ```
 
-> **Note:** NVENC H.265 (`nvh265enc`) requires an **Nvidia Jetson** device with the appropriate Jetpack SDK and GStreamer Nvidia plugins installed. If you are running on non-Jetson hardware, replace `nvh265enc` with the software encoder `x265enc` in the relevant pipeline files. See [Miscellaneous Notes](#miscellaneous-notes) for details.
+> **Note:** NVENC H.265 (`nvh265enc`) requires an **Nvidia Jetson** device with the appropriate Jetpack SDK and GStreamer Nvidia plugins installed. If you are running on non-Jetson hardware, replace `nvh265enc` with the software encoder `x265enc` in the relevant pipeline files. See [Miscellaneous Notes](#miscellaneous-notes-and-stuff) for details.
 
 Useful resources:
 - [GStreamer Documentation](https://gstreamer.freedesktop.org/documentation/)
@@ -154,11 +158,26 @@ Useful resources:
 - [GStreamer Plugin Reference](https://gstreamer.freedesktop.org/documentation/plugins_doc.html)
 
 ---
+#### Nav2
+[Nav2](https://docs.nav2.org/rolling/) is an open source mobile robot navigation package. It is the most commonly used robot navigation system used in research and is developed and maintained by research experts. The rover uses a Nav2 stack for autonomous naviagation and makes use of rtabmap and robot localization package. Nav2 documentation also have good resources for developing ros2 nodes and plugins. 
+
+```bash
+sudo apt update
+sudo apt install \
+    ros-$ROS_DISTRO-navigation2 \
+    ros-$ROS_DISTRO-nav2-bringup \
+    ros-$ROS_DISTRO-nav2-minimal-tb\*
+sudo apt install ros-jazzy-robot-localization
+sudo apt install ros-jazzy-rtabmap-ros
+
+```
+---
 #### Gazebo
 [Gazebo](https://gazebosim.org/docs/latest/ros_installation/) is a simulation framework designed to work with ros2. This simulation software models some physics and provides a better environment compared to pure visualizations found with rviz2. However this is not an advanced simulation like Isaac sim or MuJoCu that are often used for RL, AI, or Visual models. Its integration with ROS2 however does give it an edge for testing full stack operations. 
 
 ```bash
 sudo apt-get install ros-${ROS_DISTRO}-ros-gz
+sudo apt install ros-jazzy-gz-ros2-control
 ```
 ---
 ### Building the Project
@@ -166,11 +185,11 @@ sudo apt-get install ros-${ROS_DISTRO}-ros-gz
 Make sure all dependencies above are installed and your ROS2 environment is sourced before building.
 
 ```bash
-# Source ROS2 Humble
+# Source ROS2 Jazzy
 source /opt/ros/jazzy/setup.bash
 
 # Navigate to your workspace
-cd ~/Rover_2023_2024
+cd ~/Rover_2023_2024/software
 
 # Install any missing ROS dependencies. Rover doesn't have rosdep setup.
 rosdep update
