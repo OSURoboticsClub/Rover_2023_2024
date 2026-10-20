@@ -4,7 +4,7 @@
 - [Groundstation Setup](#groundstation-setup)
 - [Rover Setup](#rover-setup)
   - [Software Dependencies](#software-dependencies)
-  - [ROS2 Humble](#ros2-humble)
+  - [ROS2 Jazzy](#ros2-jazzy)
   - [MoveIt2](#moveit2)
   - [Intel RealSense](#intel-realsense)
   - [GStreamer](#gstreamer)
@@ -43,7 +43,7 @@ We integrate several software environments to help manage our rover. These inclu
 
 #### ROS2 Jazzy
 
-[ROS2 Jazzy](https://docs.ros.org/en/jazzy/index.html) is our middleware communications manager between subsystems on the rover and between the rover and groundstation. ROS2 Humble is the current LTS release and targets **Ubuntu 24.04 (Noble)**.
+[ROS2 Jazzy](https://docs.ros.org/en/jazzy/index.html) is our middleware communications manager between subsystems on the rover and between the rover and groundstation. ROS2 Jazzy is the current LTS release and targets **Ubuntu 24.04 (Noble)**.
 
 **Installation:**
 
@@ -82,12 +82,11 @@ source /opt/ros/jazzy/setup.bash
 
 **Installation:**
 
-MoveIt2 can be installed via apt after ROS2 Humble is set up:
+MoveIt2 can be installed via apt after ROS2 Jazzy is set up:
 
 ```bash
 sudo apt install ros-jazzy-moveit
 sudo apt install ros-jazzy-moveit-servo
-
 ```
 
 For a full setup guide including tutorials, see the [MoveIt2 Getting Started docs](https://moveit.picknik.ai/main/doc/tutorials/getting_started/getting_started.html).
@@ -146,7 +145,7 @@ sudo apt install \
 sudo apt install gstreamer1.0-plugins-bad gstreamer1.0-gl
 ```
 
-> **Note:** NVENC H.265 (`nvh265enc`) requires an **Nvidia Jetson** device with the appropriate Jetpack SDK and GStreamer Nvidia plugins installed. If you are running on non-Jetson hardware, replace `nvh265enc` with the software encoder `x265enc` in the relevant pipeline files. See [Miscellaneous Notes](#miscellaneous-notes) for details.
+> **Note:** NVENC H.265 (`nvh265enc`) requires an **Nvidia Jetson** device with the appropriate Jetpack SDK and GStreamer Nvidia plugins installed. If you are running on non-Jetson hardware, replace `nvh265enc` with the software encoder `x265enc` in the relevant pipeline files. See [Miscellaneous Notes](#miscellaneous-notes-and-stuff) for details.
 
 Useful resources:
 - [GStreamer Documentation](https://gstreamer.freedesktop.org/documentation/)
@@ -166,7 +165,7 @@ sudo apt-get install ros-${ROS_DISTRO}-ros-gz
 Make sure all dependencies above are installed and your ROS2 environment is sourced before building.
 
 ```bash
-# Source ROS2 Humble
+# Source ROS2 Jazzy
 source /opt/ros/jazzy/setup.bash
 
 # Navigate to your workspace
