@@ -73,7 +73,7 @@ class JointPositionController(Node):
     def joint_states_callback(self, msg):
         self.latest_joint_state = msg
 
-    def start_servo(self):
+    async def start_servo(self):
             """Start moveit servo.
     
             Returns
@@ -84,11 +84,9 @@ class JointPositionController(Node):
             # Starts servo node
             request = SetBool.Request()
             request.data = False
-            future = self.start_servo_client.call_async(request)
-            rclpy.spin_until_future_complete(self, future) 
-            return future.result()
+            return await self.start_servo_client.call_async(request)
     
-    def switch_controller(self, servo=False, sim=False):
+    async def switch_controller(self, servo=False, sim=False):
             """Switch the ros2 control controllers.
     
             Parameters
@@ -102,7 +100,7 @@ class JointPositionController(Node):
             # Switches controller from forward position controller to joint_trajectory controller
             self.request = SwitchController.Request()
             if servo:
-                self.start_servo()
+                await self.start_servo()
                 if not sim:
                     self.request.activate_controllers = ["rover_arm_velocity_controller"] 
                     self.request.deactivate_controllers = ["rover_arm_controller_moveit"]
@@ -122,22 +120,21 @@ class JointPositionController(Node):
     
             self.request.strictness = SwitchController.Request.BEST_EFFORT  # Use STRICT or BEST_EFFORT
     
-            self.future = self.controller_client.call_async(self.request)
-            rclpy.spin_until_future_complete(self, self.future)
+            result = await self.controller_client.call_async(self.request)
 
-            self.get_logger().info("Attempted to activate " + "rover_arm_velocity_controller" if servo else "rover_arm_controller_moveit")
+            self.get_logger().info("Attempted to activate " + ("rover_arm_velocity_controller" if servo else "rover_arm_controller_moveit"))
 
-            return self.future.result()
+            return result
         
 
-    def move_to_joint_positions(self, msg):
+    async def move_to_joint_positions(self, msg):
         joint_positions = []
         for joint in msg.data:
             joint_positions.append(joint)
-        # Wait until we have received joint states
-        while self.latest_joint_state is None:
-            self.get_logger().info('Waiting for joint states...')
-            rclpy.spin_once(self, timeout_sec=1.0)
+        # Can't spin here to wait for joint states, so drop the command until they arrive
+        if self.latest_joint_state is None:
+            self.get_logger().warn('No joint states received yet, ignoring command')
+            return
         
         # Create a motion planning request
         motion_request = MotionPlanRequest()
@@ -189,7 +186,7 @@ class JointPositionController(Node):
         goal_msg.planning_options = planning_options
 
         #switch to moveit controller
-        self.switch_controller(servo=False, sim=False)
+        await self.switch_controller(servo=False, sim=False)
         # Send the goal
         self.get_logger().info(f'Sending goal to move joints {self.joint_names} to positions {joint_positions}')
         send_goal_future = self.move_group_client.send_goal_async(goal_msg)
@@ -220,8 +217,8 @@ class JointPositionController(Node):
             self.get_logger().info('Motion execution succeeded!')
         else:
             self.get_logger().error(f'Motion execution failed with status: {status}')
-        self.start_servo()
-        self.switch_controller(servo=True, sim=False)
+        # Done callbacks can't await, so hand the coroutine to the executor (switch_controller also starts servo)
+        self.executor.create_task(self.switch_controller(servo=True, sim=False))
 
 
 def main(args=None):

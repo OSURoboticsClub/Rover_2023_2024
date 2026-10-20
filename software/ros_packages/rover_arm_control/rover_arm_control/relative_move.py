@@ -144,7 +144,7 @@ class GripperMoveNode(Node):
     #         pose_dict[key] = pose
     #     return pose_dict
 
-    def switch_controller(self, servo=False, sim=False):
+    async def switch_controller(self, servo=False, sim=False):
         """Switch the ros2 control controllers.
 
         Parameters
@@ -178,23 +178,19 @@ class GripperMoveNode(Node):
 
         self.request.strictness = SwitchController.Request.BEST_EFFORT  # Use STRICT or BEST_EFFORT
 
-        self.future = self.controller_client.call_async(self.request)
-        rclpy.spin_until_future_complete(self, self.future)
-        return self.future.result()
+        return await self.controller_client.call_async(self.request)
 
-    def start_servo(self):
+    async def start_servo(self):
             # Starts servo node
             self.request = SetBool.Request()
             self.request.data = False
-            self.future = self.start_servo_client.call_async(self.request)
-            rclpy.spin_until_future_complete(self, self.future) 
-            return self.future.result()
+            return await self.start_servo_client.call_async(self.request)
     
-    def set_callback_flag(self, goal_handle):
+    async def set_callback_flag(self, goal_handle):
         self.succeed = False
 
         #switch ros2 control controller to moveit
-        self.switch_controller(servo=False)
+        await self.switch_controller(servo=False)
 
         response = RelativeMove.Result()
 
@@ -207,8 +203,7 @@ class GripperMoveNode(Node):
             #send goal and wait for return
             send_goal_future = self.move_group_client.send_goal_async(goal_msg)
             self.get_logger().info("sent goal")
-            rclpy.spin_until_future_complete(self, send_goal_future)
-            sent_goal_handle = send_goal_future.result()
+            sent_goal_handle = await send_goal_future
 
             #Check if goal was accepted and wait for result
             if not sent_goal_handle.accepted:
@@ -223,8 +218,7 @@ class GripperMoveNode(Node):
 
             # Wait for result
             result_future = sent_goal_handle.get_result_async()
-            rclpy.spin_until_future_complete(self, result_future)
-            result_handle = result_future.result()
+            result_handle = await result_future
 
             # Check result status
             status = result_handle.status
@@ -246,8 +240,8 @@ class GripperMoveNode(Node):
         self.get_logger().info(f"Goal complete. Success = {self.succeed}")
 
         #switch ros2 control controller to servo
-        self.start_servo()
-        self.switch_controller(servo=True)
+        await self.start_servo()
+        await self.switch_controller(servo=True)
         return response
 
     def get_EE_pose(self):
@@ -318,14 +312,11 @@ class GripperMoveNode(Node):
         result.position.z = p_T[2]
         return result
     
-    def get_current_robot_state(self) -> RobotState:
+    async def get_current_robot_state(self) -> RobotState:
         req = GetPlanningScene.Request()
         # Empty request returns full scene including current robot state
-        future = self.planning_scene_client.call_async(req)
-        rclpy.spin_until_future_complete(self, future)
-
-        scene = future.result().scene
-        return scene.robot_state
+        response = await self.planning_scene_client.call_async(req)
+        return response.scene.robot_state
 
     def create_motion_request(self):
         #create motion planning request
