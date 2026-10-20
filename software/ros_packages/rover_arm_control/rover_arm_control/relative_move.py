@@ -36,7 +36,7 @@ from tf2_ros import Buffer, TransformListener
 from rover_arm_control_interface.action import RelativeMove
 from controller_manager_msgs.srv import SwitchController
 from rclpy.executors import MultiThreadedExecutor
-from std_srvs.srv import Trigger, Empty
+from std_srvs.srv import Trigger, Empty, SetBool
 from tf_transformations import quaternion_matrix, quaternion_from_matrix, translation_matrix, translation_from_matrix
 
 
@@ -65,7 +65,7 @@ class GripperMoveNode(Node):
         self.get_logger().info('MoveGroup action server connected!')
 
         self.controller_client = self.make_client(SwitchController, '/controller_manager/switch_controller')
-        self.start_servo_client = self.make_client(Trigger, '/servo_node/start_servo')
+        self.start_servo_client = self.make_client(SetBool, '/servo_node/pause_servo')
         self.planning_scene_client = self.make_client(GetPlanningScene, '/get_planning_scene')
 
 
@@ -184,7 +184,8 @@ class GripperMoveNode(Node):
 
     def start_servo(self):
             # Starts servo node
-            self.request = Trigger.Request()
+            self.request = SetBool.Request()
+            self.request.data = False
             self.future = self.start_servo_client.call_async(self.request)
             rclpy.spin_until_future_complete(self, self.future) 
             return self.future.result()

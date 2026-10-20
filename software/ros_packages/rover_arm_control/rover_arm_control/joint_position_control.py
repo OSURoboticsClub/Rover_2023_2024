@@ -14,7 +14,7 @@ import geometry_msgs.msg
 from builtin_interfaces.msg import Duration
 from std_msgs.msg import Float32MultiArray
 
-from std_srvs.srv import Trigger
+from std_srvs.srv import Trigger, SetBool
 from controller_manager_msgs.srv import SwitchController
 from rcl_interfaces.srv import SetParameters
 
@@ -53,7 +53,7 @@ class JointPositionController(Node):
         #services
         self.controller_client = self.make_client(SwitchController, '/controller_manager/switch_controller')
         self.configure_servo_cli = self.make_client(SetParameters, '/servo_node/set_parameters')
-        self.start_servo_client = self.make_client(Trigger, '/servo_node/start_servo')
+        self.start_servo_client = self.make_client(SetBool, '/servo_node/pause_servo')
 
     def make_client(self, srv_type, name):
         """ Create a client to a service.
@@ -82,7 +82,8 @@ class JointPositionController(Node):
                 The result from the service call.
             """
             # Starts servo node
-            request = Trigger.Request()
+            request = SetBool.Request()
+            request.data = False
             future = self.start_servo_client.call_async(request)
             rclpy.spin_until_future_complete(self, future) 
             return future.result()
