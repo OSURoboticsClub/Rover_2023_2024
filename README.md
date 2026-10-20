@@ -32,7 +32,7 @@ We integrate several software environments to help manage our rover. These inclu
 
 | Software | Purpose | Link |
 |---|---|---|
-| ROS2 Humble | Middleware & communications | [docs.ros.org](https://docs.ros.org/en/humble/index.html) |
+| ROS2 Jazzy | Middleware & communications | [docs.ros.org](https://docs.ros.org/en/jazzy/index.html) |
 | MoveIt2 | IK & path planning | [moveit.picknik.ai](https://moveit.picknik.ai/main/index.html) |
 | Intel RealSense SDK | Depth cameras & pointcloud | [github.com/IntelRealSense](https://github.com/IntelRealSense/librealsense) |
 | GStreamer | Camera streaming & encoding | [gstreamer.freedesktop.org](https://gstreamer.freedesktop.org/) |
@@ -41,17 +41,17 @@ We integrate several software environments to help manage our rover. These inclu
 
 ### Software Dependencies
 
-#### ROS2 Humble
+#### ROS2 Jazzy
 
-[ROS2 Humble](https://docs.ros.org/en/humble/index.html) is our middleware communications manager between subsystems on the rover and between the rover and groundstation. ROS2 Humble is the current LTS release and targets **Ubuntu 22.04 (Jammy)**.
+[ROS2 Jazzy](https://docs.ros.org/en/jazzy/index.html) is our middleware communications manager between subsystems on the rover and between the rover and groundstation. ROS2 Humble is the current LTS release and targets **Ubuntu 24.04 (Noble)**.
 
 **Installation:**
 
 Follow the official installation guide for your platform:
-- [ROS2 Humble — Ubuntu (Debian packages)](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html) *(recommended)*
-- [ROS2 Humble — Other platforms](https://docs.ros.org/en/humble/Installation.html)
+- [ROS2 Jazzy — Ubuntu (Debian packages)](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html) *(recommended)*
+- [ROS2 Jazzy — Other platforms](https://docs.ros.org/en/jazzy/Installation.html)
 
-Quick install summary for Ubuntu 22.04:
+Quick install summary for Ubuntu 24.04:
 
 ```bash
 # Set locale
@@ -63,18 +63,15 @@ sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
 sudo apt install software-properties-common
 sudo add-apt-repository universe
 sudo apt update && sudo apt install curl -y
-sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
-  -o /usr/share/keyrings/ros-archive-keyring.gpg
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] \
-  http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" \
-  | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
-
+export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F'"' '{print $4}')
+curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo ${UBUNTU_CODENAME:-${VERSION_CODENAME}})_all.deb"
+sudo dpkg -i /tmp/ros2-apt-source.deb
 # Install ROS2 Humble (desktop-full recommended)
 sudo apt update && sudo apt upgrade
-sudo apt install ros-humble-desktop-full
+sudo apt install ros-jazzy-desktop
 
 # Source the environment (add to ~/.bashrc for persistence)
-source /opt/ros/humble/setup.bash
+source /opt/ros/jazzy/setup.bash
 ```
 
 ---
@@ -157,7 +154,13 @@ Useful resources:
 - [GStreamer Plugin Reference](https://gstreamer.freedesktop.org/documentation/plugins_doc.html)
 
 ---
+#### Gazebo
+[Gazebo](https://gazebosim.org/docs/latest/ros_installation/) is a simulation framework designed to work with ros2. This simulation software models some physics and provides a better environment compared to pure visualizations found with rviz2. However this is not an advanced simulation like Isaac sim or MuJoCu that are often used for RL, AI, or Visual models. Its integration with ROS2 however does give it an edge for testing full stack operations. 
 
+```bash
+sudo apt-get install ros-${ROS_DISTRO}-ros-gz
+```
+---
 ### Building the Project
 
 Make sure all dependencies above are installed and your ROS2 environment is sourced before building.

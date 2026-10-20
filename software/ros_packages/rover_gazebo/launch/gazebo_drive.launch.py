@@ -9,6 +9,7 @@ from launch_ros.substitutions import FindPackageShare
 from launch.actions import DeclareLaunchArgument
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
+from launch_ros.parameter_descriptions import ParameterValue
 from launch.substitutions import LaunchConfiguration
 import os
 
@@ -65,7 +66,7 @@ def generate_launch_description():
         executable="robot_state_publisher",
         parameters=[{
             'use_sim_time': use_sim_time,
-            "robot_description": robot_description
+            "robot_description": ParameterValue(robot_description, value_type=str)
         }],
         output="screen",
     )
@@ -150,7 +151,8 @@ def generate_launch_description():
         package="rover2_control",
         executable="joy_to_drive",
         name="joy_to_drive",
-        output="screen"
+        output="screen",
+        parameters=[{"use_joy": True}],
     )
 
     ign_ros_bridge_config = PathJoinSubstitution([
@@ -413,10 +415,10 @@ def generate_launch_description():
                 on_exit=[local_ekf_node],
             )
         ),
-        # RegisterEventHandler(
-        #     event_handler=OnProcessExit(
-        #         target_action=drive_controller_node,
-        #         on_exit=[global_ekf_node],
-        #     )
-        # ),
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=drive_controller_node,
+                on_exit=[global_ekf_node],
+            )
+        ),
     ])

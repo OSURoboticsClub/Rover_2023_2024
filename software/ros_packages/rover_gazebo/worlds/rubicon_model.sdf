@@ -2242,12 +2242,6 @@
                 <metalness>0</metalness>
               </metal>
             </pbr>
-            <!-- fallback to script if no PBR support-->
-            <script>
-              <uri>materials/scripts/</uri>
-              <uri>materials/textures/</uri>
-              <name>UrbanTile/RockPile_Diffuse</name>
-            </script>
           </material>
         </visual>
         <visual name="Bush_visual">
@@ -2271,12 +2265,6 @@
                 <metalness>0</metalness>
               </metal>
             </pbr>
-            <!-- fallback to script if no PBR support-->
-            <script>
-              <uri>materials/scripts/</uri>
-              <uri>materials/textures/</uri>
-              <name>UrbanTile/Bush01_Diffuse</name>
-            </script>
           </material>
         </visual>
         <visual name="Rock01_visual">
@@ -2301,12 +2289,6 @@
                 <metalness>0</metalness>
               </metal>
             </pbr>
-            <!-- fallback to script if no PBR support-->
-            <script>
-              <uri>materials/scripts/</uri>
-              <uri>materials/textures/</uri>
-              <name>UrbanTile/Rock01_Diffuse</name>
-            </script>
           </material>
         </visual>
         <visual name="Rock02_visual">
@@ -2331,12 +2313,6 @@
                 <metalness>0</metalness>
               </metal>
             </pbr>
-            <!-- fallback to script if no PBR support-->
-            <script>
-              <uri>materials/scripts/</uri>
-              <uri>materials/textures/</uri>
-              <name>UrbanTile/Rock02_Diffuse</name>
-            </script>
           </material>
         </visual>
         <visual name="JeffreyTreeLeaves_visual">
@@ -2360,12 +2336,6 @@
                 <metalness>0</metalness>
               </metal>
             </pbr>
-            <!-- fallback to script if no PBR support-->
-            <script>
-              <uri>materials/scripts/</uri>
-              <uri>materials/textures/</uri>
-              <name>UrbanTile/TreeJeffreyPine_Diffuse</name>
-            </script>
           </material>
         </visual>
         <visual name="JeffreyTreeBark_visual">
@@ -2391,12 +2361,6 @@
                 <!-- <light_map uv_set="1">materials/textures/LightmapDark.png</light_map> -->
               </metal>
             </pbr>
-            <!-- fallback to script if no PBR support-->
-            <script>
-              <uri>materials/scripts/</uri>
-              <uri>materials/textures/</uri>
-              <name>UrbanTile/Bark_Diffuse</name>
-            </script>
           </material>
         </visual>
         <visual name="Vista">

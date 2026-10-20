@@ -48,8 +48,17 @@ class JoyToDriveNode(Node):
             ),
         )
 
+        self.declare_parameter(
+            "use_joy",
+            False,
+            ParameterDescriptor(
+                description="Drive from the /joy topic (off by default since joy_to_servo normally owns /joy)"
+            ),
+        )
+
         self.linear_vel_scalar = self.get_parameter("linear_vel_scalar").value
         self.angular_vel_scalar = self.get_parameter("angular_vel_scalar").value
+        self.use_joy = self.get_parameter("use_joy").value
 
         # Publisher Drive Commands
         self.wheel_pub = self.create_publisher(TwistStamped, '/drive_controller/cmd_vel', 1)
@@ -67,12 +76,13 @@ class JoyToDriveNode(Node):
             self.iris_drive_command_callback,
             1
         )
-        # self.joy_sub = self.create_subscription(
-        #     Joy,
-        #     '/joy',  # Topic where joy messages are published
-        #     self.joy_callback,
-        #     1
-        # )
+        if self.use_joy:
+            self.joy_sub = self.create_subscription(
+                Joy,
+                '/joy',  # Topic where joy messages are published
+                self.joy_callback,
+                1
+            )
 
         #Drive Control Loop
         self.timer = self.create_timer(0.03, self.timer_callback) 
