@@ -33,9 +33,9 @@ class Spectrometry_Publisher(Node):
         self.x_size = 800
         self.y_start = 2
         self.y_size = 800
-        self.r = [self.x_start, self.y_start, self.x_size, self.y_size]
-        # The following is for old scimech:
-        # self.r = [286, 60, 27, 54]
+
+
+        self.rois = self.get_roi()
         self.start_time = 0
         self.camera_ids = []
 
@@ -55,6 +55,53 @@ class Spectrometry_Publisher(Node):
         self.start_times = {}
         self.iterations = {}
 
+
+    def get_roi(self):
+        cap = cv2.VideoCapture(1)
+
+        try:
+            success, frame = cap.read()
+            if not success:
+                raise RuntimeError(
+                    "Could not capture an image from the camera")
+
+            # Drag a rectangle, then press Enter to confirm it.
+            roi1 = cv2.selectROI(
+                "Select ROI",
+                frame,
+                fromCenter=False,
+                showCrosshair=True,
+            )
+
+            print(roi1)  # (x, y, width, height)
+        finally:
+            cap.release()
+            cv2.destroyAllWindows()
+
+
+        cap = cv2.VideoCapture(1)
+
+        try:
+            success, frame = cap.read()
+            if not success:
+                raise RuntimeError(
+                    "Could not capture an image from the camera")
+
+            # Drag a rectangle, then press Enter to confirm it.
+            roi2 = cv2.selectROI(
+                "Select ROI",
+                frame,
+                fromCenter=False,
+                showCrosshair=True,
+            )
+
+            print(roi2)  # (x, y, width, height)
+        finally:
+            cap.release()
+            cv2.destroyAllWindows()
+
+        return [roi1, roi2]
+
     def start_graph_feed(self, request, response):
         if not self.camera_ids:
             self.start_time = self.get_clock().now()
@@ -65,14 +112,14 @@ class Spectrometry_Publisher(Node):
             self.camera_ids.append(request.camera_id)
             self.reaction_type.update({request.camera_id: request.reaction_type})
             self.start_times.update({request.camera_id: self.get_clock().now()})
-            self.iterations.update({request.camera_id: 0    })
+            self.iterations.update({request.camera_id: 0})
             response.success = True
             return response
         except:
             response.success = False
             return response
 
-
+    
 
     def timer_callback(self):
         # Check if any camera ids have been requested
@@ -118,6 +165,10 @@ class Spectrometry_Publisher(Node):
         cap.set(cv2.CAP_PROP_SATURATION, 200)
         
         ret, frame = cap.read()
+        if len(self.camera_ids) == 1 or feedNumber == self.camera_ids[0]:
+            self.r = self.rois[0]
+        else:
+            self.r = self.rois[1]
         cropped = frame[int(self.r[1]):int(self.r[1] + self.r[3]), int(self.r[0]):int(self.r[0] + self.r[2])]
         # cv2.imshow('roi', cropped)
         shape = cropped.shape
@@ -173,11 +224,11 @@ class Spectrometry_Publisher(Node):
         # 5 is a default value that shouldn't get used.
         if (reaction_type == 1 or reaction_type == 2) and elapsed < 5:
             title = "Benedict's Control"
-        elif (reaction_type == 1 or reaction_type == 2) and elapsed > 5:
+        elif (reaction_type == 1 or reaction_type == 2) and elapsed >= 5:
             title = "Benedict's Experiment"
         elif (reaction_type == 3 or reaction_type == 4) and elapsed < 5:
             title = "Ninhydrin Control"
-        elif (reaction_type == 3 or reaction_type == 4) and elapsed > 5:
+        elif (reaction_type == 3 or reaction_type == 4) and elapsed >= 5:
             title = "Ninhydrin Experiment"
         elif reaction_type == 5:
             title = "Spectroanalysis of Image"

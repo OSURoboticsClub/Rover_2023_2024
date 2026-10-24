@@ -31,6 +31,7 @@ setup(
         'console_scripts': [
             'spectrometry_publisher = rover2_spectrometry.spectrometry_publisher:main',
             'spectrometry_mechanical = rover2_spectrometry.spectrometry_mechanical:main',
+            # 'mechanical_interlock_test = rover2_spectrometry.mechanical_interlock_test:main',
         ],
     },
 )
