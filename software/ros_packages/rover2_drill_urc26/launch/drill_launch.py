@@ -10,19 +10,19 @@ def generate_launch_description():
 
     return LaunchDescription([
         Node(
-            package='rover2_drill',
+            package='rover2_drill_urc26',
             executable='drill_cap_control',
             name='drill_cap_control',
             **config
         ),
         Node(
-            package='rover2_drill',
+            package='rover2_drill_urc26',
             executable='drill_control',
             name='drill_control',
             **config
         ),
         Node(
-            package='rover2_drill',
+            package='rover2_drill_urc26',
             executable='linear_actuator_control',
             name='linear_actuator_control',
             **config

@@ -8,13 +8,33 @@ from rover2_spectrometry.protocol import (
 )
 
 
+def test_command_codes_match_mcu_protocol():
+    """Python command IDs must remain aligned with the MCU enum."""
+    assert {command.name: command.value for command in CommandCode} == {
+        "STATUS": 4,
+        "VALVE_1_ON": 9,
+        "VALVE_1_OFF": 10,
+        "VALVE_2_ON": 11,
+        "VALVE_2_OFF": 12,
+        "ALL_VALVES_ON": 13,
+        "ALL_VALVES_OFF": 14,
+        "PUMP_ON": 15,
+        "PUMP_OFF": 16,
+        "COIL_1_ON": 17,
+        "COIL_1_OFF": 18,
+        "COIL_2_ON": 19,
+        "COIL_2_OFF": 20,
+        "ALL_COILS_ON": 21,
+        "ALL_COILS_OFF": 22,
+    }
+
+
 def test_startup_sends_complete_all_off_state():
     """An unknown startup state must explicitly converge every output off."""
     assert command_codes_for_transition(None, WATCHDOG_TIMEOUT_STATE) == (
         CommandCode.ALL_VALVES_OFF,
         CommandCode.PUMP_OFF,
         CommandCode.ALL_COILS_OFF,
-        CommandCode.SOLENOID_OFF,
     )
 
 
@@ -26,7 +46,6 @@ def test_startup_locked_state_explicitly_turns_every_device_off():
         CommandCode.PUMP_OFF,
         CommandCode.COIL_1_OFF,
         CommandCode.COIL_2_OFF,
-        CommandCode.SOLENOID_OFF,
     )
 
 
@@ -65,7 +84,6 @@ def test_lock_explicitly_turns_off_active_devices():
         pump_on=True,
         coil_1_on=True,
         coil_2_on=True,
-        solenoid_on=True,
     )
     target = MechanicalState(controls_unlocked=False)
     assert command_codes_for_transition(previous, target) == (
@@ -74,7 +92,6 @@ def test_lock_explicitly_turns_off_active_devices():
         CommandCode.PUMP_OFF,
         CommandCode.COIL_1_OFF,
         CommandCode.COIL_2_OFF,
-        CommandCode.SOLENOID_OFF,
     )
 
 

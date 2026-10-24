@@ -2,7 +2,7 @@ from setuptools import setup
 import os
 from glob import glob
 
-package_name = "rover2_drill"
+package_name = "rover2_drill_urc26"
 
 setup(
     name=package_name,

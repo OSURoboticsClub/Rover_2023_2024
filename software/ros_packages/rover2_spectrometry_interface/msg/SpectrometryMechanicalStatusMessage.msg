@@ -10,4 +10,3 @@ bool valve_2_on
 bool pump_on
 bool coil_1_on
 bool coil_2_on
-bool solenoid_on

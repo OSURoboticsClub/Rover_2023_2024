@@ -15,6 +15,7 @@ from rover2_spectrometry_interface.msg import (
 )
 
 from .protocol import (
+    CommandCode,
     MechanicalState,
     WATCHDOG_TIMEOUT_STATE,
     command_codes_for_transition,
@@ -95,14 +96,15 @@ class SpectrometryMechanical(Node):
             self.requested_state = WATCHDOG_TIMEOUT_STATE
             self.command_link_was_active = False
 
+        valve_1_on = bool(msg.valve_1_on)
+        valve_2_on = bool(msg.valve_2_on)
         state = MechanicalState(
             controls_unlocked=bool(msg.controls_unlocked),
-            valve_1_on=bool(msg.valve_1_on),
-            valve_2_on=bool(msg.valve_2_on),
-            pump_on=bool(msg.pump_on),
+            valve_1_on=valve_1_on,
+            valve_2_on=valve_2_on,
+            pump_on=bool(msg.pump_on) and (valve_1_on or valve_2_on),
             coil_1_on=bool(msg.coil_1_on),
             coil_2_on=bool(msg.coil_2_on),
-            solenoid_on=bool(msg.solenoid_on),
         ).normalized()
         self.last_command_time = now
 
@@ -142,6 +144,7 @@ class SpectrometryMechanical(Node):
         command_codes = command_codes_for_transition(
             previous_state, target_state
         )
+        command_codes = self._order_commands_for_pump_safety(command_codes)
         if not command_codes:
             return
 
@@ -169,6 +172,26 @@ class SpectrometryMechanical(Node):
                 timeout=self.can_send_timeout_s,
             )
 
+    @staticmethod
+    def _order_commands_for_pump_safety(command_codes):
+        """Keep a flow path open whenever the pump could be running."""
+        valve_on_commands = {
+            CommandCode.VALVE_1_ON,
+            CommandCode.VALVE_2_ON,
+            CommandCode.ALL_VALVES_ON,
+        }
+
+        def safety_priority(command_code):
+            if command_code == CommandCode.PUMP_OFF:
+                return 0
+            if command_code in valve_on_commands:
+                return 1
+            if command_code == CommandCode.PUMP_ON:
+                return 3
+            return 2
+
+        return tuple(sorted(command_codes, key=safety_priority))
+
     def _publish_status(self, command_link_active):
         state = self.applied_state or WATCHDOG_TIMEOUT_STATE
         msg = SpectrometryMechanicalStatusMessage()
@@ -182,7 +205,6 @@ class SpectrometryMechanical(Node):
         msg.pump_on = state.pump_on
         msg.coil_1_on = state.coil_1_on
         msg.coil_2_on = state.coil_2_on
-        msg.solenoid_on = state.solenoid_on
         self.status_publisher.publish(msg)
 
     def arbitration_id(self, command_code):

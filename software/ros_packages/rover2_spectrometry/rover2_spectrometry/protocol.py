@@ -7,6 +7,7 @@ from enum import IntEnum
 class CommandCode(IntEnum):
     """Science mechanism command IDs implemented by the MCU firmware."""
 
+    STATUS = 4
     VALVE_1_ON = 9
     VALVE_1_OFF = 10
     VALVE_2_ON = 11
@@ -21,8 +22,6 @@ class CommandCode(IntEnum):
     COIL_2_OFF = 20
     ALL_COILS_ON = 21
     ALL_COILS_OFF = 22
-    SOLENOID_ON = 23
-    SOLENOID_OFF = 24
 
 
 @dataclass(frozen=True)
@@ -35,7 +34,6 @@ class MechanicalState:
     pump_on: bool = False
     coil_1_on: bool = False
     coil_2_on: bool = False
-    solenoid_on: bool = False
 
     def normalized(self):
         """Force all outputs off whenever master control is locked."""
@@ -60,7 +58,6 @@ def command_codes_for_state(state):
             CommandCode.PUMP_OFF,
             CommandCode.COIL_1_OFF,
             CommandCode.COIL_2_OFF,
-            CommandCode.SOLENOID_OFF,
         )
 
     commands = []
@@ -90,11 +87,6 @@ def command_codes_for_state(state):
             CommandCode.COIL_2_ON,
             CommandCode.COIL_2_OFF,
         )
-    )
-    commands.append(
-        CommandCode.SOLENOID_ON
-        if state.solenoid_on
-        else CommandCode.SOLENOID_OFF
     )
     return tuple(commands)
 
@@ -126,8 +118,6 @@ def command_codes_for_transition(previous_state, target_state):
             commands.append(CommandCode.COIL_1_OFF)
         if previous_state.coil_2_on:
             commands.append(CommandCode.COIL_2_OFF)
-        if previous_state.solenoid_on:
-            commands.append(CommandCode.SOLENOID_OFF)
         return tuple(commands)
 
     commands = []
@@ -165,12 +155,6 @@ def command_codes_for_transition(previous_state, target_state):
             CommandCode.COIL_2_OFF,
         )
     )
-    if previous_state.solenoid_on != target_state.solenoid_on:
-        commands.append(
-            CommandCode.SOLENOID_ON
-            if target_state.solenoid_on
-            else CommandCode.SOLENOID_OFF
-        )
     return tuple(commands)
 
 
